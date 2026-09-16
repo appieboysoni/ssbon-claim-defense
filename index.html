@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>이물관리 - 순수본 2공장 (프로토타입)</title>
+<title>이물관리 - 순수본 2공장</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
@@ -15,140 +15,66 @@
     --bg:#f5f6f8;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;
-    background:var(--bg);
-    color:#1c2430;
-  }
-  header{
-    background:#1c2430;
-    color:#fff;
-    padding:12px 20px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    flex-wrap:wrap;
-    gap:8px;
-  }
+  body{margin:0;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:var(--bg);color:#1c2430;}
+  header{background:#1c2430;color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
   header h1{font-size:16px;margin:0;font-weight:600;}
   header .status{font-size:12px;color:#aab3c2;}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;}
-  button{
-    font-family:inherit;
-    font-size:13px;
-    padding:7px 12px;
-    border-radius:6px;
-    border:1px solid var(--border);
-    background:#fff;
-    cursor:pointer;
-  }
+  button{font-family:inherit;font-size:13px;padding:7px 12px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;}
   button.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
   button.danger{background:#fff;border-color:var(--danger);color:var(--danger);}
   button.active{background:#123a99;border-color:#123a99;color:#fff;}
   button:hover{filter:brightness(0.97);}
-  .main-layout{
-    display:flex;
-    gap:16px;
-    padding:16px;
-    align-items:flex-start;
-  }
-  .plan-wrap{
-    position:relative;
-    display:inline-block;
-    background:#fff;
-    border:1px solid var(--border);
-    line-height:0;
-    user-select:none;
-    max-width:min(72vw, 900px);
-  }
+  .main-layout{display:flex;gap:16px;padding:16px;align-items:flex-start;}
+  .plan-wrap{position:relative;display:inline-block;background:#fff;border:1px solid var(--border);line-height:0;user-select:none;max-width:min(58vw, 820px);flex-shrink:1;}
   .plan-wrap.edit-mode{cursor:crosshair;}
-  #floorplanImg{
-    display:block;
-    width:100%;
-    height:auto;
-    pointer-events:none;
-  }
-  #overlay{
-    position:absolute;
-    inset:0;
-  }
-  .zone-box{
-    position:absolute;
-    border:2px solid var(--accent);
-    background:var(--accent-fill);
-    cursor:pointer;
-  }
-  .zone-box.selected{
-    border-color:#ff8a00;
-    background:rgba(255,138,0,0.22);
-  }
-  .zone-label{
-    position:absolute;
-    top:-2px;
-    left:2px;
-    transform:translateY(-100%);
-    background:var(--accent);
-    color:#fff;
-    font-size:11px;
-    padding:2px 6px;
-    border-radius:4px 4px 0 0;
-    white-space:nowrap;
-  }
+  #floorplanImg{display:block;width:100%;height:auto;pointer-events:none;}
+  #overlay{position:absolute;inset:0;}
+  .zone-box{position:absolute;border:2px solid var(--accent);background:var(--accent-fill);cursor:pointer;}
+  .zone-box.alert{border-color:var(--danger);background:rgba(224,71,63,0.16);}
+  .zone-box.selected{border-color:#ff8a00;background:rgba(255,138,0,0.22);}
+  .zone-label{position:absolute;top:-2px;left:2px;transform:translateY(-100%);background:var(--accent);color:#fff;font-size:11px;padding:2px 6px;border-radius:4px 4px 0 0;white-space:nowrap;line-height:1.3;}
+  .zone-box.alert .zone-label{background:var(--danger);}
   .zone-box.selected .zone-label{background:#ff8a00;}
-  .drag-preview{
-    position:absolute;
-    border:2px dashed var(--accent);
-    background:rgba(47,111,237,0.10);
-    pointer-events:none;
-  }
-  aside{
-    width:300px;
-    flex-shrink:0;
-    background:#fff;
-    border:1px solid var(--border);
-    border-radius:8px;
-    padding:14px;
-  }
+  .drag-preview{position:absolute;border:2px dashed var(--accent);background:rgba(47,111,237,0.10);pointer-events:none;}
+  aside{width:460px;flex-shrink:0;background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px;}
   aside h2{font-size:14px;margin:0 0 10px;}
-  #zoneList{list-style:none;margin:0 0 16px;padding:0;max-height:260px;overflow:auto;}
-  #zoneList li{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:6px 8px;
-    border-radius:6px;
-    font-size:13px;
-    cursor:pointer;
-  }
+  #zoneList{list-style:none;margin:0 0 16px;padding:0;max-height:200px;overflow:auto;}
+  #zoneList li{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:6px;font-size:13px;cursor:pointer;}
   #zoneList li:hover{background:#f0f2f5;}
   #zoneList li.selected{background:#eef3ff;font-weight:600;}
   #zoneList li button{padding:2px 6px;font-size:11px;}
   #zoneList .empty{color:#8a94a6;font-size:12px;padding:6px 8px;}
-  #detailPanel{
-    border-top:1px solid var(--border);
-    padding-top:12px;
-    font-size:13px;
-    color:#444;
-    min-height:80px;
-  }
-  #detailPanel .placeholder{color:#8a94a6;}
+  .zone-cnt{font-size:10px;color:#fff;background:var(--danger);border-radius:9px;padding:1px 6px;margin-left:6px;font-weight:400;}
+  #detailPanel{border-top:1px solid var(--border);padding-top:12px;font-size:13px;color:#333;min-height:80px;}
+  .placeholder{color:#8a94a6;}
   .hint{font-size:12px;color:#8a94a6;margin-top:10px;line-height:1.5;}
-  .modal{
-    position:fixed;inset:0;background:rgba(0,0,0,0.35);
-    display:flex;align-items:center;justify-content:center;
-    z-index:50;
-  }
+  .sec-title{display:flex;justify-content:space-between;align-items:center;margin:16px 0 6px;font-weight:700;font-size:13px;}
+  .sec-title button{padding:3px 8px;font-size:11px;}
+  .tree ul{list-style:none;margin:0;padding:0;}
+  .tree ul ul{margin-left:14px;border-left:1px dashed #d0d5dd;padding-left:6px;}
+  .node-row{display:flex;align-items:flex-start;gap:4px;padding:4px 2px;border-bottom:1px solid #f0f1f3;font-size:12px;}
+  .node-row:hover{background:#f7f8fa;}
+  .tg{width:14px;text-align:center;cursor:pointer;color:#666;flex-shrink:0;user-select:none;}
+  .nm{flex:1;min-width:0;line-height:1.6;}
+  .nm .no{color:#8a94a6;margin-right:4px;}
+  .nm .memo{color:#8a94a6;font-size:11px;}
+  .badge{display:inline-block;font-size:10px;padding:0 6px;border-radius:10px;margin-left:4px;white-space:nowrap;line-height:1.7;}
+  .b-gray{background:#eef0f3;color:#555;}
+  .b-ok{background:#e3f5ec;color:#157347;}
+  .b-warn{background:#fff1dc;color:#a15c00;}
+  .b-bad{background:#fde4e2;color:#b42318;}
+  .acts{display:flex;gap:2px;flex-shrink:0;opacity:.5;}
+  .node-row:hover .acts{opacity:1;}
+  .acts button{padding:1px 5px;font-size:10px;}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:50;}
   .modal.hidden{display:none;}
-  .modal-box{
-    background:#fff;border-radius:8px;padding:20px;width:280px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.2);
-  }
+  .modal-box{background:#fff;border-radius:8px;padding:20px;width:330px;box-shadow:0 10px 30px rgba(0,0,0,0.2);}
   .modal-box label{font-size:13px;display:block;margin-bottom:6px;}
-  .modal-box input{
-    width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;
-    font-size:14px;margin-bottom:14px;
-  }
+  .modal-box input,.modal-box select{width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;margin-bottom:14px;font-family:inherit;background:#fff;}
+  .row2{display:flex;gap:6px;}
+  .leaf-only{border-top:1px solid #eee;padding-top:10px;}
+  .muted{font-size:11px;color:#8a94a6;margin:0 0 12px;line-height:1.5;}
   .modal-actions{display:flex;justify-content:flex-end;gap:8px;}
   footer{padding:0 16px 16px;font-size:12px;color:#8a94a6;}
 </style>
@@ -156,7 +82,7 @@
 <body>
 <header>
   <div>
-    <h1>이물관리 - 순수본 2공장 1층 (프로토타입 · 1단계: 구역 지도)</h1>
+    <h1>이물관리 - 순수본 2공장 1층 · 설비/공기구 점검 관리 (프로토타입)</h1>
     <div class="status" id="statusLine">연결 확인 중...</div>
   </div>
   <div class="toolbar">
@@ -174,19 +100,19 @@
   <aside>
     <h2>공정구역 목록 (<span id="zoneCount">0</span>)</h2>
     <ul id="zoneList"><li class="empty">아직 그려진 구역이 없습니다.</li></ul>
-    <div id="detailPanel"><span class="placeholder">구역을 클릭하면 여기에 설비 목록이 표시됩니다.</span></div>
+    <div id="detailPanel"><span class="placeholder">구역을 클릭하면 여기에 설비·공기구 목록이 표시됩니다.</span></div>
     <div class="hint">
-      "구역 편집 모드"를 켠 뒤 도면 위에서 마우스로 드래그하면 사각형 구역을 그릴 수 있습니다.<br>
-      이름을 입력하면 구역으로 저장됩니다. 편집 모드를 끄면 구역을 클릭해 선택할 수 있습니다.
+      "구역 편집 모드"를 켠 뒤 도면 위에서 드래그하면 구역을 그릴 수 있습니다. 편집 모드를 끄면 구역을 클릭해 선택합니다.<br>
+      점검 예정일이 지난 항목이 있는 구역은 빨간색으로 표시됩니다.
     </div>
   </aside>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.1 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.2 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
     <label for="zoneNameInput">구역 이름</label>
-    <input id="zoneNameInput" type="text" placeholder="예: 원료투입, 세척, 조리, 포장">
+    <input id="zoneNameInput" type="text" placeholder="예: 자숙실, 내포장실">
     <div class="modal-actions">
       <button id="zoneNameCancel">취소</button>
       <button id="zoneNameSave" class="primary">저장</button>
@@ -194,17 +120,36 @@
   </div>
 </div>
 
-<div class="modal hidden" id="equipModal">
+<div class="modal hidden" id="nodeModal">
   <div class="modal-box">
-    <label for="equipNameInput">설비명 *</label>
-    <input id="equipNameInput" type="text" placeholder="예: 2,000L 추출탱크 1호">
-    <label for="equipModelInput">모델/규격 (선택)</label>
-    <input id="equipModelInput" type="text" placeholder="예: 제작사·용량 등">
-    <label for="equipNoteInput">비고 (선택)</label>
-    <input id="equipNoteInput" type="text" placeholder="예: 설치 위치, 특이사항">
+    <div id="nodeModalTitle" style="font-weight:700;margin-bottom:12px;font-size:14px;"></div>
+    <label for="nodeName">이름 *</label>
+    <input id="nodeName" type="text">
+    <label for="nodeNote">비고 (선택)</label>
+    <input id="nodeNote" type="text" placeholder="예: 색상, 규격, 위치">
+    <div id="parentWarn" class="muted" style="display:none;color:#a15c00;"></div>
+    <div id="leafFields" class="leaf-only">
+      <label>점검주기</label>
+      <div class="row2">
+        <input id="nodeCycleVal" type="number" min="1" placeholder="예: 3">
+        <select id="nodeCycleUnit">
+          <option value="day">일</option>
+          <option value="week">주</option>
+          <option value="month" selected>개월</option>
+        </select>
+      </div>
+      <label for="nodeLastDate">최근 점검(교체)일</label>
+      <input id="nodeLastDate" type="date">
+      <div id="qtyWrap">
+        <label for="nodeStdQty">기준 보유 수량</label>
+        <input id="nodeStdQty" type="number" min="0" placeholder="예: 2">
+      </div>
+      <div class="muted">점검주기는 맨 아래 항목에만 적용됩니다. 이 항목 아래에 하위 항목을 추가하면 주기는 표시되지 않습니다.</div>
+    </div>
+    <div id="nonLeafNote" class="muted" style="display:none;">하위 항목이 있는 항목은 점검주기를 두지 않습니다. 점검주기는 맨 아래 항목에서 입력하세요.</div>
     <div class="modal-actions">
-      <button id="equipCancel">취소</button>
-      <button id="equipSave" class="primary">저장</button>
+      <button id="nodeCancel">취소</button>
+      <button id="nodeSave" class="primary">저장</button>
     </div>
   </div>
 </div>
@@ -212,26 +157,34 @@
 <script>
 (function(){
   var zones = [];
+  var nodes = [];
+  var collapsed = {};
   var editMode = false;
   var selectedZoneId = null;
   var drawing = false;
   var dragStart = null;
   var pendingRect = null;
+  var nodeModalCtx = null;
 
-  var planWrap = document.getElementById('planWrap');
-  var overlay = document.getElementById('overlay');
-  var img = document.getElementById('floorplanImg');
-  var btnEditMode = document.getElementById('btnEditMode');
-  var zoneListEl = document.getElementById('zoneList');
-  var zoneCountEl = document.getElementById('zoneCount');
-  var detailPanel = document.getElementById('detailPanel');
-  var nameModal = document.getElementById('nameModal');
-  var zoneNameInput = document.getElementById('zoneNameInput');
-  var statusLine = document.getElementById('statusLine');
+  var CAT_LABEL = {equip: '설비', tool: '공기구'};
+  var UNIT_LABEL = {day: '일', week: '주', month: '개월'};
 
-  // ---- Firebase (같은 프로젝트 ssbon-64b4f, 이물관리 전용 컬렉션으로 분리) ----
+  function byId(id){ return document.getElementById(id); }
+  var planWrap = byId('planWrap');
+  var overlay = byId('overlay');
+  var btnEditMode = byId('btnEditMode');
+  var zoneListEl = byId('zoneList');
+  var zoneCountEl = byId('zoneCount');
+  var detailPanel = byId('detailPanel');
+  var nameModal = byId('nameModal');
+  var zoneNameInput = byId('zoneNameInput');
+  var nodeModal = byId('nodeModal');
+  var statusLine = byId('statusLine');
+
+  // ---- Firebase (프로젝트 ssbon-64b4f, 이물관리 전용 컬렉션) ----
   var FB_DB = null;
   var ZONES_COL = 'claimdefense_zones';
+  var NODES_COL = 'claimdefense_nodes';
   function initFB(){
     try{
       if(FB_DB) return FB_DB;
@@ -251,11 +204,13 @@
     }
   }
   function setStatus(text, ok){
-    if(!statusLine) return;
     statusLine.textContent = text;
     statusLine.style.color = ok === false ? '#ffb4b4' : (ok === true ? '#9be89b' : '#aab3c2');
   }
-  function loadZonesFromFirestore(){
+  function saveOk(){ setStatus('Firebase 연결됨 · 마지막 저장 ' + new Date().toLocaleTimeString('ko-KR'), true); }
+  function saveFail(e){ console.warn('저장 실패', e); setStatus('저장 실패(오프라인?) · 새로고침 시 사라질 수 있음', false); }
+
+  function loadAll(){
     var db = initFB();
     if(!db){
       setStatus('Firebase 연결 안 됨 · 로컬 메모리에만 보관(새로고침 시 사라짐)', false);
@@ -263,14 +218,26 @@
       return;
     }
     setStatus('불러오는 중...');
-    db.collection(ZONES_COL).get().then(function(snap){
+    Promise.all([db.collection(ZONES_COL).get(), db.collection(NODES_COL).get()]).then(function(res){
       zones = [];
-      snap.forEach(function(doc){
+      res[0].forEach(function(doc){
         var d = doc.data();
         zones.push({id: doc.id, name: d.name, x: d.x, y: d.y, w: d.w, h: d.h});
       });
+      nodes = [];
+      res[1].forEach(function(doc){
+        var d = doc.data();
+        nodes.push({
+          id: doc.id, zoneId: d.zoneId, parentId: d.parentId || null, category: d.category,
+          name: d.name, note: d.note || '',
+          cycleValue: d.cycleValue || null, cycleUnit: d.cycleUnit || 'month',
+          lastDate: d.lastDate || '', stdQty: (d.stdQty === undefined ? null : d.stdQty),
+          order: d.order || 0
+        });
+      });
       renderAll();
-      setStatus('Firebase 연결됨 · 구역 ' + zones.length + '개 불러옴 · 자동 저장됨', true);
+      if(selectedZoneId){ renderDetailPanel(selectedZoneId); }
+      setStatus('Firebase 연결됨 · 구역 ' + zones.length + '개 · 항목 ' + nodes.length + '개 불러옴 · 자동 저장됨', true);
     }).catch(function(e){
       console.warn('불러오기 실패', e);
       setStatus('Firebase 연결 실패 · 로컬 메모리에만 보관(새로고침 시 사라짐)', false);
@@ -278,102 +245,110 @@
     });
   }
   function saveZoneToFirestore(z){
-    var db = initFB();
-    if(!db) return;
-    db.collection(ZONES_COL).doc(z.id).set({
-      name: z.name, x: z.x, y: z.y, w: z.w, h: z.h, updatedAt: Date.now()
-    }).then(function(){
-      setStatus('Firebase 연결됨 · 마지막 저장 ' + new Date().toLocaleTimeString('ko-KR'), true);
-    }).catch(function(e){
-      console.warn('저장 실패', e);
-      setStatus('저장 실패(오프라인?) · 이 구역은 새로고침 시 사라질 수 있음', false);
-    });
+    var db = initFB(); if(!db) return;
+    db.collection(ZONES_COL).doc(z.id).set({name: z.name, x: z.x, y: z.y, w: z.w, h: z.h, updatedAt: Date.now()}).then(saveOk).catch(saveFail);
   }
   function deleteZoneFromFirestore(id){
-    var db = initFB();
-    if(!db) return;
-    db.collection(ZONES_COL).doc(id).delete().catch(function(e){
-      console.warn('삭제 반영 실패', e);
-    });
+    var db = initFB(); if(!db) return;
+    db.collection(ZONES_COL).doc(id).delete().then(saveOk).catch(saveFail);
+  }
+  function saveNodeToFirestore(n){
+    var db = initFB(); if(!db) return;
+    db.collection(NODES_COL).doc(n.id).set({
+      zoneId: n.zoneId, parentId: n.parentId || null, category: n.category,
+      name: n.name, note: n.note || '',
+      cycleValue: n.cycleValue || null, cycleUnit: n.cycleUnit || 'month',
+      lastDate: n.lastDate || '', stdQty: (n.stdQty === undefined ? null : n.stdQty),
+      order: n.order || 0, updatedAt: Date.now()
+    }).then(saveOk).catch(saveFail);
+  }
+  function deleteNodesFromFirestore(ids){
+    var db = initFB(); if(!db || !ids.length) return;
+    var batch = db.batch();
+    ids.forEach(function(id){ batch.delete(db.collection(NODES_COL).doc(id)); });
+    batch.commit().then(saveOk).catch(saveFail);
   }
 
-  // ---- 설비 (구역에 속함) ----
-  var equipment = [];
-  var EQUIP_COL = 'claimdefense_equipment';
-  function loadEquipmentFromFirestore(){
-    var db = initFB();
-    if(!db) return;
-    db.collection(EQUIP_COL).get().then(function(snap){
-      equipment = [];
-      snap.forEach(function(doc){
-        var d = doc.data();
-        equipment.push({id: doc.id, zoneId: d.zoneId, name: d.name, model: d.model || '', note: d.note || ''});
-      });
-      if(selectedZoneId){ renderDetailPanel(selectedZoneId); }
-    }).catch(function(e){
-      console.warn('설비 불러오기 실패', e);
-    });
+  // ---- 공통 도우미 ----
+  function uid(prefix){
+    return (prefix || 'z') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
   }
-  function saveEquipmentToFirestore(eq){
-    var db = initFB();
-    if(!db) return;
-    db.collection(EQUIP_COL).doc(eq.id).set({
-      zoneId: eq.zoneId, name: eq.name, model: eq.model || '', note: eq.note || '', updatedAt: Date.now()
-    }).catch(function(e){ console.warn('설비 저장 실패', e); });
-  }
-  function deleteEquipmentFromFirestore(id){
-    var db = initFB();
-    if(!db) return;
-    db.collection(EQUIP_COL).doc(id).delete().catch(function(e){
-      console.warn('설비 삭제 반영 실패', e);
-    });
-  }
-  function addEquipment(zoneId, name, model, note){
-    var eq = {id: uid(), zoneId: zoneId, name: name, model: model || '', note: note || ''};
-    equipment.push(eq);
-    renderDetailPanel(zoneId);
-    saveEquipmentToFirestore(eq);
-  }
-  function deleteEquipment(id, zoneId, evt){
-    if(evt) evt.stopPropagation();
-    if(!confirm('이 설비를 삭제할까요? (연결된 부품·점검이력은 다음 단계에서 다룰 예정입니다)')) return;
-    equipment = equipment.filter(function(e){ return e.id !== id; });
-    renderDetailPanel(zoneId);
-    deleteEquipmentFromFirestore(id);
-  }
-
-  function uid(){
-    return 'z_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
-  }
-
   function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+  function ymd(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function parseYmd(s){ var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function todayStr(){ return ymd(new Date()); }
+  function addCycle(dateStr, val, unit){
+    var d = parseYmd(dateStr);
+    if(unit === 'day'){ d.setDate(d.getDate() + val); }
+    else if(unit === 'week'){ d.setDate(d.getDate() + val * 7); }
+    else {
+      var day = d.getDate();
+      d.setDate(1);
+      d.setMonth(d.getMonth() + val);
+      var last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      d.setDate(Math.min(day, last));
+    }
+    return ymd(d);
+  }
+  function nodeStatus(n, today){
+    today = today || todayStr();
+    if(!n.cycleValue){ return {cls: 'b-gray', text: '주기 미설정', level: 0}; }
+    if(!n.lastDate){ return {cls: 'b-warn', text: '최근점검일 미입력', level: 1}; }
+    var due = addCycle(n.lastDate, n.cycleValue, n.cycleUnit);
+    var diff = Math.round((parseYmd(due) - parseYmd(today)) / 86400000);
+    if(diff < 0){ return {cls: 'b-bad', text: '지연 ' + (-diff) + '일 (예정 ' + due + ')', level: 2, due: due}; }
+    if(diff <= 7){ return {cls: 'b-warn', text: '임박 D-' + diff + ' (' + due + ')', level: 1, due: due}; }
+    return {cls: 'b-ok', text: '다음 ' + due, level: 0, due: due};
+  }
+  function findNode(id){ return nodes.find(function(n){ return n.id === id; }); }
+  function hasChildren(id){ return nodes.some(function(n){ return n.parentId === id; }); }
+  function childrenOf(zoneId, category, parentId){
+    return nodes.filter(function(n){
+      return n.zoneId === zoneId && n.category === category && (n.parentId || null) === (parentId || null);
+    }).sort(function(a, b){ return a.order - b.order; });
+  }
+  function descendantIds(id){
+    var out = [];
+    nodes.forEach(function(n){
+      if(n.parentId === id){ out.push(n.id); out = out.concat(descendantIds(n.id)); }
+    });
+    return out;
+  }
+  function isOverdueLeaf(n){ return !hasChildren(n.id) && nodeStatus(n).level === 2; }
+  function overdueInZone(zoneId){
+    return nodes.filter(function(n){ return n.zoneId === zoneId && isOverdueLeaf(n); }).length;
+  }
+  function overdueUnder(id){
+    return descendantIds(id).filter(function(did){ return isOverdueLeaf(findNode(did)); }).length;
+  }
 
+  // ---- 구역 그리기 ----
   function getRelativePoint(evt){
     var rect = overlay.getBoundingClientRect();
-    var x = clamp((evt.clientX - rect.left) / rect.width * 100, 0, 100);
-    var y = clamp((evt.clientY - rect.top) / rect.height * 100, 0, 100);
-    return {x: x, y: y};
+    return {
+      x: clamp((evt.clientX - rect.left) / rect.width * 100, 0, 100),
+      y: clamp((evt.clientY - rect.top) / rect.height * 100, 0, 100)
+    };
   }
-
   function setEditMode(on){
     editMode = on;
     planWrap.classList.toggle('edit-mode', on);
     btnEditMode.textContent = on ? '구역 편집 모드 끄기 (보기 모드로)' : '구역 편집 모드 켜기';
     btnEditMode.classList.toggle('active', on);
-    if(!on){
-      cancelDrawing();
-    }
+    if(!on){ cancelDrawing(); }
   }
-
   function cancelDrawing(){
     drawing = false;
     dragStart = null;
-    if(pendingRect && pendingRect.parentNode){
-      pendingRect.parentNode.removeChild(pendingRect);
-    }
+    if(pendingRect && pendingRect.parentNode){ pendingRect.parentNode.removeChild(pendingRect); }
     pendingRect = null;
   }
-
   function onOverlayMouseDown(evt){
     if(!editMode) return;
     drawing = true;
@@ -383,13 +358,10 @@
     overlay.appendChild(pendingRect);
     updatePendingRect(dragStart);
   }
-
   function onOverlayMouseMove(evt){
     if(!editMode || !drawing) return;
-    var p = getRelativePoint(evt);
-    updatePendingRect(p);
+    updatePendingRect(getRelativePoint(evt));
   }
-
   function updatePendingRect(current){
     var x1 = Math.min(dragStart.x, current.x);
     var y1 = Math.min(dragStart.y, current.y);
@@ -404,21 +376,17 @@
     pendingRect.dataset.w = w;
     pendingRect.dataset.h = h;
   }
-
-  function onOverlayMouseUp(evt){
+  function onOverlayMouseUp(){
     if(!editMode || !drawing) return;
     drawing = false;
     var x = parseFloat(pendingRect.dataset.x);
     var y = parseFloat(pendingRect.dataset.y);
     var w = parseFloat(pendingRect.dataset.w);
     var h = parseFloat(pendingRect.dataset.h);
-    if(w < 1 || h < 1){
-      cancelDrawing();
-      return;
-    }
+    if(w < 1 || h < 1){ cancelDrawing(); return; }
     openNameModal(function(name){
       if(name){
-        var z = {id: uid(), name: name, x: x, y: y, w: w, h: h};
+        var z = {id: uid('z'), name: name, x: x, y: y, w: w, h: h};
         zones.push(z);
         renderAll();
         saveZoneToFirestore(z);
@@ -426,15 +394,14 @@
       cancelDrawing();
     });
   }
-
   function openNameModal(callback){
     zoneNameInput.value = '';
     nameModal.classList.remove('hidden');
     setTimeout(function(){ zoneNameInput.focus(); }, 0);
     function cleanup(result){
       nameModal.classList.add('hidden');
-      document.getElementById('zoneNameSave').removeEventListener('click', onSave);
-      document.getElementById('zoneNameCancel').removeEventListener('click', onCancel);
+      byId('zoneNameSave').removeEventListener('click', onSave);
+      byId('zoneNameCancel').removeEventListener('click', onCancel);
       zoneNameInput.removeEventListener('keydown', onKeydown);
       callback(result);
     }
@@ -444,109 +411,188 @@
       if(e.key === 'Enter'){ onSave(); }
       if(e.key === 'Escape'){ onCancel(); }
     }
-    document.getElementById('zoneNameSave').addEventListener('click', onSave);
-    document.getElementById('zoneNameCancel').addEventListener('click', onCancel);
+    byId('zoneNameSave').addEventListener('click', onSave);
+    byId('zoneNameCancel').addEventListener('click', onCancel);
     zoneNameInput.addEventListener('keydown', onKeydown);
   }
 
-  function openEquipModal(callback){
-    var equipModal = document.getElementById('equipModal');
-    var nameEl = document.getElementById('equipNameInput');
-    var modelEl = document.getElementById('equipModelInput');
-    var noteEl = document.getElementById('equipNoteInput');
-    nameEl.value = ''; modelEl.value = ''; noteEl.value = '';
-    equipModal.classList.remove('hidden');
-    setTimeout(function(){ nameEl.focus(); }, 0);
-    function cleanup(result){
-      equipModal.classList.add('hidden');
-      document.getElementById('equipSave').removeEventListener('click', onSave);
-      document.getElementById('equipCancel').removeEventListener('click', onCancel);
-      callback(result);
+  // ---- 설비/공기구 항목(트리) ----
+  function openNodeModal(opts){
+    nodeModalCtx = opts;
+    var n = opts.node || null;
+    var cat = n ? n.category : opts.category;
+    var isLeaf = opts.mode === 'add' ? true : !hasChildren(n.id);
+    var parent = (opts.mode === 'add' && opts.parentId) ? findNode(opts.parentId) : null;
+    byId('nodeModalTitle').textContent = opts.mode === 'add'
+      ? (parent ? '"' + parent.name + '" 아래에 하위 항목 추가' : CAT_LABEL[cat] + ' 추가')
+      : '항목 수정';
+    byId('nodeName').value = n ? n.name : '';
+    byId('nodeName').placeholder = cat === 'tool' ? '예: 청소도구, 스퀴즈(청색)' : '예: 자숙탱크1, 원심펌프, 메카니칼씰';
+    byId('nodeNote').value = n ? n.note : '';
+    byId('nodeCycleVal').value = (n && n.cycleValue) ? n.cycleValue : '';
+    byId('nodeCycleUnit').value = n ? n.cycleUnit : 'month';
+    byId('nodeLastDate').value = n ? n.lastDate : '';
+    byId('nodeStdQty').value = (n && n.stdQty !== null && n.stdQty !== undefined) ? n.stdQty : '';
+    byId('leafFields').style.display = isLeaf ? '' : 'none';
+    byId('nonLeafNote').style.display = isLeaf ? 'none' : '';
+    byId('qtyWrap').style.display = cat === 'tool' ? '' : 'none';
+    var warn = byId('parentWarn');
+    if(parent && !hasChildren(parent.id) && parent.cycleValue){
+      warn.textContent = '"' + parent.name + '"에 입력된 점검주기는 하위 항목이 생기면 더 이상 표시·적용되지 않습니다.';
+      warn.style.display = '';
+    } else {
+      warn.style.display = 'none';
     }
-    function onSave(){
-      var name = nameEl.value.trim();
-      if(!name){ nameEl.focus(); return; }
-      cleanup({name: name, model: modelEl.value.trim(), note: noteEl.value.trim()});
-    }
-    function onCancel(){ cleanup(null); }
-    document.getElementById('equipSave').addEventListener('click', onSave);
-    document.getElementById('equipCancel').addEventListener('click', onCancel);
+    nodeModal.classList.remove('hidden');
+    setTimeout(function(){ byId('nodeName').focus(); }, 0);
   }
-
+  function closeNodeModal(){
+    nodeModal.classList.add('hidden');
+    nodeModalCtx = null;
+  }
+  function onNodeSave(){
+    var ctx = nodeModalCtx;
+    if(!ctx) return;
+    var name = byId('nodeName').value.trim();
+    if(!name){ byId('nodeName').focus(); return; }
+    var cv = parseInt(byId('nodeCycleVal').value, 10);
+    var qv = byId('nodeStdQty').value;
+    var leafShown = byId('leafFields').style.display !== 'none';
+    var n;
+    if(ctx.mode === 'add'){
+      n = {
+        id: uid('n'), zoneId: selectedZoneId, parentId: ctx.parentId || null, category: ctx.category,
+        name: '', note: '', cycleValue: null, cycleUnit: 'month', lastDate: '', stdQty: null, order: Date.now()
+      };
+      nodes.push(n);
+      if(ctx.parentId){ collapsed[ctx.parentId] = false; }
+    } else {
+      n = ctx.node;
+    }
+    n.name = name;
+    n.note = byId('nodeNote').value.trim();
+    if(leafShown){
+      n.cycleValue = cv > 0 ? cv : null;
+      n.cycleUnit = byId('nodeCycleUnit').value;
+      n.lastDate = byId('nodeLastDate').value || '';
+      n.stdQty = (n.category === 'tool' && qv !== '') ? Math.max(0, parseInt(qv, 10) || 0) : null;
+    }
+    closeNodeModal();
+    saveNodeToFirestore(n);
+    renderAll();
+    renderDetailPanel(selectedZoneId);
+  }
+  function deleteNode(n){
+    var desc = descendantIds(n.id);
+    var msg = desc.length
+      ? '"' + n.name + '"와(과) 그 아래 하위 항목 ' + desc.length + '개를 모두 삭제할까요?'
+      : '"' + n.name + '"을(를) 삭제할까요?';
+    if(!confirm(msg)) return;
+    var ids = [n.id].concat(desc);
+    nodes = nodes.filter(function(x){ return ids.indexOf(x.id) < 0; });
+    deleteNodesFromFirestore(ids);
+    renderAll();
+    renderDetailPanel(selectedZoneId);
+  }
+  function renderTree(zoneId, category, parentId, prefix){
+    var list = childrenOf(zoneId, category, parentId);
+    if(!list.length) return '';
+    var h = '<ul>';
+    list.forEach(function(n, i){
+      var no = (prefix ? prefix + '.' : '') + (i + 1);
+      var kids = hasChildren(n.id);
+      var isCol = !!collapsed[n.id];
+      h += '<li><div class="node-row" data-node-id="' + n.id + '">';
+      h += '<span class="tg" data-act="toggle" data-id="' + n.id + '">' + (kids ? (isCol ? '▸' : '▾') : '·') + '</span>';
+      h += '<span class="nm"><span class="no">' + no + '</span>' + escapeHtml(n.name);
+      if(n.note){ h += ' <span class="memo">(' + escapeHtml(n.note) + ')</span>'; }
+      if(kids){
+        var od = overdueUnder(n.id);
+        if(od > 0){ h += '<span class="badge b-bad">하위 지연 ' + od + '</span>'; }
+      } else {
+        var st = nodeStatus(n);
+        if(n.cycleValue){ h += '<span class="badge b-gray">주기 ' + n.cycleValue + UNIT_LABEL[n.cycleUnit] + '</span>'; }
+        h += '<span class="badge ' + st.cls + '">' + st.text + '</span>';
+        if(n.category === 'tool' && n.stdQty !== null && n.stdQty !== undefined){
+          h += '<span class="badge b-gray">기준 ' + n.stdQty + '개</span>';
+        }
+      }
+      h += '</span><span class="acts">' +
+        '<button data-act="add" data-id="' + n.id + '" title="하위 항목 추가">+하위</button>' +
+        '<button data-act="edit" data-id="' + n.id + '">수정</button>' +
+        '<button class="danger" data-act="del" data-id="' + n.id + '">삭제</button>' +
+        '</span></div>';
+      if(kids && !isCol){ h += renderTree(zoneId, category, n.id, no); }
+      h += '</li>';
+    });
+    return h + '</ul>';
+  }
   function renderDetailPanel(zoneId){
     var z = zones.find(function(zz){ return zz.id === zoneId; });
     if(!z){
-      detailPanel.innerHTML = '<span class="placeholder">구역을 클릭하면 여기에 설비 목록이 표시될 예정입니다.</span>';
+      detailPanel.innerHTML = '<span class="placeholder">구역을 클릭하면 여기에 설비·공기구 목록이 표시됩니다.</span>';
       return;
     }
-    var list = equipment.filter(function(e){ return e.zoneId === zoneId; });
-    var html = '<strong>' + escapeHtml(z.name) + '</strong>';
-    html += '<div style="margin-top:10px;font-weight:600;font-size:12px;color:#555;">설비 목록 (' + list.length + ')</div>';
-    if(list.length === 0){
-      html += '<div class="placeholder" style="margin:6px 0;">등록된 설비가 없습니다.</div>';
-    } else {
-      html += '<ul style="list-style:none;margin:6px 0;padding:0;">';
-      list.forEach(function(e){
-        html += '<li data-equip-id="' + e.id + '" style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #eee;font-size:12px;">' +
-          '<span><strong>' + escapeHtml(e.name) + '</strong>' +
-          (e.model ? ' <span style="color:#888;">· ' + escapeHtml(e.model) + '</span>' : '') +
-          (e.note ? '<br><span style="color:#888;font-size:11px;">' + escapeHtml(e.note) + '</span>' : '') +
-          '</span>' +
-          '<button class="danger equip-del-btn" data-equip-id="' + e.id + '" style="flex-shrink:0;margin-left:8px;">삭제</button>' +
-          '</li>';
-      });
-      html += '</ul>';
-    }
-    html += '<button id="btnAddEquipment" class="primary" style="margin-top:6px;">+ 설비 추가</button>';
-    html += '<div class="placeholder" style="margin-top:10px;font-size:11px;">부품 · 점검주기 · 점검이력은 다음 단계에서 각 설비에 연결됩니다.</div>';
-    detailPanel.innerHTML = html;
-
-    document.getElementById('btnAddEquipment').addEventListener('click', function(){
-      openEquipModal(function(result){
-        if(result){ addEquipment(zoneId, result.name, result.model, result.note); }
-      });
+    var h = '<div style="font-size:15px;font-weight:700;">' + escapeHtml(z.name) + '</div>';
+    ['equip', 'tool'].forEach(function(cat){
+      h += '<div class="sec-title"><span>■ ' + CAT_LABEL[cat] + '</span>' +
+        '<button class="primary" data-act="addtop" data-cat="' + cat + '">+ ' + CAT_LABEL[cat] + ' 추가</button></div>';
+      var t = renderTree(zoneId, cat, null, '');
+      h += t ? '<div class="tree">' + t + '</div>' : '<div class="placeholder" style="font-size:12px;">등록된 항목이 없습니다.</div>';
     });
-    detailPanel.querySelectorAll('.equip-del-btn').forEach(function(btn){
-      btn.addEventListener('click', function(evt){
-        deleteEquipment(btn.dataset.equipId, zoneId, evt);
-      });
-    });
+    h += '<div class="placeholder" style="margin-top:12px;font-size:11px;line-height:1.5;">점검주기는 맨 아래 항목에만 입력합니다. 점검 기록(점검일·입력자·이상 유무·교체 여부·수량)은 다음 단계에서 연결됩니다.</div>';
+    detailPanel.innerHTML = h;
   }
+  detailPanel.addEventListener('click', function(evt){
+    var el = evt.target.closest('[data-act]');
+    if(!el) return;
+    var act = el.dataset.act;
+    var id = el.dataset.id;
+    if(act === 'toggle'){
+      if(hasChildren(id)){ collapsed[id] = !collapsed[id]; renderDetailPanel(selectedZoneId); }
+      return;
+    }
+    if(act === 'addtop'){ openNodeModal({mode: 'add', category: el.dataset.cat, parentId: null}); return; }
+    var n = findNode(id);
+    if(!n) return;
+    if(act === 'add'){ openNodeModal({mode: 'add', category: n.category, parentId: n.id}); }
+    else if(act === 'edit'){ openNodeModal({mode: 'edit', node: n}); }
+    else if(act === 'del'){ deleteNode(n); }
+  });
+  byId('nodeSave').addEventListener('click', onNodeSave);
+  byId('nodeCancel').addEventListener('click', closeNodeModal);
+  nodeModal.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){ closeNodeModal(); }
+    if(e.key === 'Enter' && e.target.id === 'nodeName'){ onNodeSave(); }
+  });
 
+  // ---- 구역 선택/삭제/렌더 ----
   function selectZone(id){
     selectedZoneId = id;
     renderAll();
     renderDetailPanel(id);
   }
-
   function deleteZone(id, evt){
     if(evt) evt.stopPropagation();
-    var hasEquip = equipment.some(function(e){ return e.zoneId === id; });
-    var msg = hasEquip
-      ? '이 구역에는 등록된 설비가 있습니다. 구역을 삭제해도 설비 데이터는 남아있지만 화면에서 연결이 끊깁니다. 그래도 삭제할까요?'
+    var cnt = nodes.filter(function(n){ return n.zoneId === id; }).length;
+    var msg = cnt
+      ? '이 구역에는 설비·공기구 항목 ' + cnt + '개가 등록되어 있습니다. 구역을 삭제해도 항목 데이터는 남지만 화면에서 연결이 끊깁니다. 그래도 삭제할까요?'
       : '이 구역을 삭제할까요?';
     if(!confirm(msg)) return;
     zones = zones.filter(function(z){ return z.id !== id; });
     if(selectedZoneId === id){
       selectedZoneId = null;
-      detailPanel.innerHTML = '<span class="placeholder">구역을 클릭하면 여기에 설비 목록이 표시될 예정입니다.</span>';
+      renderDetailPanel(null);
     }
     renderAll();
     deleteZoneFromFirestore(id);
   }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, function(c){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-    });
-  }
-
   function renderZonesOnImage(){
-    var existing = overlay.querySelectorAll('.zone-box');
-    existing.forEach(function(el){ el.remove(); });
+    overlay.querySelectorAll('.zone-box').forEach(function(el){ el.remove(); });
     zones.forEach(function(z){
+      var od = overdueInZone(z.id);
       var box = document.createElement('div');
-      box.className = 'zone-box' + (z.id === selectedZoneId ? ' selected' : '');
+      box.className = 'zone-box' + (od > 0 ? ' alert' : '') + (z.id === selectedZoneId ? ' selected' : '');
       box.style.left = z.x + '%';
       box.style.top = z.y + '%';
       box.style.width = z.w + '%';
@@ -554,7 +600,7 @@
       box.dataset.zoneId = z.id;
       var label = document.createElement('span');
       label.className = 'zone-label';
-      label.textContent = z.name;
+      label.textContent = z.name + (od > 0 ? ' (지연 ' + od + ')' : '');
       box.appendChild(label);
       box.addEventListener('click', function(evt){
         if(editMode) return;
@@ -564,7 +610,6 @@
       overlay.appendChild(box);
     });
   }
-
   function renderZoneList(){
     zoneListEl.innerHTML = '';
     zoneCountEl.textContent = zones.length;
@@ -581,6 +626,13 @@
       var nameSpan = document.createElement('span');
       nameSpan.textContent = z.name;
       nameSpan.style.cursor = 'pointer';
+      var od = overdueInZone(z.id);
+      if(od > 0){
+        var c = document.createElement('span');
+        c.className = 'zone-cnt';
+        c.textContent = '지연 ' + od;
+        nameSpan.appendChild(c);
+      }
       nameSpan.addEventListener('click', function(){ selectZone(z.id); });
       var delBtn = document.createElement('button');
       delBtn.textContent = '삭제';
@@ -591,14 +643,14 @@
       zoneListEl.appendChild(li);
     });
   }
-
   function renderAll(){
     renderZonesOnImage();
     renderZoneList();
   }
 
+  // ---- 구역 내보내기/가져오기 ----
   function exportZones(){
-    var blob = new Blob([JSON.stringify(zones, null, 2)], {type:'application/json'});
+    var blob = new Blob([JSON.stringify(zones, null, 2)], {type: 'application/json'});
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
@@ -608,7 +660,6 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
-
   function importZones(file){
     var reader = new FileReader();
     reader.onload = function(){
@@ -618,6 +669,7 @@
           zones = data;
           selectedZoneId = null;
           renderAll();
+          renderDetailPanel(null);
         }
       }catch(e){
         alert('zones.json 형식이 올바르지 않습니다.');
@@ -627,29 +679,26 @@
   }
 
   btnEditMode.addEventListener('click', function(){ setEditMode(!editMode); });
-  document.getElementById('btnExport').addEventListener('click', exportZones);
-  document.getElementById('btnImportTrigger').addEventListener('click', function(){
-    document.getElementById('importFile').click();
-  });
-  document.getElementById('importFile').addEventListener('change', function(evt){
+  byId('btnExport').addEventListener('click', exportZones);
+  byId('btnImportTrigger').addEventListener('click', function(){ byId('importFile').click(); });
+  byId('importFile').addEventListener('change', function(evt){
     if(evt.target.files && evt.target.files[0]){
       importZones(evt.target.files[0]);
       evt.target.value = '';
     }
   });
-
   overlay.addEventListener('mousedown', onOverlayMouseDown);
   window.addEventListener('mousemove', onOverlayMouseMove);
   window.addEventListener('mouseup', onOverlayMouseUp);
 
-  loadZonesFromFirestore();
-  loadEquipmentFromFirestore();
+  loadAll();
 
-  // Exposed for automated testing (Node/jsdom + Playwright verification).
+  // 자동 검증용 (Node/jsdom · Playwright)
   window.__zoneApp = {
     getZones: function(){ return zones.slice(); },
+    getNodes: function(){ return nodes.slice(); },
     addZoneProgrammatic: function(z){
-      var zz = Object.assign({id: uid()}, z);
+      var zz = Object.assign({id: uid('z')}, z);
       zones.push(zz);
       renderAll();
       saveZoneToFirestore(zz);
@@ -657,8 +706,8 @@
     },
     setEditMode: setEditMode,
     selectZone: selectZone,
-    getEquipment: function(){ return equipment.slice(); },
-    addEquipment: addEquipment
+    nodeStatus: nodeStatus,
+    addCycle: addCycle
   };
 })();
 </script>
