@@ -27,12 +27,27 @@
   #topPanel{padding:10px 12px;margin-bottom:12px;}
   .zone-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
   .bar-label{font-size:12px;font-weight:700;color:#475467;margin-right:4px;white-space:nowrap;}
-  .zchip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:14px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;white-space:nowrap;}
+  .zchip{position:relative;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:14px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;white-space:nowrap;}
   .zchip:hover{border-color:var(--accent);}
   .zchip.selected{background:var(--sel);border-color:var(--sel);color:#fff;font-weight:600;}
   .zchip .cnt{font-size:10px;color:#fff;background:var(--danger);border-radius:9px;padding:0 6px;}
-  .zchip .zx{font-size:11px;color:var(--danger);border-left:1px solid #eee;padding-left:5px;margin-left:2px;}
-  .zchip.selected .zx{color:#fff;}
+  .zchip .zx{position:absolute;top:-7px;right:-7px;width:17px;height:17px;border-radius:50%;background:#fff;border:1px solid var(--danger);color:var(--danger);font-size:9px;line-height:15px;text-align:center;z-index:3;}
+  .zchip .zx:hover{background:var(--danger);color:#fff;}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:3px;border:1px solid rgba(0,0,0,0.15);flex-shrink:0;}
+  .dot.untyped{background:#fff;border:1px dashed #98a2b3;}
+  .legend{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:#475467;}
+  .legend span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
+  .legend button{padding:3px 8px;font-size:11px;}
+  .zset{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;}
+  .zset input,.zset select{padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;}
+  .zset input{width:180px;}
+  .zset button{padding:5px 10px;font-size:12px;}
+  .tbadge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:1px 8px;border-radius:10px;}
+  .trow{display:grid;grid-template-columns:44px 1fr 80px 60px;gap:8px;align-items:center;margin-bottom:8px;}
+  .trow input[type=color]{width:44px;height:34px;padding:2px;margin:0;cursor:pointer;}
+  .trow input[type=text]{margin:0;}
+  .trow .cnt{font-size:12px;color:#667085;}
+  .trow button{padding:4px 6px;font-size:12px;}
   #zoneItems{margin-top:8px;border-top:1px solid #eef0f3;padding-top:8px;height:124px;overflow:auto;}
   .zi-head{display:flex;align-items:baseline;gap:10px;margin-bottom:6px;}
   .zi-head .zname{font-size:15px;font-weight:700;}
@@ -56,12 +71,13 @@
   .plan-inner{position:absolute;left:var(--cL,0);top:var(--cT,0);width:var(--cW,100%);height:var(--cH,100%);}
   #floorplanImg{display:block;width:100%;height:100%;pointer-events:none;}
   #overlay{position:absolute;inset:0;}
-  .zone-box{position:absolute;border:2px solid var(--accent);background:var(--accent-fill);cursor:pointer;}
-  .zone-box.alert{border-color:var(--danger);background:rgba(224,71,63,0.16);}
-  .zone-box.selected{border-color:var(--sel);background:rgba(255,138,0,0.22);}
-  .zone-label{position:absolute;top:-2px;left:2px;transform:translateY(-100%);background:var(--accent);color:#fff;font-size:11px;padding:1px 6px;border-radius:4px 4px 0 0;white-space:nowrap;line-height:1.3;}
-  .zone-box.alert .zone-label{background:var(--danger);}
-  .zone-box.selected .zone-label{background:var(--sel);}
+  .zone-box{position:absolute;--zc:#98a2b3;--zf:rgba(152,162,179,0.16);--zfs:rgba(152,162,179,0.32);--zt:#fff;border:2px solid var(--zc);background:var(--zf);cursor:pointer;}
+  .zone-box.untyped{border-style:dashed;}
+  .zone-box.alert{border-color:var(--danger);}
+  .zone-box.selected{border-color:var(--sel);border-width:3px;background:var(--zfs);box-shadow:0 0 0 2px rgba(255,138,0,0.35);z-index:2;}
+  .zone-label{position:absolute;top:-2px;left:2px;transform:translateY(-100%);background:var(--zc);color:var(--zt);font-size:11px;padding:1px 6px;border-radius:4px 4px 0 0;white-space:nowrap;line-height:1.3;}
+  .zone-box.alert .zone-label{background:var(--danger);color:#fff;}
+  .zone-box.selected .zone-label{background:var(--sel);color:#fff;}
   .drag-preview{position:absolute;border:2px dashed var(--accent);background:rgba(47,111,237,0.10);pointer-events:none;}
   #detailPanel{flex:1 1 auto;min-width:0;height:var(--panelH);overflow:auto;padding:14px 16px;font-size:13px;color:#333;}
 
@@ -183,12 +199,14 @@
     <div id="detailPanel" class="card"></div>
   </div>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.4 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.5 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
     <label for="zoneNameInput">구역 이름</label>
     <input id="zoneNameInput" type="text" placeholder="예: 자숙실, 내포장실">
+    <label for="zoneTypeInput">구역 구분</label>
+    <select id="zoneTypeInput"></select>
     <div class="modal-actions">
       <button id="zoneNameCancel">취소</button>
       <button id="zoneNameSave" class="primary">저장</button>
@@ -273,6 +291,21 @@
   </div>
 </div>
 
+<div class="modal hidden" id="typeModal">
+  <div class="modal-box mid">
+    <div class="m-title">구역 구분 · 색상 관리</div>
+    <div class="muted">색상 칸을 눌러 색을 고르고, 이름을 바꾼 뒤 저장하세요. 구분을 지우면 그 구분이던 구역은 '미지정'(회색 점선)이 됩니다.</div>
+    <div class="trow" style="font-size:11px;color:#667085;margin-bottom:4px;"><span>색상</span><span>구분 이름</span><span>배정 구역</span><span></span></div>
+    <div id="typeRows"></div>
+    <button id="typeAdd">+ 구분 추가</button>
+    <div class="modal-actions" style="margin-top:14px;">
+      <span id="typeMsg" class="muted" style="margin:0 auto 0 0;color:#b42318;"></span>
+      <button id="typeCancel">취소</button>
+      <button id="typeSave" class="primary">저장</button>
+    </div>
+  </div>
+</div>
+
 <div id="lightbox" class="hidden"><img alt=""></div>
 
 <script>
@@ -289,6 +322,14 @@
   var photoNodeId = null;
   var selectedItemId = null;
   var photoCache = {};
+  // 구역 구분(청결/일반 등): DB가 비어 있으면 아래 기본값을 쓰고, 관리 화면에서 저장할 때 DB에 기록
+  var DEFAULT_TYPES = [
+    {id: 'clean', name: '청결구역', color: '#16a34a', order: 1},
+    {id: 'general', name: '일반구역', color: '#2f6fed', order: 2}
+  ];
+  var zoneTypes = DEFAULT_TYPES.map(function(t){ return Object.assign({}, t); });
+  var lastTypeId = '';
+  var typeDraft = null;
 
   var CAT_LABEL = {equip: '설비', tool: '공기구'};
   var UNIT_LABEL = {day: '일', week: '주', month: '개월'};
@@ -312,6 +353,7 @@
   var ZONES_COL = 'claimdefense_zones';
   var NODES_COL = 'claimdefense_nodes';
   var PHOTOS_COL = 'claimdefense_photos';
+  var TYPES_COL = 'claimdefense_zonetypes';
   function initFB(){
     try{
       if(FB_DB) return FB_DB;
@@ -365,12 +407,20 @@
       return;
     }
     setStatus('불러오는 중...');
-    Promise.all([db.collection(ZONES_COL).get(), db.collection(NODES_COL).get()]).then(function(res){
+    Promise.all([db.collection(ZONES_COL).get(), db.collection(NODES_COL).get(), db.collection(TYPES_COL).get()]).then(function(res){
       zones = [];
       res[0].forEach(function(doc){
         var d = doc.data();
-        zones.push({id: doc.id, name: d.name, x: d.x, y: d.y, w: d.w, h: d.h});
+        zones.push({id: doc.id, name: d.name, x: d.x, y: d.y, w: d.w, h: d.h, typeId: d.typeId || ''});
       });
+      if(!res[2].empty){
+        zoneTypes = [];
+        res[2].forEach(function(doc){
+          var d = doc.data();
+          zoneTypes.push({id: doc.id, name: d.name, color: d.color, order: d.order || 0});
+        });
+        zoneTypes.sort(function(a, b){ return a.order - b.order; });
+      }
       nodes = [];
       res[1].forEach(function(doc){ nodes.push(nodeFromDoc(doc.id, doc.data())); });
       renderAll();
@@ -383,7 +433,7 @@
   }
   function saveZoneToFirestore(z){
     var db = initFB(); if(!db) return;
-    db.collection(ZONES_COL).doc(z.id).set({name: z.name, x: z.x, y: z.y, w: z.w, h: z.h, updatedAt: Date.now()}).then(saveOk).catch(saveFail);
+    db.collection(ZONES_COL).doc(z.id).set({name: z.name, x: z.x, y: z.y, w: z.w, h: z.h, typeId: z.typeId || '', updatedAt: Date.now()}).then(saveOk).catch(saveFail);
   }
   function deleteZoneFromFirestore(id){
     var db = initFB(); if(!db) return;
@@ -471,6 +521,31 @@
   }
   function overdueUnder(id){
     return descendantIds(id).filter(function(did){ return isOverdueLeaf(findNode(did)); }).length;
+  }
+  function typeById(id){ return id ? zoneTypes.find(function(t){ return t.id === id; }) || null : null; }
+  function zoneType(z){ return z ? typeById(z.typeId) : null; }
+  function hexToRgb(hex){
+    var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+    if(!m) return null;
+    var v = parseInt(m[1], 16);
+    return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+  }
+  function rgba(hex, a){ var c = hexToRgb(hex) || [152, 162, 179]; return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; }
+  function textOn(hex){
+    var c = hexToRgb(hex) || [152, 162, 179];
+    var lum = (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255;
+    return lum > 0.62 ? '#1c2430' : '#fff';
+  }
+  function typeBadge(t){
+    if(!t) return '<span class="tbadge" style="background:#f2f4f7;color:#667085;"><i class="dot untyped"></i>미지정</span>';
+    return '<span class="tbadge" style="background:' + rgba(t.color, 0.14) + ';color:#1c2430;"><i class="dot" style="background:' + escapeHtml(t.color) + ';"></i>' + escapeHtml(t.name) + '</span>';
+  }
+  function typeOptions(selected){
+    var h = '<option value="">미지정</option>';
+    zoneTypes.forEach(function(t){
+      h += '<option value="' + escapeHtml(t.id) + '"' + (t.id === selected ? ' selected' : '') + '>' + escapeHtml(t.name) + '</option>';
+    });
+    return h;
   }
 
   // ---- 사진 (긴 변 1280px JPEG로 줄여 Firestore에 저장) ----
@@ -629,6 +704,8 @@
     btnEditMode.classList.toggle('active', on);
     if(!on){ cancelDrawing(); }
     renderZoneBar();
+    renderZoneItems();
+    renderDetail();
     layoutPlan();
   }
   function cancelDrawing(){
@@ -671,11 +748,20 @@
     var y = parseFloat(pendingRect.dataset.y);
     var w = parseFloat(pendingRect.dataset.w);
     var h = parseFloat(pendingRect.dataset.h);
-    if(w < 1 || h < 1){ cancelDrawing(); return; }
-    openNameModal(function(name){
-      if(name){
-        var z = {id: uid('z'), name: name, x: x, y: y, w: w, h: h};
+    if(w < 1 || h < 1){
+      // 편집 모드에서 드래그 없이 클릭하면 그 위치의 구역을 선택
+      var hit = zones.filter(function(zz){ return x >= zz.x && x <= zz.x + zz.w && y >= zz.y && y <= zz.y + zz.h; })
+        .sort(function(a, b){ return a.w * a.h - b.w * b.h; })[0];
+      cancelDrawing();
+      if(hit){ selectZone(hit.id); }
+      return;
+    }
+    openNameModal(function(res){
+      if(res && res.name){
+        var z = {id: uid('z'), name: res.name, x: x, y: y, w: w, h: h, typeId: res.typeId};
         zones.push(z);
+        selectedZoneId = z.id;
+        selectedItemId = null;
         renderAll();
         saveZoneToFirestore(z);
       }
@@ -684,6 +770,7 @@
   }
   function openNameModal(callback){
     zoneNameInput.value = '';
+    byId('zoneTypeInput').innerHTML = typeOptions(typeById(lastTypeId) ? lastTypeId : '');
     nameModal.classList.remove('hidden');
     setTimeout(function(){ zoneNameInput.focus(); }, 0);
     function cleanup(result){
@@ -693,7 +780,12 @@
       zoneNameInput.removeEventListener('keydown', onKeydown);
       callback(result);
     }
-    function onSave(){ cleanup(zoneNameInput.value.trim()); }
+    function onSave(){
+      var nm = zoneNameInput.value.trim();
+      if(!nm){ zoneNameInput.focus(); return; }
+      lastTypeId = byId('zoneTypeInput').value;
+      cleanup({name: nm, typeId: lastTypeId});
+    }
     function onCancel(){ cleanup(null); }
     function onKeydown(e){
       if(e.key === 'Enter'){ onSave(); }
@@ -831,6 +923,20 @@
   function renderZoneItems(){
     var box = byId('zoneItems');
     var z = zones.find(function(zz){ return zz.id === selectedZoneId; });
+    if(editMode){
+      if(!z){
+        box.innerHTML = '<div class="zi-empty"><b>구역 편집 모드</b> · 도면에 드래그하면 새 구역을 그립니다(이름·구분 입력).<br>' +
+          '기존 구역의 이름이나 구분을 바꾸려면 위 작업장 버튼을 누르거나 도면의 구역을 클릭하세요. 구분 목록과 색상은 오른쪽 위 <b>구분·색상 관리</b>에서 바꿉니다.</div>';
+        return;
+      }
+      box.innerHTML = '<div class="zi-head"><span class="zname">구역 설정</span><span class="zsum">이름과 구분을 바꾼 뒤 저장하세요. 설비·공기구 목록은 편집 모드를 끄면 보입니다.</span></div>' +
+        '<div class="zset"><label>이름 <input id="zsName" type="text" value="' + escapeHtml(z.name) + '"></label>' +
+        '<label>구분 <select id="zsType">' + typeOptions(zoneType(z) ? z.typeId : '') + '</select></label>' +
+        '<button class="primary" data-act="zsave" data-id="' + z.id + '">저장</button>' +
+        '<button class="danger" data-act="zdel" data-id="' + z.id + '">구역 삭제</button>' +
+        '<span id="zsMsg" class="placeholder"></span></div>';
+      return;
+    }
     if(!z){
       box.innerHTML = '<div class="zi-empty">도면의 구역이나 위 작업장 버튼을 누르면, 그 작업장의 <b>설비·공기구 목록</b>이 여기에 나옵니다.<br>' +
         '목록에서 항목을 누르면 도면 오른쪽에 하위 부품·점검주기·사진이 펼쳐집니다. 처음 등록은 상단 <b>일괄 등록</b>이나 작업장 선택 후 <b>+ 추가</b>로 합니다.<br>' +
@@ -839,7 +945,7 @@
     }
     var all = nodes.filter(function(n){ return n.zoneId === z.id; });
     var zs = countStatus(all.filter(function(n){ return !hasChildren(n.id); }));
-    var h = '<div class="zi-head"><span class="zname">' + escapeHtml(z.name) + '</span>' +
+    var h = '<div class="zi-head"><span class="zname">' + escapeHtml(z.name) + '</span>' + typeBadge(zoneType(z)) +
       '<span class="zsum">설비 ' + childrenOf(z.id, 'equip', null).length + ' · 공기구 ' + childrenOf(z.id, 'tool', null).length +
       ' · 점검 대상 ' + zs.total + (zs.bad ? ' · <b style="color:#b42318;">지연 ' + zs.bad + '</b>' : '') + (zs.warn ? ' · <span style="color:#a15c00;">임박 ' + zs.warn + '</span>' : '') + '</span></div>';
     h += '<div class="zi-cols">';
@@ -1012,6 +1118,8 @@
     }
     if(act === 'zone'){ selectZone(id); return; }
     if(act === 'zdel'){ deleteZone(id, evt); return; }
+    if(act === 'zsave'){ saveZoneSettings(id); return; }
+    if(act === 'types'){ if(editMode){ openTypeModal(); } return; }
     if(act === 'close'){ selectedItemId = null; renderAll(); return; }
     if(act === 'allzones'){ selectedZoneId = null; selectedItemId = null; renderAll(); return; }
     if(act === 'addtop'){ openNodeModal({mode: 'add', category: el.dataset.cat, parentId: null}); return; }
@@ -1420,6 +1528,85 @@
     runImport(p);
   });
 
+  // ---- 구역 설정 · 구분/색상 관리 ----
+  function saveZoneSettings(id){
+    var z = zones.find(function(zz){ return zz.id === id; });
+    if(!z) return;
+    var nm = byId('zsName').value.trim();
+    if(!nm){ byId('zsMsg').textContent = '이름을 입력하세요.'; byId('zsName').focus(); return; }
+    z.name = nm;
+    z.typeId = byId('zsType').value;
+    lastTypeId = z.typeId;
+    saveZoneToFirestore(z);
+    renderAll();
+    var msg = byId('zsMsg');
+    if(msg){ msg.textContent = '저장됨'; }
+  }
+  function zoneCountByType(id){ return zones.filter(function(z){ return z.typeId === id; }).length; }
+  function openTypeModal(){
+    typeDraft = zoneTypes.map(function(t){ return Object.assign({}, t); });
+    byId('typeMsg').textContent = '';
+    renderTypeRows();
+    byId('typeModal').classList.remove('hidden');
+  }
+  function renderTypeRows(){
+    byId('typeRows').innerHTML = typeDraft.map(function(t, i){
+      var cnt = t.id ? zoneCountByType(t.id) : 0;
+      return '<div class="trow" data-i="' + i + '">' +
+        '<input type="color" data-f="color" value="' + escapeHtml(t.color) + '">' +
+        '<input type="text" data-f="name" value="' + escapeHtml(t.name) + '" placeholder="예: 준청결구역">' +
+        '<span class="cnt">' + cnt + '개 구역</span>' +
+        '<button class="danger" data-act="tdel">삭제</button></div>';
+    }).join('') || '<div class="placeholder" style="margin-bottom:8px;">구분이 없습니다. 모든 구역이 미지정으로 표시됩니다.</div>';
+  }
+  byId('typeRows').addEventListener('input', function(e){
+    var row = e.target.closest('.trow');
+    if(!row || !e.target.dataset.f) return;
+    typeDraft[+row.dataset.i][e.target.dataset.f] = e.target.value;
+  });
+  byId('typeRows').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-act="tdel"]');
+    if(!btn) return;
+    typeDraft.splice(+btn.closest('.trow').dataset.i, 1);
+    renderTypeRows();
+  });
+  byId('typeAdd').addEventListener('click', function(){
+    typeDraft.push({id: '', name: '', color: '#f59e0b', order: 0});
+    renderTypeRows();
+    var inputs = byId('typeRows').querySelectorAll('input[data-f="name"]');
+    if(inputs.length) inputs[inputs.length - 1].focus();
+  });
+  byId('typeCancel').addEventListener('click', function(){ byId('typeModal').classList.add('hidden'); typeDraft = null; });
+  byId('typeSave').addEventListener('click', function(){
+    var msg = byId('typeMsg');
+    var names = {};
+    for(var i = 0; i < typeDraft.length; i++){
+      var t = typeDraft[i];
+      t.name = String(t.name || '').trim();
+      if(!t.name){ msg.textContent = (i + 1) + '번째 구분의 이름을 입력하세요.'; return; }
+      if(names[t.name]){ msg.textContent = "'" + t.name + "' 이름이 중복됩니다."; return; }
+      if(!hexToRgb(t.color)){ msg.textContent = t.name + ' 색상이 올바르지 않습니다.'; return; }
+      names[t.name] = true;
+    }
+    var keepIds = {};
+    typeDraft.forEach(function(t, i){ if(!t.id){ t.id = uid('t'); } t.order = i + 1; keepIds[t.id] = true; });
+    var removed = zoneTypes.filter(function(t){ return !keepIds[t.id]; });
+    var orphanZones = zones.filter(function(z){ return z.typeId && !keepIds[z.typeId]; });
+    if(orphanZones.length && !confirm('삭제한 구분(' + removed.map(function(t){ return t.name; }).join(', ') + ')에 속한 구역 ' + orphanZones.length + '개가 미지정으로 바뀝니다. 저장할까요?')) return;
+    var db = initFB();
+    zoneTypes = typeDraft.map(function(t){ return {id: t.id, name: t.name, color: t.color.toLowerCase(), order: t.order}; });
+    orphanZones.forEach(function(z){ z.typeId = ''; });
+    byId('typeModal').classList.add('hidden');
+    typeDraft = null;
+    renderAll();
+    if(!db) return;
+    var b = db.batch();
+    zoneTypes.forEach(function(t){ b.set(db.collection(TYPES_COL).doc(t.id), {name: t.name, color: t.color, order: t.order, updatedAt: Date.now()}); });
+    removed.forEach(function(t){ b.delete(db.collection(TYPES_COL).doc(t.id)); });
+    orphanZones.forEach(function(z){ b.set(db.collection(ZONES_COL).doc(z.id), {name: z.name, x: z.x, y: z.y, w: z.w, h: z.h, typeId: '', updatedAt: Date.now()}); });
+    b.commit().then(saveOk).catch(saveFail);
+  });
+
   // ---- 구역 선택/삭제/렌더 ----
   function selectZone(id){
     if(selectedZoneId !== id){ selectedItemId = null; }
@@ -1446,8 +1633,15 @@
     overlay.querySelectorAll('.zone-box').forEach(function(el){ el.remove(); });
     zones.forEach(function(z){
       var od = overdueInZone(z.id);
+      var t = zoneType(z);
       var box = document.createElement('div');
-      box.className = 'zone-box' + (od > 0 ? ' alert' : '') + (z.id === selectedZoneId ? ' selected' : '');
+      box.className = 'zone-box' + (t ? '' : ' untyped') + (od > 0 ? ' alert' : '') + (z.id === selectedZoneId ? ' selected' : '');
+      if(t){
+        box.style.setProperty('--zc', t.color);
+        box.style.setProperty('--zf', rgba(t.color, 0.16));
+        box.style.setProperty('--zfs', rgba(t.color, 0.32));
+        box.style.setProperty('--zt', textOn(t.color));
+      }
       box.style.left = z.x + '%';
       box.style.top = z.y + '%';
       box.style.width = z.w + '%';
@@ -1456,6 +1650,7 @@
       var label = document.createElement('span');
       label.className = 'zone-label';
       label.textContent = z.name + (od > 0 ? ' (지연 ' + od + ')' : '');
+      box.title = z.name + ' · ' + (t ? t.name : '구분 미지정');
       box.appendChild(label);
       box.addEventListener('click', function(evt){
         if(editMode) return;
@@ -1472,10 +1667,19 @@
     }
     zones.forEach(function(z){
       var od = overdueInZone(z.id);
-      h += '<span class="zchip' + (z.id === selectedZoneId ? ' selected' : '') + '" data-act="zone" data-id="' + z.id + '">' + escapeHtml(z.name) +
+      var t = zoneType(z);
+      h += '<span class="zchip' + (z.id === selectedZoneId ? ' selected' : '') + '" data-act="zone" data-id="' + z.id + '">' +
+        (t ? '<i class="dot" style="background:' + escapeHtml(t.color) + ';"></i>' : '<i class="dot untyped"></i>') + escapeHtml(z.name) +
         (od > 0 ? '<span class="cnt">지연 ' + od + '</span>' : '') +
         (editMode ? '<span class="zx" data-act="zdel" data-id="' + z.id + '" title="구역 삭제">✕</span>' : '') + '</span>';
     });
+    h += '<span class="legend">';
+    zoneTypes.forEach(function(t){
+      h += '<span><i class="dot" style="background:' + escapeHtml(t.color) + ';"></i>' + escapeHtml(t.name) + '</span>';
+    });
+    h += '<span><i class="dot untyped"></i>미지정</span>';
+    h += '<button data-act="types"' + (editMode ? '' : ' style="visibility:hidden;" tabindex="-1" aria-hidden="true"') + '>구분·색상 관리</button>';
+    h += '</span>';
     byId('zoneBar').innerHTML = h;
   }
   function renderAll(){
@@ -1592,7 +1796,8 @@
     pathNames: function(id){ return pathNames(findNode(id)); },
     selectItem: selectItem,
     getState: function(){ return {zone: selectedZoneId, item: selectedItemId, editMode: editMode}; },
-    crop: CROP
+    crop: CROP,
+    getTypes: function(){ return zoneTypes.map(function(t){ return Object.assign({}, t); }); }
   };
 })();
 </script>
