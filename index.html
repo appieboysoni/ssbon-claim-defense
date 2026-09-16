@@ -1063,4 +1063,271 @@
       });
     });
     return chain.then(function(){
-      prog.textContent = '완료 · 항목 ' + savedCount + '개 저장 · 사진 ' + photoDone + '장 저장' +
+      prog.textContent = '완료 · 항목 ' + savedCount + '개 저장 · 사진 ' + photoDone + '장 저장' + (photoFail.length ? ' · 사진 실패 ' + photoFail.length + '장' : '');
+      if(photoFail.length){ alert('사진 저장 실패:\n' + photoFail.join('\n')); }
+      bulkPlan = null;
+      byId('bkPreview').disabled = false;
+      renderAll();
+      if(selectedZoneId) renderDetailPanel(selectedZoneId);
+      saveOk();
+    }).catch(function(e){
+      prog.textContent = '저장 중 오류: ' + (e.message || e) + ' — 새로고침 후 저장된 내용을 확인하세요.';
+      byId('bkPreview').disabled = false;
+      saveFail(e);
+    });
+  }
+  function downloadTemplate(){
+    loadXlsx().then(function(X){
+      var wb = X.utils.book_new();
+      var ws1 = X.utils.aoa_to_sheet([TEMPLATE_HEADERS]);
+      ws1['!cols'] = TEMPLATE_HEADERS.map(function(h){ return {wch: h === '사진파일명' ? 28 : (h.indexOf('단계') > 0 ? 16 : 11)}; });
+      X.utils.book_append_sheet(wb, ws1, '목록');
+      var ex = [TEMPLATE_HEADERS,
+        ['자숙실', '설비', '자숙탱크1', '', '', '', '', '', '', '', '', '', '자숙탱크1.jpg'],
+        ['자숙실', '설비', '자숙탱크1', '원심펌프', '메카니칼씰', '', '', '', 6, '개월', '2026-09-01', '', ''],
+        ['자숙실', '설비', '자숙탱크1', '원심펌프', '오링', '', '', '', 3, '개월', '2026-09-01', '', ''],
+        ['자숙실', '설비', '자숙탱크1', '배관', '오링', '', '', '', 3, '개월', '2026-09-01', '', ''],
+        ['자숙실', '공기구', '청소도구', '스퀴즈', '', '', '', '청색', 1, '주', '2026-09-14', 2, '스퀴즈_청색.jpg'],
+        ['자숙실', '공기구', '청소도구', '바닥솔', '', '', '', '백색', 1, '주', '2026-09-14', 3, '바닥솔_1.jpg, 바닥솔_2.jpg'],
+        ['자숙실', '공기구', '수리도구', '십자드라이버', '', '', '', '', 1, '개월', '', 1, '']];
+      var ws2 = X.utils.aoa_to_sheet(ex);
+      ws2['!cols'] = ws1['!cols'];
+      X.utils.book_append_sheet(wb, ws2, '작성예시');
+      var zl = [['구역 이름(이대로 적으세요)']].concat(zones.map(function(z){ return [z.name]; }));
+      var ws3 = X.utils.aoa_to_sheet(zl);
+      ws3['!cols'] = [{wch: 28}];
+      X.utils.book_append_sheet(wb, ws3, '구역목록');
+      var guide = [
+        ['작성 방법'],
+        ["1. '목록' 시트에 한 줄에 항목 하나씩 적습니다. 머리글(첫 줄)은 지우거나 바꾸지 마세요."],
+        ["2. 구역: '구역목록' 시트의 이름과 똑같이 적습니다."],
+        ["3. 구분: '설비' 또는 '공기구'."],
+        ['4. 1단계~5단계: 위에서부터 차례로 적습니다. 예) 자숙탱크1 / 원심펌프 / 메카니칼씰. 중간 단계는 자동으로 만들어지며, 같은 이름·같은 경로는 하나로 합쳐집니다.'],
+        ['5. 점검주기·주기단위·최근점검일은 맨 아래 항목에만 적습니다. 주기단위는 일/주/개월, 날짜는 2026-09-01 형식.'],
+        ['6. 기준수량은 공기구에만 적습니다.'],
+        ['7. 사진파일명: 올릴 사진의 파일 이름(확장자 포함). 여러 장은 쉼표로 구분. 설비 자체 사진은 그 설비만 적힌 줄(예: 1단계만 있는 줄)에 적습니다.'],
+        ['8. 이미 등록된 항목과 경로가 같으면 새로 만들지 않고, 적은 값만 덮어씁니다(빈 칸은 기존 값 유지). 같은 사진 파일명은 다시 올리지 않습니다.'],
+        ['9. 사진은 긴 변 1280px JPEG로 줄여서 저장됩니다.']
+      ];
+      var ws4 = X.utils.aoa_to_sheet(guide);
+      ws4['!cols'] = [{wch: 120}];
+      X.utils.book_append_sheet(wb, ws4, '작성방법');
+      X.writeFile(wb, '이물관리_일괄등록양식.xlsx');
+    }).catch(function(e){ alert(e.message || e); });
+  }
+  function readWorkbook(file){
+    return loadXlsx().then(function(X){
+      return file.arrayBuffer().then(function(buf){
+        var wb = X.read(buf, {type: 'array', cellDates: true});
+        var name = wb.SheetNames.indexOf('목록') >= 0 ? '목록' : wb.SheetNames[0];
+        return X.utils.sheet_to_json(wb.Sheets[name], {header: 1, raw: true, defval: ''});
+      });
+    });
+  }
+  function updatePhotoCount(){
+    byId('bkPhotoCount').textContent = '선택된 사진 ' + Object.keys(bulkPhotos).length + '장';
+  }
+  function addBulkPhotos(fileList){
+    Array.prototype.forEach.call(fileList || [], function(f){
+      if(/^image\//.test(f.type) || /\.(jpe?g|png|gif|bmp|webp|heic)$/i.test(f.name)){ bulkPhotos[f.name.toLowerCase()] = f; }
+    });
+    updatePhotoCount();
+    invalidatePlan();
+  }
+  function invalidatePlan(){
+    bulkPlan = null;
+    byId('bkRun').disabled = true;
+    if(byId('bkTableWrap').innerHTML){ byId('bkSummary').innerHTML = '<span class="placeholder">파일이 바뀌었습니다. 미리보기를 다시 누르세요.</span>'; byId('bkTableWrap').innerHTML = ''; }
+  }
+  byId('btnBulk').addEventListener('click', function(){
+    byId('bulkModal').classList.remove('hidden');
+    byId('bkProgress').textContent = '';
+    loadXlsx().catch(function(e){ byId('bkProgress').textContent = e.message; });
+  });
+  byId('bkClose').addEventListener('click', function(){ byId('bulkModal').classList.add('hidden'); });
+  byId('bkTemplate').addEventListener('click', downloadTemplate);
+  byId('bkPickXlsx').addEventListener('click', function(){ byId('bkXlsx').click(); });
+  byId('bkPickPhotos').addEventListener('click', function(){ byId('bkPhotos').click(); });
+  byId('bkPickFolder').addEventListener('click', function(){ byId('bkFolder').click(); });
+  byId('bkClearPhotos').addEventListener('click', function(){ bulkPhotos = {}; updatePhotoCount(); invalidatePlan(); });
+  byId('bkPhotos').addEventListener('change', function(e){ addBulkPhotos(e.target.files); e.target.value = ''; });
+  byId('bkFolder').addEventListener('change', function(e){ addBulkPhotos(e.target.files); e.target.value = ''; });
+  byId('bkXlsx').addEventListener('change', function(e){
+    var f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if(!f) return;
+    byId('bkXlsxName').textContent = '읽는 중... ' + f.name;
+    readWorkbook(f).then(function(rows){
+      bulkRows = rows;
+      byId('bkXlsxName').textContent = f.name + ' (' + rows.length + '줄)';
+      invalidatePlan();
+    }).catch(function(err){
+      bulkRows = null;
+      byId('bkXlsxName').textContent = '읽기 실패: ' + (err.message || err);
+    });
+  });
+  byId('bkPreview').addEventListener('click', function(){
+    if(!bulkRows){ alert('엑셀 파일을 먼저 선택하세요.'); return; }
+    bulkPlan = planOnCopies(bulkRows, bulkPhotos);
+    renderPlan(bulkPlan);
+  });
+  byId('bkRun').addEventListener('click', function(){
+    if(!bulkPlan) return;
+    var p = bulkPlan;
+    var msg = '새 항목 ' + p.newNodes.length + '개, 기존 항목 수정 ' + p.updatedNodes.length + '개, 사진 ' + p.photoJobs.length + '장을 등록합니다.' +
+      (p.errors ? '\n오류가 있는 ' + p.errors + '개 행은 제외됩니다.' : '') + '\n진행할까요?';
+    if(!confirm(msg)) return;
+    runImport(p);
+  });
+
+  // ---- 구역 선택/삭제/렌더 ----
+  function selectZone(id){
+    selectedZoneId = id;
+    renderAll();
+    renderDetailPanel(id);
+  }
+  function deleteZone(id, evt){
+    if(evt) evt.stopPropagation();
+    var cnt = nodes.filter(function(n){ return n.zoneId === id; }).length;
+    var msg = cnt
+      ? '이 구역에는 설비·공기구 항목 ' + cnt + '개가 등록되어 있습니다. 구역을 삭제해도 항목 데이터는 남지만 화면에서 연결이 끊깁니다. 그래도 삭제할까요?'
+      : '이 구역을 삭제할까요?';
+    if(!confirm(msg)) return;
+    zones = zones.filter(function(z){ return z.id !== id; });
+    if(selectedZoneId === id){
+      selectedZoneId = null;
+      renderDetailPanel(null);
+    }
+    renderAll();
+    deleteZoneFromFirestore(id);
+  }
+  function renderZonesOnImage(){
+    overlay.querySelectorAll('.zone-box').forEach(function(el){ el.remove(); });
+    zones.forEach(function(z){
+      var od = overdueInZone(z.id);
+      var box = document.createElement('div');
+      box.className = 'zone-box' + (od > 0 ? ' alert' : '') + (z.id === selectedZoneId ? ' selected' : '');
+      box.style.left = z.x + '%';
+      box.style.top = z.y + '%';
+      box.style.width = z.w + '%';
+      box.style.height = z.h + '%';
+      box.dataset.zoneId = z.id;
+      var label = document.createElement('span');
+      label.className = 'zone-label';
+      label.textContent = z.name + (od > 0 ? ' (지연 ' + od + ')' : '');
+      box.appendChild(label);
+      box.addEventListener('click', function(evt){
+        if(editMode) return;
+        evt.stopPropagation();
+        selectZone(z.id);
+      });
+      overlay.appendChild(box);
+    });
+  }
+  function renderZoneList(){
+    zoneListEl.innerHTML = '';
+    zoneCountEl.textContent = zones.length;
+    if(zones.length === 0){
+      var empty = document.createElement('li');
+      empty.className = 'empty';
+      empty.textContent = '아직 그려진 구역이 없습니다.';
+      zoneListEl.appendChild(empty);
+      return;
+    }
+    zones.forEach(function(z){
+      var li = document.createElement('li');
+      li.className = z.id === selectedZoneId ? 'selected' : '';
+      var nameSpan = document.createElement('span');
+      nameSpan.textContent = z.name;
+      nameSpan.style.cursor = 'pointer';
+      var od = overdueInZone(z.id);
+      if(od > 0){
+        var c = document.createElement('span');
+        c.className = 'zone-cnt';
+        c.textContent = '지연 ' + od;
+        nameSpan.appendChild(c);
+      }
+      nameSpan.addEventListener('click', function(){ selectZone(z.id); });
+      var delBtn = document.createElement('button');
+      delBtn.textContent = '삭제';
+      delBtn.className = 'danger';
+      delBtn.addEventListener('click', function(evt){ deleteZone(z.id, evt); });
+      li.appendChild(nameSpan);
+      li.appendChild(delBtn);
+      zoneListEl.appendChild(li);
+    });
+  }
+  function renderAll(){
+    renderZonesOnImage();
+    renderZoneList();
+  }
+
+  // ---- 구역 내보내기/가져오기 ----
+  function exportZones(){
+    var blob = new Blob([JSON.stringify(zones, null, 2)], {type: 'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'zones.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  function importZones(file){
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var data = JSON.parse(reader.result);
+        if(Array.isArray(data)){
+          zones = data;
+          selectedZoneId = null;
+          renderAll();
+          renderDetailPanel(null);
+        }
+      }catch(e){
+        alert('zones.json 형식이 올바르지 않습니다.');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  btnEditMode.addEventListener('click', function(){ setEditMode(!editMode); });
+  byId('btnExport').addEventListener('click', exportZones);
+  byId('btnImportTrigger').addEventListener('click', function(){ byId('importFile').click(); });
+  byId('importFile').addEventListener('change', function(evt){
+    if(evt.target.files && evt.target.files[0]){
+      importZones(evt.target.files[0]);
+      evt.target.value = '';
+    }
+  });
+  overlay.addEventListener('mousedown', onOverlayMouseDown);
+  window.addEventListener('mousemove', onOverlayMouseMove);
+  window.addEventListener('mouseup', onOverlayMouseUp);
+
+  loadAll();
+
+  // 자동 검증용 (Node/jsdom · Playwright)
+  window.__zoneApp = {
+    getZones: function(){ return zones.slice(); },
+    getNodes: function(){ return nodes.slice(); },
+    addZoneProgrammatic: function(z){
+      var zz = Object.assign({id: uid('z')}, z);
+      zones.push(zz);
+      renderAll();
+      saveZoneToFirestore(zz);
+      return zz;
+    },
+    setEditMode: setEditMode,
+    selectZone: selectZone,
+    nodeStatus: nodeStatus,
+    addCycle: addCycle,
+    planImport: planOnCopies,
+    runImport: runImport,
+    normalizeDate: normalizeDate,
+    pathNames: function(id){ return pathNames(findNode(id)); }
+  };
+})();
+</script>
+</body>
+</html>
