@@ -7,13 +7,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
-  :root{
-    --border:#d0d5dd;
-    --accent:#2f6fed;
-    --accent-fill:rgba(47,111,237,0.18);
-    --danger:#e0473f;
-    --bg:#f5f6f8;
-  }
+  :root{--border:#d0d5dd;--accent:#2f6fed;--accent-fill:rgba(47,111,237,0.18);--danger:#e0473f;--bg:#f5f6f8;}
   *{box-sizing:border-box;}
   body{margin:0;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:var(--bg);color:#1c2430;}
   header{background:#1c2430;color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
@@ -21,10 +15,10 @@
   header .status{font-size:12px;color:#aab3c2;}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;}
   button{font-family:inherit;font-size:13px;padding:7px 12px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;}
+  button:disabled{opacity:.45;cursor:default;}
   button.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
   button.danger{background:#fff;border-color:var(--danger);color:var(--danger);}
   button.active{background:#123a99;border-color:#123a99;color:#fff;}
-  button:hover{filter:brightness(0.97);}
   .main-layout{display:flex;gap:16px;padding:16px;align-items:flex-start;}
   .plan-wrap{position:relative;display:inline-block;background:#fff;border:1px solid var(--border);line-height:0;user-select:none;max-width:min(58vw, 820px);flex-shrink:1;}
   .plan-wrap.edit-mode{cursor:crosshair;}
@@ -37,7 +31,7 @@
   .zone-box.alert .zone-label{background:var(--danger);}
   .zone-box.selected .zone-label{background:#ff8a00;}
   .drag-preview{position:absolute;border:2px dashed var(--accent);background:rgba(47,111,237,0.10);pointer-events:none;}
-  aside{width:460px;flex-shrink:0;background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px;}
+  aside{width:470px;flex-shrink:0;background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px;}
   aside h2{font-size:14px;margin:0 0 10px;}
   #zoneList{list-style:none;margin:0 0 16px;padding:0;max-height:200px;overflow:auto;}
   #zoneList li{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:6px;font-size:13px;cursor:pointer;}
@@ -64,18 +58,42 @@
   .b-ok{background:#e3f5ec;color:#157347;}
   .b-warn{background:#fff1dc;color:#a15c00;}
   .b-bad{background:#fde4e2;color:#b42318;}
+  .b-photo{background:#e8eefc;color:#1d4ed8;cursor:pointer;}
   .acts{display:flex;gap:2px;flex-shrink:0;opacity:.5;}
   .node-row:hover .acts{opacity:1;}
   .acts button{padding:1px 5px;font-size:10px;}
   .modal{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:50;}
   .modal.hidden{display:none;}
-  .modal-box{background:#fff;border-radius:8px;padding:20px;width:330px;box-shadow:0 10px 30px rgba(0,0,0,0.2);}
+  .modal-box{background:#fff;border-radius:8px;padding:20px;width:330px;max-height:92vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,0.2);}
+  .modal-box.wide{width:min(1100px, 96vw);}
+  .modal-box.mid{width:min(640px, 96vw);}
   .modal-box label{font-size:13px;display:block;margin-bottom:6px;}
   .modal-box input,.modal-box select{width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;margin-bottom:14px;font-family:inherit;background:#fff;}
+  .modal-box input[type=file]{display:none;}
   .row2{display:flex;gap:6px;}
   .leaf-only{border-top:1px solid #eee;padding-top:10px;}
   .muted{font-size:11px;color:#8a94a6;margin:0 0 12px;line-height:1.5;}
-  .modal-actions{display:flex;justify-content:flex-end;gap:8px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;align-items:center;}
+  .m-title{font-weight:700;margin-bottom:12px;font-size:14px;}
+  .step{border:1px solid #e4e7ec;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:13px;}
+  .step b{display:inline-block;min-width:18px;}
+  .step .muted{margin:6px 0 0;}
+  .step-line{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .pv-wrap{max-height:42vh;overflow:auto;border:1px solid #e4e7ec;border-radius:6px;}
+  table.pv{border-collapse:collapse;width:100%;font-size:11px;}
+  table.pv th{position:sticky;top:0;background:#1c2430;color:#fff;padding:5px 6px;text-align:left;font-weight:500;white-space:nowrap;}
+  table.pv td{padding:4px 6px;border-bottom:1px solid #eef0f3;vertical-align:top;}
+  table.pv tr.err td{background:#fff5f4;}
+  .pv-sum{font-size:12px;margin:8px 0;}
+  .ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin:10px 0;}
+  .ph-item{border:1px solid #e4e7ec;border-radius:6px;overflow:hidden;font-size:10px;color:#667085;}
+  .ph-item img{display:block;width:100%;height:110px;object-fit:cover;cursor:zoom-in;background:#f2f4f7;}
+  .ph-meta{padding:4px 6px;display:flex;justify-content:space-between;align-items:center;gap:4px;}
+  .ph-meta span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ph-meta button{padding:1px 5px;font-size:10px;flex-shrink:0;}
+  #lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:80;cursor:zoom-out;}
+  #lightbox.hidden{display:none;}
+  #lightbox img{max-width:95vw;max-height:92vh;}
   footer{padding:0 16px 16px;font-size:12px;color:#8a94a6;}
 </style>
 </head>
@@ -86,9 +104,10 @@
     <div class="status" id="statusLine">연결 확인 중...</div>
   </div>
   <div class="toolbar">
+    <button id="btnBulk">일괄 등록 (엑셀+사진)</button>
     <button id="btnEditMode">구역 편집 모드 켜기</button>
-    <button id="btnExport">내보내기 (zones.json)</button>
-    <button id="btnImportTrigger">가져오기</button>
+    <button id="btnExport">구역 내보내기</button>
+    <button id="btnImportTrigger">구역 가져오기</button>
     <input type="file" id="importFile" accept="application/json" style="display:none;">
   </div>
 </header>
@@ -107,7 +126,7 @@
     </div>
   </aside>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.2 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.3 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -122,7 +141,7 @@
 
 <div class="modal hidden" id="nodeModal">
   <div class="modal-box">
-    <div id="nodeModalTitle" style="font-weight:700;margin-bottom:12px;font-size:14px;"></div>
+    <div id="nodeModalTitle" class="m-title"></div>
     <label for="nodeName">이름 *</label>
     <input id="nodeName" type="text">
     <label for="nodeNote">비고 (선택)</label>
@@ -154,6 +173,51 @@
   </div>
 </div>
 
+<div class="modal hidden" id="photoModal">
+  <div class="modal-box mid">
+    <div id="photoTitle" class="m-title"></div>
+    <div class="step-line">
+      <button id="photoAddBtn" class="primary">+ 사진 추가</button>
+      <input type="file" id="photoInput" accept="image/*" multiple>
+      <span id="photoStatus" class="muted" style="margin:0;"></span>
+    </div>
+    <div id="photoGrid" class="ph-grid"></div>
+    <div class="muted">사진은 긴 변 1280px 이하 JPEG로 줄여서 저장됩니다(원본 해상도는 보관되지 않음). 휴대폰에서는 촬영 후 바로 올릴 수 있습니다.</div>
+    <div class="modal-actions"><button id="photoClose">닫기</button></div>
+  </div>
+</div>
+
+<div class="modal hidden" id="bulkModal">
+  <div class="modal-box wide">
+    <div class="m-title">일괄 등록 (엑셀 목록 + 사진)</div>
+    <div class="step">
+      <div class="step-line"><b>1</b> 양식을 받아 작성합니다. <button id="bkTemplate">양식 다운로드 (.xlsx)</button></div>
+      <div class="muted">'목록' 시트에 한 줄에 항목 하나씩 적습니다. 경로는 1단계부터 차례로 적고(예: 자숙탱크1 / 원심펌프 / 메카니칼씰), 중간 단계는 자동으로 만들어집니다. '구역목록' 시트의 구역 이름과 똑같이 적어야 합니다.</div>
+    </div>
+    <div class="step">
+      <div class="step-line"><b>2</b> 작성한 엑셀 파일 선택 <button id="bkPickXlsx">엑셀 선택</button><input type="file" id="bkXlsx" accept=".xlsx,.xls,.csv"><span id="bkXlsxName" class="muted" style="margin:0;"></span></div>
+    </div>
+    <div class="step">
+      <div class="step-line"><b>3</b> 사진 선택 (선택사항) <button id="bkPickPhotos">사진 파일 선택</button><button id="bkPickFolder">사진 폴더 선택</button><button id="bkClearPhotos">사진 선택 비우기</button>
+        <input type="file" id="bkPhotos" accept="image/*" multiple><input type="file" id="bkFolder" webkitdirectory multiple>
+        <span id="bkPhotoCount" class="muted" style="margin:0;">선택된 사진 0장</span></div>
+      <div class="muted">엑셀의 '사진파일명' 칸에 적은 이름과 파일 이름이 같아야 연결됩니다(대소문자 무시, 여러 장은 쉼표로 구분).</div>
+    </div>
+    <div class="step">
+      <div class="step-line"><b>4</b> 미리보기 확인 후 등록 <button id="bkPreview" class="primary">미리보기</button></div>
+      <div id="bkSummary" class="pv-sum"></div>
+      <div id="bkTableWrap"></div>
+    </div>
+    <div class="modal-actions">
+      <span id="bkProgress" class="muted" style="margin:0 auto 0 0;"></span>
+      <button id="bkClose">닫기</button>
+      <button id="bkRun" class="primary" disabled>등록 실행</button>
+    </div>
+  </div>
+</div>
+
+<div id="lightbox" class="hidden"><img alt=""></div>
+
 <script>
 (function(){
   var zones = [];
@@ -165,9 +229,13 @@
   var dragStart = null;
   var pendingRect = null;
   var nodeModalCtx = null;
+  var photoNodeId = null;
 
   var CAT_LABEL = {equip: '설비', tool: '공기구'};
   var UNIT_LABEL = {day: '일', week: '주', month: '개월'};
+  var XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  var PHOTO_MAX_SIDE = 1280;
+  var PHOTO_MAX_BYTES = 700 * 1024;
 
   function byId(id){ return document.getElementById(id); }
   var planWrap = byId('planWrap');
@@ -185,6 +253,7 @@
   var FB_DB = null;
   var ZONES_COL = 'claimdefense_zones';
   var NODES_COL = 'claimdefense_nodes';
+  var PHOTOS_COL = 'claimdefense_photos';
   function initFB(){
     try{
       if(FB_DB) return FB_DB;
@@ -210,6 +279,26 @@
   function saveOk(){ setStatus('Firebase 연결됨 · 마지막 저장 ' + new Date().toLocaleTimeString('ko-KR'), true); }
   function saveFail(e){ console.warn('저장 실패', e); setStatus('저장 실패(오프라인?) · 새로고침 시 사라질 수 있음', false); }
 
+  function nodeFromDoc(id, d){
+    return {
+      id: id, zoneId: d.zoneId, parentId: d.parentId || null, category: d.category,
+      name: d.name, note: d.note || '',
+      cycleValue: d.cycleValue || null, cycleUnit: d.cycleUnit || 'month',
+      lastDate: d.lastDate || '', stdQty: (d.stdQty === undefined ? null : d.stdQty),
+      photoNames: Array.isArray(d.photoNames) ? d.photoNames : [],
+      order: d.order || 0
+    };
+  }
+  function nodeToDoc(n){
+    return {
+      zoneId: n.zoneId, parentId: n.parentId || null, category: n.category,
+      name: n.name, note: n.note || '',
+      cycleValue: n.cycleValue || null, cycleUnit: n.cycleUnit || 'month',
+      lastDate: n.lastDate || '', stdQty: (n.stdQty === undefined ? null : n.stdQty),
+      photoNames: n.photoNames || [],
+      order: n.order || 0, updatedAt: Date.now()
+    };
+  }
   function loadAll(){
     var db = initFB();
     if(!db){
@@ -225,16 +314,7 @@
         zones.push({id: doc.id, name: d.name, x: d.x, y: d.y, w: d.w, h: d.h});
       });
       nodes = [];
-      res[1].forEach(function(doc){
-        var d = doc.data();
-        nodes.push({
-          id: doc.id, zoneId: d.zoneId, parentId: d.parentId || null, category: d.category,
-          name: d.name, note: d.note || '',
-          cycleValue: d.cycleValue || null, cycleUnit: d.cycleUnit || 'month',
-          lastDate: d.lastDate || '', stdQty: (d.stdQty === undefined ? null : d.stdQty),
-          order: d.order || 0
-        });
-      });
+      res[1].forEach(function(doc){ nodes.push(nodeFromDoc(doc.id, doc.data())); });
       renderAll();
       if(selectedZoneId){ renderDetailPanel(selectedZoneId); }
       setStatus('Firebase 연결됨 · 구역 ' + zones.length + '개 · 항목 ' + nodes.length + '개 불러옴 · 자동 저장됨', true);
@@ -253,20 +333,21 @@
     db.collection(ZONES_COL).doc(id).delete().then(saveOk).catch(saveFail);
   }
   function saveNodeToFirestore(n){
-    var db = initFB(); if(!db) return;
-    db.collection(NODES_COL).doc(n.id).set({
-      zoneId: n.zoneId, parentId: n.parentId || null, category: n.category,
-      name: n.name, note: n.note || '',
-      cycleValue: n.cycleValue || null, cycleUnit: n.cycleUnit || 'month',
-      lastDate: n.lastDate || '', stdQty: (n.stdQty === undefined ? null : n.stdQty),
-      order: n.order || 0, updatedAt: Date.now()
-    }).then(saveOk).catch(saveFail);
+    var db = initFB(); if(!db) return Promise.resolve();
+    return db.collection(NODES_COL).doc(n.id).set(nodeToDoc(n)).then(saveOk).catch(saveFail);
   }
-  function deleteNodesFromFirestore(ids){
+  function deleteNodesFromFirestore(ids, idsWithPhotos){
     var db = initFB(); if(!db || !ids.length) return;
     var batch = db.batch();
     ids.forEach(function(id){ batch.delete(db.collection(NODES_COL).doc(id)); });
     batch.commit().then(saveOk).catch(saveFail);
+    (idsWithPhotos || []).forEach(function(id){
+      db.collection(PHOTOS_COL).where('nodeId', '==', id).get().then(function(snap){
+        var b = db.batch();
+        snap.forEach(function(doc){ b.delete(doc.ref); });
+        return b.commit();
+      }).catch(saveFail);
+    });
   }
 
   // ---- 공통 도우미 ----
@@ -320,6 +401,13 @@
     });
     return out;
   }
+  function pathNames(n){
+    var names = [];
+    var cur = n;
+    var guard = 0;
+    while(cur && guard++ < 50){ names.unshift(cur.name); cur = cur.parentId ? findNode(cur.parentId) : null; }
+    return names;
+  }
   function isOverdueLeaf(n){ return !hasChildren(n.id) && nodeStatus(n).level === 2; }
   function overdueInZone(zoneId){
     return nodes.filter(function(n){ return n.zoneId === zoneId && isOverdueLeaf(n); }).length;
@@ -327,6 +415,134 @@
   function overdueUnder(id){
     return descendantIds(id).filter(function(did){ return isOverdueLeaf(findNode(did)); }).length;
   }
+
+  // ---- 사진 (긴 변 1280px JPEG로 줄여 Firestore에 저장) ----
+  function loadImageFromFile(file){
+    return new Promise(function(resolve, reject){
+      var url = URL.createObjectURL(file);
+      var im = new Image();
+      im.onload = function(){ URL.revokeObjectURL(url); resolve(im); };
+      im.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('이미지를 읽을 수 없음(지원하지 않는 형식일 수 있음): ' + file.name)); };
+      im.src = url;
+    });
+  }
+  function compressImage(file){
+    return loadImageFromFile(file).then(function(im){
+      var w = im.naturalWidth, h = im.naturalHeight;
+      var scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(w, h));
+      var canvas = document.createElement('canvas');
+      var q = 0.82;
+      var data = '';
+      for(var attempt = 0; attempt < 12; attempt++){
+        canvas.width = Math.max(1, Math.round(w * scale));
+        canvas.height = Math.max(1, Math.round(h * scale));
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(im, 0, 0, canvas.width, canvas.height);
+        data = canvas.toDataURL('image/jpeg', q);
+        if(data.length <= PHOTO_MAX_BYTES) break;
+        if(q > 0.55){ q -= 0.1; } else { scale *= 0.8; }
+      }
+      if(data.length > PHOTO_MAX_BYTES){ throw new Error('사진 용량을 줄이지 못함: ' + file.name); }
+      return {data: data, width: canvas.width, height: canvas.height, bytes: data.length};
+    });
+  }
+  function addPhotoToNode(n, file, source){
+    var db = initFB();
+    if(!db){ return Promise.reject(new Error('Firebase 연결 안 됨 — 사진은 저장할 수 없습니다.')); }
+    return compressImage(file).then(function(c){
+      return db.collection(PHOTOS_COL).add({
+        nodeId: n.id, zoneId: n.zoneId, fileName: file.name, data: c.data,
+        width: c.width, height: c.height, bytes: c.bytes, source: source, createdAt: Date.now()
+      });
+    }).then(function(){
+      n.photoNames = (n.photoNames || []).concat([file.name]);
+      return saveNodeToFirestore(n);
+    });
+  }
+  function openPhotoModal(nodeId){
+    photoNodeId = nodeId;
+    var n = findNode(nodeId);
+    if(!n) return;
+    byId('photoTitle').textContent = '사진 · ' + pathNames(n).join(' > ');
+    byId('photoStatus').textContent = '';
+    byId('photoModal').classList.remove('hidden');
+    loadPhotoGrid();
+  }
+  function loadPhotoGrid(){
+    var grid = byId('photoGrid');
+    var db = initFB();
+    if(!db){ grid.innerHTML = '<div class="placeholder">Firebase 연결이 없어 사진을 불러올 수 없습니다.</div>'; return; }
+    grid.innerHTML = '<div class="placeholder">불러오는 중...</div>';
+    var nid = photoNodeId;
+    db.collection(PHOTOS_COL).where('nodeId', '==', nid).get().then(function(snap){
+      if(nid !== photoNodeId) return;
+      var list = [];
+      snap.forEach(function(doc){ var d = doc.data(); d.id = doc.id; list.push(d); });
+      list.sort(function(a, b){ return (a.createdAt || 0) - (b.createdAt || 0); });
+      if(!list.length){ grid.innerHTML = '<div class="placeholder">등록된 사진이 없습니다.</div>'; return; }
+      var h = '';
+      list.forEach(function(p){
+        var dt = p.createdAt ? ymd(new Date(p.createdAt)) : '';
+        h += '<div class="ph-item"><img src="' + p.data + '" data-act="zoom" alt="">' +
+          '<div class="ph-meta"><span title="' + escapeHtml(p.fileName || '') + '">' + escapeHtml(p.fileName || '') + '<br>' + dt + (p.source === 'bulk' ? ' · 일괄' : '') + '</span>' +
+          '<button class="danger" data-act="phdel" data-id="' + p.id + '" data-name="' + escapeHtml(p.fileName || '') + '">삭제</button></div></div>';
+      });
+      grid.innerHTML = h;
+    }).catch(function(e){
+      grid.innerHTML = '<div class="placeholder">사진을 불러오지 못했습니다: ' + escapeHtml(e.message || e) + '</div>';
+    });
+  }
+  byId('photoAddBtn').addEventListener('click', function(){ byId('photoInput').click(); });
+  byId('photoInput').addEventListener('change', function(evt){
+    var files = Array.prototype.slice.call(evt.target.files || []);
+    evt.target.value = '';
+    var n = findNode(photoNodeId);
+    if(!n || !files.length) return;
+    var st = byId('photoStatus');
+    var done = 0, failed = [];
+    var chain = Promise.resolve();
+    files.forEach(function(f){
+      chain = chain.then(function(){
+        st.textContent = '저장 중... ' + (done + 1) + '/' + files.length;
+        return addPhotoToNode(n, f, 'manual').then(function(){ done++; }, function(e){ failed.push(e.message || String(e)); });
+      });
+    });
+    chain.then(function(){
+      st.textContent = done + '장 저장' + (failed.length ? ' · 실패 ' + failed.length + '장: ' + failed.join(' / ') : '');
+      loadPhotoGrid();
+      renderDetailPanel(selectedZoneId);
+    });
+  });
+  byId('photoGrid').addEventListener('click', function(evt){
+    var el = evt.target.closest('[data-act]');
+    if(!el) return;
+    if(el.dataset.act === 'zoom'){
+      byId('lightbox').querySelector('img').src = el.src;
+      byId('lightbox').classList.remove('hidden');
+      return;
+    }
+    if(el.dataset.act === 'phdel'){
+      if(!confirm('이 사진을 삭제할까요?')) return;
+      var n = findNode(photoNodeId);
+      var db = initFB();
+      if(!db || !n) return;
+      var name = el.dataset.name;
+      db.collection(PHOTOS_COL).doc(el.dataset.id).delete().then(function(){
+        var arr = (n.photoNames || []).slice();
+        var i = arr.indexOf(name);
+        if(i >= 0){ arr.splice(i, 1); } else if(arr.length){ arr.pop(); }
+        n.photoNames = arr;
+        return saveNodeToFirestore(n);
+      }).then(function(){
+        loadPhotoGrid();
+        renderDetailPanel(selectedZoneId);
+      }).catch(saveFail);
+    }
+  });
+  byId('photoClose').addEventListener('click', function(){ byId('photoModal').classList.add('hidden'); photoNodeId = null; });
+  byId('lightbox').addEventListener('click', function(){ byId('lightbox').classList.add('hidden'); });
 
   // ---- 구역 그리기 ----
   function getRelativePoint(evt){
@@ -462,7 +678,7 @@
     if(ctx.mode === 'add'){
       n = {
         id: uid('n'), zoneId: selectedZoneId, parentId: ctx.parentId || null, category: ctx.category,
-        name: '', note: '', cycleValue: null, cycleUnit: 'month', lastDate: '', stdQty: null, order: Date.now()
+        name: '', note: '', cycleValue: null, cycleUnit: 'month', lastDate: '', stdQty: null, photoNames: [], order: Date.now()
       };
       nodes.push(n);
       if(ctx.parentId){ collapsed[ctx.parentId] = false; }
@@ -484,13 +700,19 @@
   }
   function deleteNode(n){
     var desc = descendantIds(n.id);
-    var msg = desc.length
-      ? '"' + n.name + '"와(과) 그 아래 하위 항목 ' + desc.length + '개를 모두 삭제할까요?'
-      : '"' + n.name + '"을(를) 삭제할까요?';
-    if(!confirm(msg)) return;
     var ids = [n.id].concat(desc);
+    var photoCnt = 0;
+    var idsWithPhotos = ids.filter(function(id){
+      var c = (findNode(id).photoNames || []).length;
+      photoCnt += c;
+      return c > 0;
+    });
+    var msg = (desc.length
+      ? '"' + n.name + '"와(과) 그 아래 하위 항목 ' + desc.length + '개를 모두 삭제할까요?'
+      : '"' + n.name + '"을(를) 삭제할까요?') + (photoCnt ? '\n연결된 사진 ' + photoCnt + '장도 함께 삭제됩니다.' : '');
+    if(!confirm(msg)) return;
     nodes = nodes.filter(function(x){ return ids.indexOf(x.id) < 0; });
-    deleteNodesFromFirestore(ids);
+    deleteNodesFromFirestore(ids, idsWithPhotos);
     renderAll();
     renderDetailPanel(selectedZoneId);
   }
@@ -502,10 +724,12 @@
       var no = (prefix ? prefix + '.' : '') + (i + 1);
       var kids = hasChildren(n.id);
       var isCol = !!collapsed[n.id];
+      var pc = (n.photoNames || []).length;
       h += '<li><div class="node-row" data-node-id="' + n.id + '">';
       h += '<span class="tg" data-act="toggle" data-id="' + n.id + '">' + (kids ? (isCol ? '▸' : '▾') : '·') + '</span>';
       h += '<span class="nm"><span class="no">' + no + '</span>' + escapeHtml(n.name);
       if(n.note){ h += ' <span class="memo">(' + escapeHtml(n.note) + ')</span>'; }
+      if(pc > 0){ h += '<span class="badge b-photo" data-act="photo" data-id="' + n.id + '">사진 ' + pc + '</span>'; }
       if(kids){
         var od = overdueUnder(n.id);
         if(od > 0){ h += '<span class="badge b-bad">하위 지연 ' + od + '</span>'; }
@@ -519,6 +743,7 @@
       }
       h += '</span><span class="acts">' +
         '<button data-act="add" data-id="' + n.id + '" title="하위 항목 추가">+하위</button>' +
+        '<button data-act="photo" data-id="' + n.id + '">사진</button>' +
         '<button data-act="edit" data-id="' + n.id + '">수정</button>' +
         '<button class="danger" data-act="del" data-id="' + n.id + '">삭제</button>' +
         '</span></div>';
@@ -558,6 +783,7 @@
     if(act === 'add'){ openNodeModal({mode: 'add', category: n.category, parentId: n.id}); }
     else if(act === 'edit'){ openNodeModal({mode: 'edit', node: n}); }
     else if(act === 'del'){ deleteNode(n); }
+    else if(act === 'photo'){ openPhotoModal(n.id); }
   });
   byId('nodeSave').addEventListener('click', onNodeSave);
   byId('nodeCancel').addEventListener('click', closeNodeModal);
@@ -566,150 +792,275 @@
     if(e.key === 'Enter' && e.target.id === 'nodeName'){ onNodeSave(); }
   });
 
-  // ---- 구역 선택/삭제/렌더 ----
-  function selectZone(id){
-    selectedZoneId = id;
-    renderAll();
-    renderDetailPanel(id);
-  }
-  function deleteZone(id, evt){
-    if(evt) evt.stopPropagation();
-    var cnt = nodes.filter(function(n){ return n.zoneId === id; }).length;
-    var msg = cnt
-      ? '이 구역에는 설비·공기구 항목 ' + cnt + '개가 등록되어 있습니다. 구역을 삭제해도 항목 데이터는 남지만 화면에서 연결이 끊깁니다. 그래도 삭제할까요?'
-      : '이 구역을 삭제할까요?';
-    if(!confirm(msg)) return;
-    zones = zones.filter(function(z){ return z.id !== id; });
-    if(selectedZoneId === id){
-      selectedZoneId = null;
-      renderDetailPanel(null);
-    }
-    renderAll();
-    deleteZoneFromFirestore(id);
-  }
-  function renderZonesOnImage(){
-    overlay.querySelectorAll('.zone-box').forEach(function(el){ el.remove(); });
-    zones.forEach(function(z){
-      var od = overdueInZone(z.id);
-      var box = document.createElement('div');
-      box.className = 'zone-box' + (od > 0 ? ' alert' : '') + (z.id === selectedZoneId ? ' selected' : '');
-      box.style.left = z.x + '%';
-      box.style.top = z.y + '%';
-      box.style.width = z.w + '%';
-      box.style.height = z.h + '%';
-      box.dataset.zoneId = z.id;
-      var label = document.createElement('span');
-      label.className = 'zone-label';
-      label.textContent = z.name + (od > 0 ? ' (지연 ' + od + ')' : '');
-      box.appendChild(label);
-      box.addEventListener('click', function(evt){
-        if(editMode) return;
-        evt.stopPropagation();
-        selectZone(z.id);
-      });
-      overlay.appendChild(box);
+  // ---- 일괄 등록 ----
+  var TEMPLATE_HEADERS = ['구역', '구분', '1단계', '2단계', '3단계', '4단계', '5단계', '비고', '점검주기', '주기단위', '최근점검일', '기준수량', '사진파일명'];
+  var bulkRows = null;
+  var bulkPhotos = {};
+  var bulkPlan = null;
+  var xlsxPromise = null;
+
+  function loadXlsx(){
+    if(window.XLSX) return Promise.resolve(window.XLSX);
+    if(xlsxPromise) return xlsxPromise;
+    xlsxPromise = new Promise(function(resolve, reject){
+      var s = document.createElement('script');
+      s.src = XLSX_URL;
+      s.onload = function(){ window.XLSX ? resolve(window.XLSX) : reject(new Error('엑셀 모듈 로드 실패')); };
+      s.onerror = function(){ xlsxPromise = null; reject(new Error('엑셀 모듈(cdnjs)을 불러오지 못했습니다. 네트워크를 확인하세요.')); };
+      document.head.appendChild(s);
     });
+    return xlsxPromise;
   }
-  function renderZoneList(){
-    zoneListEl.innerHTML = '';
-    zoneCountEl.textContent = zones.length;
-    if(zones.length === 0){
-      var empty = document.createElement('li');
-      empty.className = 'empty';
-      empty.textContent = '아직 그려진 구역이 없습니다.';
-      zoneListEl.appendChild(empty);
+  function cellStr(v){
+    if(v === null || v === undefined) return '';
+    if(v instanceof Date) return ymd(v);
+    return String(v).trim();
+  }
+  function normalizeDate(v){
+    if(v === null || v === undefined || v === '') return {ok: true, value: ''};
+    var d = null;
+    if(v instanceof Date && !isNaN(v)){
+      d = new Date(v.getFullYear(), v.getMonth(), v.getDate());
+    } else if(typeof v === 'number' && isFinite(v) && v > 20000 && v < 80000){
+      var base = new Date(1899, 11, 30);
+      d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + Math.floor(v));
+    } else {
+      var m = String(v).trim().match(/^(\d{4})\s*[-./년]\s*(\d{1,2})\s*[-./월]\s*(\d{1,2})\s*일?$/);
+      if(m){
+        d = new Date(+m[1], +m[2] - 1, +m[3]);
+        if(d.getMonth() !== +m[2] - 1 || d.getDate() !== +m[3]) d = null;
+      }
+    }
+    if(!d) return {ok: false, error: '날짜 형식 오류(' + cellStr(v) + ')'};
+    var s = ymd(d);
+    if(s > todayStr()) return {ok: false, error: '최근점검일이 미래 날짜(' + s + ')'};
+    return {ok: true, value: s};
+  }
+  function normalizeUnit(v){
+    var s = cellStr(v).replace(/\s/g, '');
+    if(s === '') return '';
+    if(s === '일' || s === 'day' || s === 'd') return 'day';
+    if(s === '주' || s === 'week' || s === 'w') return 'week';
+    if(s === '개월' || s === '월' || s === '달' || s === 'month' || s === 'm') return 'month';
+    return null;
+  }
+  function normalizeCat(v){
+    var s = cellStr(v).replace(/\s/g, '');
+    if(s === '설비') return 'equip';
+    if(s === '공기구' || s === '도구') return 'tool';
+    return null;
+  }
+  function existingPathMap(){
+    var map = {};
+    nodes.forEach(function(n){ map[n.zoneId + '|' + n.category + '|' + pathNames(n).join('\u0001')] = n; });
+    return map;
+  }
+  // rows: 2차원 배열(첫 행들 중 '구역','구분'이 있는 행을 머리글로 인식), photoMap: {소문자파일명: File}
+  function buildImportPlan(rows, photoMap){
+    photoMap = photoMap || {};
+    var result = {rows: [], newNodes: [], updatedNodes: [], photoJobs: [], errors: 0, warnings: 0, headerError: ''};
+    var hi = -1;
+    for(var r = 0; r < Math.min(rows.length, 15); r++){
+      var cells = (rows[r] || []).map(cellStr);
+      if(cells.indexOf('구역') >= 0 && cells.indexOf('구분') >= 0){ hi = r; break; }
+    }
+    if(hi < 0){ result.headerError = "머리글 행('구역', '구분' 칸)을 찾지 못했습니다. 양식의 '목록' 시트를 사용하세요."; return result; }
+    var header = rows[hi].map(cellStr);
+    var col = {};
+    var levelCols = [];
+    header.forEach(function(hname, i){
+      var m = hname.match(/^(\d+)\s*단계$/);
+      if(m){ levelCols.push({lv: +m[1], i: i}); }
+      else if(hname){ col[hname] = i; }
+    });
+    levelCols.sort(function(a, b){ return a.lv - b.lv; });
+    if(!levelCols.length){ result.headerError = "'1단계' 칸을 찾지 못했습니다."; return result; }
+    function get(row, name){ return col[name] === undefined ? '' : row[col[name]]; }
+
+    var pathMap = existingPathMap();
+    var touched = {};
+    var seenRowPath = {};
+    var orderBase = Date.now();
+    var zoneByName = {};
+    zones.forEach(function(z){ zoneByName[z.name.trim()] = z; });
+
+    for(var ri = hi + 1; ri < rows.length; ri++){
+      var row = rows[ri] || [];
+      if(!row.some(function(v){ return cellStr(v) !== ''; })) continue;
+      var info = {rowNo: ri + 1, zone: cellStr(get(row, '구역')), cat: cellStr(get(row, '구분')), path: [], errors: [], warnings: [], status: ''};
+      var z = zoneByName[info.zone];
+      if(!info.zone){ info.errors.push('구역 비어 있음'); }
+      else if(!z){ info.errors.push("구역 '" + info.zone + "' 없음(사이트의 구역 이름과 같아야 함)"); }
+      var cat = normalizeCat(get(row, '구분'));
+      if(!cat){ info.errors.push("구분은 '설비' 또는 '공기구'"); }
+      var gap = false;
+      levelCols.forEach(function(lc){
+        var v = cellStr(row[lc.i]);
+        if(v){ if(gap){ info.errors.push('단계 중간이 비어 있음'); } info.path.push(v); }
+        else if(info.path.length){ gap = true; }
+        else { gap = true; }
+      });
+      if(!info.path.length){ info.errors.push('1단계 이름 없음'); }
+      else if(!cellStr(row[levelCols[0].i])){ info.errors.push('1단계가 비어 있음'); }
+      var note = cellStr(get(row, '비고'));
+      var cycRaw = cellStr(get(row, '점검주기'));
+      var cyc = null;
+      if(cycRaw !== ''){
+        cyc = Number(cycRaw);
+        if(!(cyc > 0) || Math.floor(cyc) !== cyc){ info.errors.push('점검주기는 1 이상의 정수'); cyc = null; }
+      }
+      var unit = normalizeUnit(get(row, '주기단위'));
+      if(unit === null){ info.errors.push("주기단위는 '일', '주', '개월' 중 하나"); }
+      else if(cyc && !unit){ info.errors.push('점검주기가 있으면 주기단위도 필요'); }
+      else if(!cyc && unit){ info.warnings.push('점검주기 없이 주기단위만 있음(무시)'); }
+      var dt = normalizeDate(get(row, '최근점검일'));
+      if(!dt.ok){ info.errors.push(dt.error); }
+      var qRaw = cellStr(get(row, '기준수량'));
+      var qty = null;
+      if(qRaw !== ''){
+        qty = Number(qRaw);
+        if(!(qty >= 0) || Math.floor(qty) !== qty){ info.errors.push('기준수량은 0 이상의 정수'); qty = null; }
+        else if(cat === 'equip'){ info.warnings.push('기준수량은 공기구에만 적용(무시)'); qty = null; }
+      }
+      var photoNames = cellStr(get(row, '사진파일명')).split(/[,;\n]/).map(function(s){ return s.trim(); }).filter(Boolean);
+      var matched = [];
+      photoNames.forEach(function(pn){
+        var f = photoMap[pn.toLowerCase()];
+        if(f){ matched.push(f); } else { info.warnings.push('사진 파일 없음: ' + pn); }
+      });
+      info.photoCount = matched.length;
+      info.cycle = cyc ? cyc + (UNIT_LABEL[unit] || '') : '';
+      info.lastDate = dt.ok ? dt.value : '';
+      info.qty = qty;
+      info.note = note;
+
+      if(info.errors.length){
+        info.status = '오류(제외)';
+        result.errors++;
+        result.rows.push(info);
+        continue;
+      }
+      var rowKey = z.id + '|' + cat + '|' + info.path.join('\u0001');
+      if(seenRowPath[rowKey]){ info.warnings.push(seenRowPath[rowKey] + '행과 경로가 같음(뒤 행 값이 적용됨)'); }
+      seenRowPath[rowKey] = info.rowNo;
+
+      var parentId = null;
+      var node = null;
+      var createdLeaf = false;
+      for(var li = 0; li < info.path.length; li++){
+        var key = z.id + '|' + cat + '|' + info.path.slice(0, li + 1).join('\u0001');
+        node = pathMap[key];
+        if(!node){
+          node = {id: uid('n'), zoneId: z.id, parentId: parentId, category: cat, name: info.path[li], note: '',
+            cycleValue: null, cycleUnit: 'month', lastDate: '', stdQty: null, photoNames: [], order: orderBase + result.newNodes.length, _new: true};
+          pathMap[key] = node;
+          result.newNodes.push(node);
+          if(li === info.path.length - 1) createdLeaf = true;
+        }
+        parentId = node.id;
+      }
+      var changed = false;
+      if(note && node.note !== note){ node.note = note; changed = true; }
+      if(cyc && (node.cycleValue !== cyc || node.cycleUnit !== unit)){ node.cycleValue = cyc; node.cycleUnit = unit; changed = true; }
+      if(dt.value && node.lastDate !== dt.value){ node.lastDate = dt.value; changed = true; }
+      if(qty !== null && node.stdQty !== qty){ node.stdQty = qty; changed = true; }
+      if(matched.length){
+        var existingNames = (node.photoNames || []).map(function(s){ return s.toLowerCase(); });
+        matched.forEach(function(f){
+          if(existingNames.indexOf(f.name.toLowerCase()) >= 0){ info.warnings.push('이미 등록된 사진이라 건너뜀: ' + f.name); info.photoCount--; }
+          else {
+            result.photoJobs.push({node: node, file: f, rowNo: info.rowNo});
+            existingNames.push(f.name.toLowerCase());
+          }
+        });
+      }
+      if(!node._new && changed && !touched[node.id]){
+        touched[node.id] = true;
+        result.updatedNodes.push(node);
+      }
+      info.nodeRef = node;
+      info.status = createdLeaf ? '신규' : (changed ? '갱신' : (info.photoCount > 0 ? '사진 추가' : '변경 없음'));
+      if(info.warnings.length) result.warnings++;
+      result.rows.push(info);
+    }
+    // 하위 항목이 생기는 곳에 주기가 입력된 경우 경고
+    var parentSet = {};
+    nodes.concat(result.newNodes).forEach(function(n){ if(n.parentId) parentSet[n.parentId] = true; });
+    result.rows.forEach(function(info){
+      if(info.nodeRef && parentSet[info.nodeRef.id] && info.cycle){
+        info.warnings.push('하위 항목이 있어 점검주기가 표시되지 않음');
+      }
+    });
+    return result;
+  }
+  // 기존 항목 수정은 실제 실행 때만 반영되도록, 미리보기용 계획은 복사본으로 계산
+  function planOnCopies(rows, photoMap){
+    var saved = nodes;
+    nodes = saved.map(function(n){ var c = Object.assign({}, n); c.photoNames = (n.photoNames || []).slice(); return c; });
+    try{
+      var plan = buildImportPlan(rows, photoMap);
+      plan._copies = nodes;
+      return plan;
+    } finally {
+      nodes = saved;
+    }
+  }
+  function renderPlan(plan){
+    var sum = byId('bkSummary');
+    var wrap = byId('bkTableWrap');
+    if(plan.headerError){
+      sum.innerHTML = '<span style="color:#b42318;">' + escapeHtml(plan.headerError) + '</span>';
+      wrap.innerHTML = '';
+      byId('bkRun').disabled = true;
       return;
     }
-    zones.forEach(function(z){
-      var li = document.createElement('li');
-      li.className = z.id === selectedZoneId ? 'selected' : '';
-      var nameSpan = document.createElement('span');
-      nameSpan.textContent = z.name;
-      nameSpan.style.cursor = 'pointer';
-      var od = overdueInZone(z.id);
-      if(od > 0){
-        var c = document.createElement('span');
-        c.className = 'zone-cnt';
-        c.textContent = '지연 ' + od;
-        nameSpan.appendChild(c);
-      }
-      nameSpan.addEventListener('click', function(){ selectZone(z.id); });
-      var delBtn = document.createElement('button');
-      delBtn.textContent = '삭제';
-      delBtn.className = 'danger';
-      delBtn.addEventListener('click', function(evt){ deleteZone(z.id, evt); });
-      li.appendChild(nameSpan);
-      li.appendChild(delBtn);
-      zoneListEl.appendChild(li);
+    var okRows = plan.rows.length - plan.errors;
+    sum.innerHTML = '읽은 행 <b>' + plan.rows.length + '</b> · 등록 가능 <b>' + okRows + '</b> · ' +
+      '<span style="color:#b42318;">오류(제외) <b>' + plan.errors + '</b></span> · 경고 ' + plan.warnings +
+      ' &nbsp;|&nbsp; 새로 만들 항목 <b>' + plan.newNodes.length + '</b>개(중간 단계 포함) · 수정될 기존 항목 <b>' + plan.updatedNodes.length + '</b>개 · 올릴 사진 <b>' + plan.photoJobs.length + '</b>장';
+    var h = '<div class="pv-wrap"><table class="pv"><thead><tr><th>행</th><th>상태</th><th>구역</th><th>구분</th><th>경로</th><th>비고</th><th>주기</th><th>최근점검일</th><th>기준수량</th><th>사진</th><th>오류·경고</th></tr></thead><tbody>';
+    plan.rows.forEach(function(r){
+      var msgs = r.errors.map(function(m){ return '<span style="color:#b42318;">' + escapeHtml(m) + '</span>'; })
+        .concat(r.warnings.map(function(m){ return '<span style="color:#a15c00;">' + escapeHtml(m) + '</span>'; }));
+      h += '<tr class="' + (r.errors.length ? 'err' : '') + '"><td>' + r.rowNo + '</td><td>' + escapeHtml(r.status) + '</td><td>' + escapeHtml(r.zone) + '</td><td>' + escapeHtml(r.cat) + '</td>' +
+        '<td>' + escapeHtml(r.path.join(' > ')) + '</td><td>' + escapeHtml(r.note || '') + '</td><td>' + escapeHtml(r.cycle || '') + '</td><td>' + escapeHtml(r.lastDate || '') + '</td>' +
+        '<td>' + (r.qty === null || r.qty === undefined ? '' : r.qty) + '</td><td>' + (r.photoCount || '') + '</td><td>' + msgs.join('<br>') + '</td></tr>';
     });
+    h += '</tbody></table></div>';
+    wrap.innerHTML = h;
+    byId('bkRun').disabled = !(plan.newNodes.length || plan.updatedNodes.length || plan.photoJobs.length);
   }
-  function renderAll(){
-    renderZonesOnImage();
-    renderZoneList();
-  }
-
-  // ---- 구역 내보내기/가져오기 ----
-  function exportZones(){
-    var blob = new Blob([JSON.stringify(zones, null, 2)], {type: 'application/json'});
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'zones.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-  function importZones(file){
-    var reader = new FileReader();
-    reader.onload = function(){
-      try{
-        var data = JSON.parse(reader.result);
-        if(Array.isArray(data)){
-          zones = data;
-          selectedZoneId = null;
-          renderAll();
-          renderDetailPanel(null);
-        }
-      }catch(e){
-        alert('zones.json 형식이 올바르지 않습니다.');
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  btnEditMode.addEventListener('click', function(){ setEditMode(!editMode); });
-  byId('btnExport').addEventListener('click', exportZones);
-  byId('btnImportTrigger').addEventListener('click', function(){ byId('importFile').click(); });
-  byId('importFile').addEventListener('change', function(evt){
-    if(evt.target.files && evt.target.files[0]){
-      importZones(evt.target.files[0]);
-      evt.target.value = '';
-    }
-  });
-  overlay.addEventListener('mousedown', onOverlayMouseDown);
-  window.addEventListener('mousemove', onOverlayMouseMove);
-  window.addEventListener('mouseup', onOverlayMouseUp);
-
-  loadAll();
-
-  // 자동 검증용 (Node/jsdom · Playwright)
-  window.__zoneApp = {
-    getZones: function(){ return zones.slice(); },
-    getNodes: function(){ return nodes.slice(); },
-    addZoneProgrammatic: function(z){
-      var zz = Object.assign({id: uid('z')}, z);
-      zones.push(zz);
-      renderAll();
-      saveZoneToFirestore(zz);
-      return zz;
-    },
-    setEditMode: setEditMode,
-    selectZone: selectZone,
-    nodeStatus: nodeStatus,
-    addCycle: addCycle
-  };
-})();
-</script>
-</body>
-</html>
+  function runImport(plan){
+    var db = initFB();
+    if(!db){ alert('Firebase에 연결되지 않아 등록할 수 없습니다.'); return Promise.resolve(); }
+    var prog = byId('bkProgress');
+    byId('bkRun').disabled = true;
+    byId('bkPreview').disabled = true;
+    // 복사본 → 실제 목록에 반영
+    var copies = plan._copies;
+    var toSave = plan.newNodes.concat(plan.updatedNodes);
+    plan.newNodes.forEach(function(n){ delete n._new; });
+    var copyById = {};
+    copies.forEach(function(c){ copyById[c.id] = c; });
+    nodes = nodes.map(function(n){ return copyById[n.id] ? copyById[n.id] : n; });
+    plan.newNodes.forEach(function(n){ nodes.push(n); });
+    var chunks = [];
+    for(var i = 0; i < toSave.length; i += 400){ chunks.push(toSave.slice(i, i + 400)); }
+    var chain = Promise.resolve();
+    var savedCount = 0;
+    chunks.forEach(function(ch){
+      chain = chain.then(function(){
+        var b = db.batch();
+        ch.forEach(function(n){ b.set(db.collection(NODES_COL).doc(n.id), nodeToDoc(n)); });
+        return b.commit().then(function(){ savedCount += ch.length; prog.textContent = '항목 저장 ' + savedCount + '/' + toSave.length; });
+      });
+    });
+    var photoDone = 0, photoFail = [];
+    plan.photoJobs.forEach(function(job, idx){
+      chain = chain.then(function(){
+        prog.textContent = '사진 저장 ' + (idx + 1) + '/' + plan.photoJobs.length + ' (' + job.file.name + ')';
+        return addPhotoToNode(job.node, job.file, 'bulk').then(function(){ photoDone++; }, function(e){ photoFail.push(job.rowNo + '행 ' + (e.message || e)); });
+      });
+    });
+    return chain.then(function(){
+      prog.textContent = '완료 · 항목 ' + savedCount + '개 저장 · 사진 ' + photoDone + '장 저장' +
