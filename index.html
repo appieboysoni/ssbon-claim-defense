@@ -68,16 +68,29 @@
   .plan-card{width:var(--planW);flex:0 0 auto;padding:6px;}
   .plan-crop{position:relative;overflow:hidden;width:100%;aspect-ratio:var(--cropAR, 1);user-select:none;}
   .plan-crop.edit-mode{cursor:crosshair;outline:2px dashed var(--accent);outline-offset:-2px;}
-  .plan-inner{position:absolute;left:var(--cL,0);top:var(--cT,0);width:var(--cW,100%);height:var(--cH,100%);}
+  .plan-inner{position:absolute;left:var(--cL,0);top:var(--cT,0);width:var(--cW,100%);height:var(--cH,100%);transition:left .35s ease, top .35s ease, width .35s ease, height .35s ease;}
   #floorplanImg{display:block;width:100%;height:100%;pointer-events:none;}
   #overlay{position:absolute;inset:0;}
-  .zone-box{position:absolute;--zc:#98a2b3;--zf:rgba(152,162,179,0.16);--zfs:rgba(152,162,179,0.32);--zt:#fff;border:2px solid var(--zc);background:var(--zf);cursor:pointer;}
-  .zone-box.untyped{border-style:dashed;}
-  .zone-box.alert{border-color:var(--danger);}
-  .zone-box.selected{border-color:var(--sel);border-width:3px;background:var(--zfs);box-shadow:0 0 0 2px rgba(255,138,0,0.35);z-index:2;}
-  .zone-label{position:absolute;top:-2px;left:2px;transform:translateY(-100%);background:var(--zc);color:var(--zt);font-size:11px;padding:1px 6px;border-radius:4px 4px 0 0;white-space:nowrap;line-height:1.3;}
-  .zone-box.alert .zone-label{background:var(--danger);color:#fff;}
-  .zone-box.selected .zone-label{background:var(--sel);color:#fff;}
+  #zoneSvg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;display:block;}
+  .zg{cursor:pointer;transition:opacity .25s;}
+  .zg.dim{opacity:.3;}
+  .zg .zline{fill:none;pointer-events:none;vector-effect:non-scaling-stroke;}
+  .ppre{fill:rgba(255,138,0,0.12);stroke:#ff8a00;stroke-width:2;vector-effect:non-scaling-stroke;pointer-events:none;}
+  .ppre-close{fill:none;stroke:#ff8a00;stroke-width:1;stroke-dasharray:4 3;vector-effect:non-scaling-stroke;pointer-events:none;}
+  .zone-label{position:absolute;transform:translateY(-100%);margin-top:-2px;font-size:11px;padding:1px 6px;border-radius:4px 4px 0 0;white-space:nowrap;line-height:1.3;cursor:pointer;z-index:1;transition:opacity .25s;}
+  .zone-label.dim{opacity:.35;}
+  .zone-label.sel{z-index:2;}
+  .plan-crop.edit-mode .zg,.plan-crop.edit-mode .zone-label{cursor:crosshair;}
+  .vh{position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;background:#fff;border:2px solid var(--sel);border-radius:2px;cursor:move;z-index:4;box-shadow:0 0 0 1px rgba(0,0,0,.25);}
+  .vh.mid{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;border-color:#667085;background:#f2f4f7;cursor:copy;z-index:3;}
+  .pdot{position:absolute;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--sel);pointer-events:none;z-index:4;}
+  .pdot.first{width:14px;height:14px;margin:-7px 0 0 -7px;background:#fff;border:3px solid var(--sel);}
+  .zoom-ctl{position:absolute;top:8px;right:8px;z-index:6;}
+  .zoom-ctl button{padding:4px 10px;font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,.18);}
+  .draw-hint{position:absolute;left:8px;right:8px;bottom:8px;z-index:6;background:rgba(28,36,48,.88);color:#fff;font-size:12px;padding:6px 10px;border-radius:6px;pointer-events:none;line-height:1.5;}
+  .zoom-ctl.hidden,.draw-hint.hidden{display:none;}
+  .zset .sep{display:inline-block;width:1px;height:18px;background:#d0d5dd;margin:0 2px;}
+  .zset button:disabled{opacity:.4;}
   .drag-preview{position:absolute;border:2px dashed var(--accent);background:rgba(47,111,237,0.10);pointer-events:none;}
   #detailPanel{flex:1 1 auto;min-width:0;height:var(--panelH);overflow:auto;padding:14px 16px;font-size:13px;color:#333;}
 
@@ -194,12 +207,14 @@
           <img id="floorplanImg" src="floorplan.png" alt="2공장 1층 평면도">
           <div id="overlay"></div>
         </div>
+        <div class="zoom-ctl hidden" id="zoomCtl"><button id="btnZoom">전체 도면 보기</button></div>
+        <div class="draw-hint hidden" id="drawHint"></div>
       </div>
     </div>
     <div id="detailPanel" class="card"></div>
   </div>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.5 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.6 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -330,6 +345,13 @@
   var zoneTypes = DEFAULT_TYPES.map(function(t){ return Object.assign({}, t); });
   var lastTypeId = '';
   var typeDraft = null;
+  var zoomOn = true;                              // 작업장 선택 시 도면 확대 여부
+  var drawMode = {kind: 'rect', target: null};    // kind: rect|poly, target: 영역을 붙일 구역 id
+  var polyPts = [];
+  var polyCursor = null;
+  var vDrag = null;
+  var undoStack = [];
+  var hintMsg = '';
 
   var CAT_LABEL = {equip: '설비', tool: '공기구'};
   var UNIT_LABEL = {day: '일', week: '주', month: '개월'};
@@ -410,8 +432,7 @@
     Promise.all([db.collection(ZONES_COL).get(), db.collection(NODES_COL).get(), db.collection(TYPES_COL).get()]).then(function(res){
       zones = [];
       res[0].forEach(function(doc){
-        var d = doc.data();
-        zones.push({id: doc.id, name: d.name, x: d.x, y: d.y, w: d.w, h: d.h, typeId: d.typeId || ''});
+        zones.push(normalizeZone(Object.assign({}, doc.data(), {id: doc.id})));
       });
       if(!res[2].empty){
         zoneTypes = [];
@@ -433,7 +454,7 @@
   }
   function saveZoneToFirestore(z){
     var db = initFB(); if(!db) return;
-    db.collection(ZONES_COL).doc(z.id).set({name: z.name, x: z.x, y: z.y, w: z.w, h: z.h, typeId: z.typeId || '', updatedAt: Date.now()}).then(saveOk).catch(saveFail);
+    db.collection(ZONES_COL).doc(z.id).set(zoneDoc(z)).then(saveOk).catch(saveFail);
   }
   function deleteZoneFromFirestore(id){
     var db = initFB(); if(!db) return;
@@ -547,6 +568,74 @@
     });
     return h;
   }
+
+  // ---- 구역 모양(다각형) 도우미: 좌표는 원본 도면 기준 % ----
+  // 한 구역은 다각형 여러 개(shapes)로 이루어짐. x,y,w,h는 전체를 감싸는 사각형(확대·이전 버전 호환용)
+  function r3(v){ return Math.round(v * 1000) / 1000; }
+  function rectPts(x, y, w, h){ return [{x: x, y: y}, {x: x + w, y: y}, {x: x + w, y: y + h}, {x: x, y: y + h}]; }
+  function polyArea(pts){
+    var a = 0;
+    for(var i = 0; i < pts.length; i++){ var p = pts[i], q = pts[(i + 1) % pts.length]; a += p.x * q.y - q.x * p.y; }
+    return a / 2;
+  }
+  function normPoly(pts){
+    var out = pts.map(function(p){ return {x: r3(clamp(p.x, 0, 100)), y: r3(clamp(p.y, 0, 100))}; });
+    return polyArea(out) < 0 ? out.reverse() : out;
+  }
+  function cloneShapes(shapes){ return shapes.map(function(pts){ return pts.map(function(p){ return {x: p.x, y: p.y}; }); }); }
+  // Firestore는 배열 안의 배열을 저장할 수 없으므로 [{pts:[{x,y}..]}] 형태로 저장
+  function shapesFromDoc(d){
+    if(!d || !Array.isArray(d.shapes) || !d.shapes.length) return null;
+    var out = [];
+    d.shapes.forEach(function(sh){
+      var pts = (sh && Array.isArray(sh.pts)) ? sh.pts.filter(function(p){ return p && isFinite(p.x) && isFinite(p.y); })
+        .map(function(p){ return {x: +p.x, y: +p.y}; }) : [];
+      if(pts.length >= 3) out.push(normPoly(pts));
+    });
+    return out.length ? out : null;
+  }
+  function shapesToDoc(shapes){
+    return shapes.map(function(pts){ return {pts: pts.map(function(p){ return {x: r3(p.x), y: r3(p.y)}; })}; });
+  }
+  function updateBBox(z){
+    var x0 = 100, y0 = 100, x1 = 0, y1 = 0;
+    z.shapes.forEach(function(pts){
+      pts.forEach(function(p){ x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); });
+    });
+    z.x = r3(x0); z.y = r3(y0); z.w = r3(Math.max(0, x1 - x0)); z.h = r3(Math.max(0, y1 - y0));
+  }
+  function normalizeZone(src){
+    var z = {id: src.id || uid('z'), name: String(src.name || ''), x: +src.x || 0, y: +src.y || 0, w: +src.w || 0, h: +src.h || 0, typeId: src.typeId || ''};
+    z.shapes = shapesFromDoc(src) || [rectPts(z.x, z.y, z.w, z.h)];
+    updateBBox(z);
+    return z;
+  }
+  function zoneDoc(z){
+    return {name: z.name, x: z.x, y: z.y, w: z.w, h: z.h, typeId: z.typeId || '', shapes: shapesToDoc(z.shapes), updatedAt: Date.now()};
+  }
+  function pointInPoly(p, pts){
+    var inside = false;
+    for(var i = 0, j = pts.length - 1; i < pts.length; j = i++){
+      var a = pts[i], b = pts[j];
+      if(((a.y > p.y) !== (b.y > p.y)) && (p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x)) inside = !inside;
+    }
+    return inside;
+  }
+  function zoneContains(z, p){ return z.shapes.some(function(pts){ return pointInPoly(p, pts); }); }
+  function zoneAt(p){
+    return zones.filter(function(z){ return zoneContains(z, p); })
+      .sort(function(a, b){ return a.w * a.h - b.w * b.h; })[0] || null;
+  }
+  function labelAnchor(z){
+    var best = null;
+    z.shapes.forEach(function(pts){
+      pts.forEach(function(p){ if(!best || p.y < best.y - 0.01 || (Math.abs(p.y - best.y) <= 0.01 && p.x < best.x)) best = p; });
+    });
+    return best || {x: z.x, y: z.y};
+  }
+  function vertexCount(z){ return z.shapes.reduce(function(sum, pts){ return sum + pts.length; }, 0); }
+  function findZone(id){ return zones.find(function(z){ return z.id === id; }) || null; }
+  function selectedZone(){ return selectedZoneId ? findZone(selectedZoneId) : null; }
 
   // ---- 사진 (긴 변 1280px JPEG로 줄여 Firestore에 저장) ----
   function loadImageFromFile(file){
@@ -702,11 +791,11 @@
     planWrap.classList.toggle('edit-mode', on);
     btnEditMode.textContent = on ? '구역 편집 모드 끄기 (보기 모드로)' : '구역 편집 모드 켜기';
     btnEditMode.classList.toggle('active', on);
-    if(!on){ cancelDrawing(); }
-    renderZoneBar();
-    renderZoneItems();
-    renderDetail();
-    layoutPlan();
+    cancelDrawing();
+    vDrag = null;
+    drawMode = {kind: 'rect', target: null};
+    polyPts = []; polyCursor = null; hintMsg = '';
+    renderAll();
   }
   function cancelDrawing(){
     drawing = false;
@@ -714,18 +803,131 @@
     if(pendingRect && pendingRect.parentNode){ pendingRect.parentNode.removeChild(pendingRect); }
     pendingRect = null;
   }
+  function setDrawMode(kind, target){
+    cancelDrawing();
+    drawMode = {kind: kind, target: target || null};
+    polyPts = []; polyCursor = null; hintMsg = '';
+    renderAll();
+  }
+  function resetDrawMode(){ setDrawMode('rect', null); }
+  function updateDrawHint(){
+    var el = byId('drawHint');
+    var t = drawMode.target ? findZone(drawMode.target) : null;
+    var msg = '';
+    if(editMode && drawMode.kind === 'poly'){
+      msg = (t ? '"' + t.name + '"에 붙일 다각형' : '새 다각형 구역') + (polyPts.length ? ' (' + polyPts.length + '점)' : '') +
+        ' · 꼭짓점을 차례로 클릭 → 첫 점 클릭·더블클릭·Enter로 완료 · Backspace 한 점 취소 · Esc 취소 · Shift 수평/수직 · Alt 자석 끄기';
+    } else if(editMode && t){
+      msg = '"' + t.name + '"에 붙일 사각형을 도면에 드래그하세요 · Esc 취소';
+    }
+    if(msg && hintMsg){ msg = hintMsg + ' — ' + msg; }
+    el.textContent = msg;
+    el.classList.toggle('hidden', !msg);
+  }
+  function flashMsg(text){ var el = byId('zsMsg'); if(el){ el.textContent = text; } }
+  function pxScale(){
+    var rect = overlay.getBoundingClientRect();
+    return {x: rect.width / 100, y: rect.height / 100, ok: rect.width > 0 && rect.height > 0};
+  }
+  function nearPx(a, b, px){
+    var k = pxScale();
+    if(!k.ok) return false;
+    var dx = (a.x - b.x) * k.x, dy = (a.y - b.y) * k.y;
+    return Math.sqrt(dx * dx + dy * dy) <= px;
+  }
+  // 자석: 7px 안의 꼭짓점에 붙고, 아니면 5px 안의 꼭짓점과 가로/세로 줄을 맞춤 (Alt 누르면 끔)
+  var SNAP_PX = 7, ALIGN_PX = 5;
+  function snapPoint(p, opt){
+    opt = opt || {};
+    var k = pxScale();
+    if(opt.off || !k.ok) return {x: p.x, y: p.y};
+    var best = null, bestD = SNAP_PX, ax = null, adx = ALIGN_PX, ay = null, ady = ALIGN_PX;
+    function consider(q){
+      var dx = Math.abs(q.x - p.x) * k.x, dy = Math.abs(q.y - p.y) * k.y;
+      var d = Math.sqrt(dx * dx + dy * dy);
+      if(d < bestD){ bestD = d; best = q; }
+      if(dx < adx){ adx = dx; ax = q.x; }
+      if(dy < ady){ ady = dy; ay = q.y; }
+    }
+    zones.forEach(function(z){
+      z.shapes.forEach(function(pts, si){
+        pts.forEach(function(q, pi){
+          if(opt.skip && opt.skip.zoneId === z.id && opt.skip.si === si && opt.skip.pi === pi) return;
+          consider(q);
+        });
+      });
+    });
+    (opt.extra || []).forEach(consider);
+    if(best) return {x: best.x, y: best.y};
+    return {x: ax !== null ? ax : p.x, y: ay !== null ? ay : p.y};
+  }
+  function polyPoint(evt, p){
+    var last = polyPts[polyPts.length - 1];
+    var opt = {off: evt.altKey, extra: polyPts};
+    if(evt.shiftKey && last){
+      var k = pxScale();
+      var horiz = Math.abs(p.x - last.x) * k.x >= Math.abs(p.y - last.y) * k.y;
+      var q = snapPoint(horiz ? {x: p.x, y: last.y} : {x: last.x, y: p.y}, opt);
+      return horiz ? {x: q.x, y: last.y} : {x: last.x, y: q.y};
+    }
+    return snapPoint(p, opt);
+  }
   function onOverlayMouseDown(evt){
-    if(!editMode) return;
+    if(!editMode || evt.button !== 0) return;
+    var p = getRelativePoint(evt);
+    var h = evt.target.closest ? evt.target.closest('.vh') : null;
+    if(h && drawMode.kind === 'rect' && !drawMode.target){
+      evt.preventDefault();
+      var z = selectedZone();
+      if(!z) return;
+      var si = +h.dataset.si, pi = +h.dataset.pi;
+      var before = cloneShapes(z.shapes);
+      var isMid = !!h.dataset.mid;
+      if(isMid){ pi = pi + 1; z.shapes[si].splice(pi, 0, {x: p.x, y: p.y}); }
+      vDrag = {zoneId: z.id, si: si, pi: pi, before: before, moved: isMid, label: isMid ? '꼭짓점 추가' : '꼭짓점 이동'};
+      if(isMid){ renderZonesOnImage(); }
+      return;
+    }
+    if(drawMode.kind === 'poly'){
+      evt.preventDefault();
+      // 더블클릭: 점을 찍을 때마다 그림을 다시 그려 dblclick 이벤트가 오지 않을 수 있으므로 누름 횟수로 판별
+      if(evt.detail >= 2 && polyPts.length){ finishPolygon(); return; }
+      var q = polyPoint(evt, p);
+      if(polyPts.length >= 3 && nearPx(q, polyPts[0], 9)){ finishPolygon(); return; }
+      polyPts.push(q);
+      polyCursor = q;
+      hintMsg = '';
+      updateDrawHint();
+      renderZonesOnImage();
+      return;
+    }
     drawing = true;
-    dragStart = getRelativePoint(evt);
+    dragStart = snapPoint(p, {off: evt.altKey});
+    dragStart.raw = p;
     pendingRect = document.createElement('div');
     pendingRect.className = 'drag-preview';
     overlay.appendChild(pendingRect);
     updatePendingRect(dragStart);
   }
   function onOverlayMouseMove(evt){
-    if(!editMode || !drawing) return;
-    updatePendingRect(getRelativePoint(evt));
+    if(!editMode) return;
+    if(vDrag){
+      var z = findZone(vDrag.zoneId);
+      if(!z){ vDrag = null; return; }
+      var p = snapPoint(getRelativePoint(evt), {off: evt.altKey, skip: vDrag});
+      z.shapes[vDrag.si][vDrag.pi] = {x: p.x, y: p.y};
+      vDrag.moved = true;
+      renderZonesOnImage();
+      return;
+    }
+    if(drawMode.kind === 'poly'){
+      if(!polyPts.length) return;
+      polyCursor = polyPoint(evt, getRelativePoint(evt));
+      renderZonesOnImage();
+      return;
+    }
+    if(!drawing) return;
+    updatePendingRect(snapPoint(getRelativePoint(evt), {off: evt.altKey}));
   }
   function updatePendingRect(current){
     var x1 = Math.min(dragStart.x, current.x);
@@ -742,31 +944,176 @@
     pendingRect.dataset.h = h;
   }
   function onOverlayMouseUp(){
-    if(!editMode || !drawing) return;
+    if(!editMode) return;
+    if(vDrag){
+      var d = vDrag;
+      vDrag = null;
+      var z = findZone(d.zoneId);
+      if(z && d.moved){
+        var np = normPoly(z.shapes[d.si]);
+        if(Math.abs(polyArea(np)) < 0.05){
+          z.shapes = d.before;
+          updateBBox(z);
+          renderAll();
+          flashMsg('영역이 너무 작아져 되돌렸습니다.');
+          return;
+        }
+        z.shapes[d.si] = np;
+        pushUndo(z.id, d.before, d.label);
+        updateBBox(z);
+        saveZoneToFirestore(z);
+      }
+      renderAll();
+      return;
+    }
+    if(!drawing) return;
     drawing = false;
     var x = parseFloat(pendingRect.dataset.x);
     var y = parseFloat(pendingRect.dataset.y);
     var w = parseFloat(pendingRect.dataset.w);
     var h = parseFloat(pendingRect.dataset.h);
+    var start = dragStart.raw || dragStart;
     if(w < 1 || h < 1){
-      // 편집 모드에서 드래그 없이 클릭하면 그 위치의 구역을 선택
-      var hit = zones.filter(function(zz){ return x >= zz.x && x <= zz.x + zz.w && y >= zz.y && y <= zz.y + zz.h; })
-        .sort(function(a, b){ return a.w * a.h - b.w * b.h; })[0];
+      // 편집 모드에서 드래그 없이 클릭하면 그 위치의 구역을 선택, 빈 곳이면 선택 해제
       cancelDrawing();
-      if(hit){ selectZone(hit.id); }
+      if(!drawMode.target){
+        var hit = zoneAt(start);
+        if(hit){ selectZone(hit.id); }
+        else if(selectedZoneId){ selectedZoneId = null; selectedItemId = null; renderAll(); }
+      }
       return;
     }
+    var pts = rectPts(x, y, w, h);
+    cancelDrawing();
+    if(drawMode.target){ addShapeToZone(drawMode.target, pts); return; }
+    createZoneWithShape(pts);
+  }
+  function finishPolygon(){
+    var pts = [];
+    polyPts.forEach(function(p){
+      var l = pts[pts.length - 1];
+      if(!l || Math.abs(l.x - p.x) > 0.02 || Math.abs(l.y - p.y) > 0.02) pts.push(p);
+    });
+    if(pts.length > 3 && Math.abs(pts[0].x - pts[pts.length - 1].x) <= 0.02 && Math.abs(pts[0].y - pts[pts.length - 1].y) <= 0.02){ pts.pop(); }
+    if(pts.length < 3 || Math.abs(polyArea(pts)) < 0.05){
+      polyPts = pts;
+      hintMsg = '꼭짓점이 3개 이상 필요합니다';
+      updateDrawHint();
+      renderZonesOnImage();
+      return;
+    }
+    var target = drawMode.target;
+    resetDrawMode();
+    if(target){ addShapeToZone(target, pts); }
+    else { createZoneWithShape(pts); }
+  }
+  function createZoneWithShape(pts){
+    var keepZoom = !!(selectedZone() && zoomOn);
     openNameModal(function(res){
       if(res && res.name){
-        var z = {id: uid('z'), name: res.name, x: x, y: y, w: w, h: h, typeId: res.typeId};
+        var z = {id: uid('z'), name: res.name, typeId: res.typeId, shapes: [normPoly(pts)]};
+        updateBBox(z);
         zones.push(z);
         selectedZoneId = z.id;
         selectedItemId = null;
+        zoomOn = keepZoom;
         renderAll();
         saveZoneToFirestore(z);
       }
-      cancelDrawing();
     });
+  }
+  function pushUndo(zoneId, shapes, label){
+    undoStack.push({zoneId: zoneId, shapes: shapes, label: label});
+    if(undoStack.length > 30) undoStack.shift();
+  }
+  function undoLast(){
+    var u;
+    while((u = undoStack.pop())){
+      var z = findZone(u.zoneId);
+      if(!z) continue;
+      z.shapes = u.shapes;
+      updateBBox(z);
+      saveZoneToFirestore(z);
+      if(selectedZoneId !== z.id){ selectedZoneId = z.id; selectedItemId = null; zoomOn = true; }
+      renderAll();
+      flashMsg('되돌림: "' + z.name + '" ' + u.label);
+      return;
+    }
+    renderAll();
+  }
+  function addShapeToZone(id, pts){
+    var z = findZone(id);
+    resetDrawMode();
+    if(!z) return;
+    pushUndo(z.id, cloneShapes(z.shapes), '영역 추가');
+    z.shapes.push(normPoly(pts));
+    updateBBox(z);
+    saveZoneToFirestore(z);
+    selectedZoneId = z.id;
+    renderAll();
+    flashMsg('영역을 붙였습니다 (영역 ' + z.shapes.length + '개).');
+  }
+  function removeShape(id, si){
+    var z = findZone(id);
+    if(!z || z.shapes.length <= 1 || !z.shapes[si]) return;
+    pushUndo(z.id, cloneShapes(z.shapes), '영역 삭제');
+    z.shapes.splice(si, 1);
+    updateBBox(z);
+    saveZoneToFirestore(z);
+    renderAll();
+    flashMsg('영역 ' + (si + 1) + '을(를) 지웠습니다. 되돌리기로 복구할 수 있습니다.');
+  }
+  function deleteVertex(si, pi){
+    var z = selectedZone();
+    if(!z || !z.shapes[si]) return;
+    if(z.shapes[si].length <= 3){ flashMsg('꼭짓점이 3개인 영역은 더 줄일 수 없습니다. 영역을 지우려면 영역 삭제(✕)를 쓰세요.'); return; }
+    var before = cloneShapes(z.shapes);
+    z.shapes[si].splice(pi, 1);
+    pushUndo(z.id, before, '꼭짓점 삭제');
+    updateBBox(z);
+    saveZoneToFirestore(z);
+    renderAll();
+  }
+  function commitOps(db, ops){
+    var chain = Promise.resolve();
+    for(var i = 0; i < ops.length; i += 400){
+      (function(part){
+        chain = chain.then(function(){ var b = db.batch(); part.forEach(function(f){ f(b); }); return b.commit(); });
+      })(ops.slice(i, i + 400));
+    }
+    return chain;
+  }
+  function mergeZones(targetId, sourceId){
+    var t = findZone(targetId), src = findZone(sourceId);
+    if(!t || !src || t === src) return Promise.resolve(false);
+    var moved = nodes.filter(function(n){ return n.zoneId === src.id; });
+    var photoCnt = moved.reduce(function(a, n){ return a + (n.photoNames || []).length; }, 0);
+    var msg = '"' + src.name + '" 구역을 "' + t.name + '" 구역에 합칩니다.\n' +
+      '- "' + src.name + '"의 영역 ' + src.shapes.length + '개가 "' + t.name + '"에 붙습니다.\n' +
+      (moved.length ? '- 등록된 설비·공기구 항목 ' + moved.length + '개' + (photoCnt ? '(사진 ' + photoCnt + '장)' : '') + '도 "' + t.name + '"(으)로 옮겨집니다.\n' : '') +
+      '- "' + src.name + '"의 이름과 구분은 없어지고 "' + t.name + '"의 이름·구분이 남습니다.\n' +
+      '이 작업은 되돌리기로 취소할 수 없습니다. 진행할까요?';
+    if(!confirm(msg)) return Promise.resolve(false);
+    t.shapes = t.shapes.concat(cloneShapes(src.shapes));
+    updateBBox(t);
+    moved.forEach(function(n){ n.zoneId = t.id; });
+    zones = zones.filter(function(z){ return z !== src; });
+    undoStack = undoStack.filter(function(u){ return u.zoneId !== src.id && u.zoneId !== t.id; });
+    selectedZoneId = t.id;
+    renderAll();
+    flashMsg('"' + src.name + '"을(를) 합쳤습니다.');
+    var db = initFB();
+    if(!db) return Promise.resolve(true);
+    var ops = [function(b){ b.set(db.collection(ZONES_COL).doc(t.id), zoneDoc(t)); }];
+    moved.forEach(function(n){ ops.push(function(b){ b.set(db.collection(NODES_COL).doc(n.id), nodeToDoc(n)); }); });
+    ops.push(function(b){ b.delete(db.collection(ZONES_COL).doc(src.id)); });
+    return commitOps(db, ops).then(function(){
+      return db.collection(PHOTOS_COL).where('zoneId', '==', src.id).get();
+    }).then(function(snap){
+      var pops = [];
+      snap.forEach(function(doc){ pops.push(function(b){ b.update(doc.ref, {zoneId: t.id}); }); });
+      return commitOps(db, pops);
+    }).then(function(){ saveOk(); return true; }, function(e){ saveFail(e); return false; });
   }
   function openNameModal(callback){
     zoneNameInput.value = '';
@@ -914,6 +1261,7 @@
   function selectItem(id){
     var n = findNode(id);
     if(!n) return;
+    if(selectedZoneId !== n.zoneId){ zoomOn = true; }
     selectedZoneId = n.zoneId;
     selectedItemId = topAncestor(n).id;
     renderAll();
@@ -925,16 +1273,32 @@
     var z = zones.find(function(zz){ return zz.id === selectedZoneId; });
     if(editMode){
       if(!z){
-        box.innerHTML = '<div class="zi-empty"><b>구역 편집 모드</b> · 도면에 드래그하면 새 구역을 그립니다(이름·구분 입력).<br>' +
-          '기존 구역의 이름이나 구분을 바꾸려면 위 작업장 버튼을 누르거나 도면의 구역을 클릭하세요. 구분 목록과 색상은 오른쪽 위 <b>구분·색상 관리</b>에서 바꿉니다.</div>';
+        box.innerHTML = '<div class="zi-empty"><b>구역 편집 모드</b> · 도면에 드래그하면 <b>사각형</b> 새 구역을 그립니다(이름·구분 입력). ' +
+          '<button data-act="newpoly" style="padding:2px 8px;font-size:12px;">다각형으로 새 구역 그리기</button><br>' +
+          '기존 구역의 이름·구분·모양을 바꾸려면 위 작업장 버튼을 누르거나 도면의 구역을 클릭하세요. 구분 목록과 색상은 오른쪽 위 <b>구분·색상 관리</b>에서 바꿉니다.</div>';
         return;
       }
-      box.innerHTML = '<div class="zi-head"><span class="zname">구역 설정</span><span class="zsum">이름과 구분을 바꾼 뒤 저장하세요. 설비·공기구 목록은 편집 모드를 끄면 보입니다.</span></div>' +
-        '<div class="zset"><label>이름 <input id="zsName" type="text" value="' + escapeHtml(z.name) + '"></label>' +
-        '<label>구분 <select id="zsType">' + typeOptions(zoneType(z) ? z.typeId : '') + '</select></label>' +
+      var prev = byId('zsName');
+      var keep = (prev && prev.dataset.zone === z.id) ? {name: prev.value, type: byId('zsType').value} : null;
+      var nsh = z.shapes.length;
+      var h = '<div class="zi-head"><span class="zname">구역 설정</span><span class="zsum">이름과 구분은 바꾼 뒤 저장을 누르세요. 모양 변경은 바로 저장됩니다. 설비·공기구 목록은 편집 모드를 끄면 보입니다.</span></div>' +
+        '<div class="zset"><label>이름 <input id="zsName" type="text" data-zone="' + escapeHtml(z.id) + '" value="' + escapeHtml(keep ? keep.name : z.name) + '"></label>' +
+        '<label>구분 <select id="zsType">' + typeOptions(keep ? keep.type : (zoneType(z) ? z.typeId : '')) + '</select></label>' +
         '<button class="primary" data-act="zsave" data-id="' + z.id + '">저장</button>' +
         '<button class="danger" data-act="zdel" data-id="' + z.id + '">구역 삭제</button>' +
         '<span id="zsMsg" class="placeholder"></span></div>';
+      h += '<div class="zset" style="margin-top:6px;"><b>모양</b><span class="placeholder">영역 ' + nsh + '개 · 꼭짓점 ' + vertexCount(z) + '개</span>' +
+        '<button data-act="addrect" data-id="' + z.id + '">＋ 사각형 붙이기</button>' +
+        '<button data-act="addpoly" data-id="' + z.id + '">＋ 다각형 붙이기</button>';
+      if(nsh > 1){
+        z.shapes.forEach(function(pts, i){ h += '<button data-act="shdel" data-id="' + z.id + '" data-si="' + i + '" title="이 영역만 지우기">영역' + (i + 1) + ' ✕</button>'; });
+      }
+      h += '<span class="sep"></span><select id="zsMerge"><option value="">합칠 구역 선택</option>';
+      zones.forEach(function(o){ if(o.id !== z.id) h += '<option value="' + escapeHtml(o.id) + '">' + escapeHtml(o.name) + '</option>'; });
+      h += '</select><button data-act="zmerge" data-id="' + z.id + '">이 구역으로 합치기</button>' +
+        '<span class="sep"></span><button data-act="undo"' + (undoStack.length ? '' : ' disabled') + '>되돌리기' + (undoStack.length ? ' (' + undoStack.length + ')' : '') + '</button></div>';
+      h += '<div class="zi-empty" style="margin-top:4px;">흰 네모(꼭짓점)를 끌어 옮기고, 회색 점(변 가운데)을 끌면 꼭짓점이 생깁니다. 꼭짓점 우클릭 = 삭제. 끌 때 다른 꼭짓점이나 같은 줄에 자석처럼 붙습니다(Alt 누르면 해제).</div>';
+      box.innerHTML = h;
       return;
     }
     if(!z){
@@ -1116,7 +1480,18 @@
       if(hasChildren(id)){ collapsed[id] = !collapsed[id]; renderDetail(); }
       return;
     }
-    if(act === 'zone'){ selectZone(id); return; }
+    if(act === 'zone'){ selectZone(id, true); return; }
+    if(act === 'newpoly'){ setDrawMode('poly', null); return; }
+    if(act === 'addrect'){ setDrawMode('rect', id); return; }
+    if(act === 'addpoly'){ setDrawMode('poly', id); return; }
+    if(act === 'shdel'){ removeShape(id, +el.dataset.si); return; }
+    if(act === 'undo'){ undoLast(); return; }
+    if(act === 'zmerge'){
+      var mid = byId('zsMerge').value;
+      if(!mid){ flashMsg('합칠 구역을 먼저 고르세요.'); return; }
+      mergeZones(id, mid);
+      return;
+    }
     if(act === 'zdel'){ deleteZone(id, evt); return; }
     if(act === 'zsave'){ saveZoneSettings(id); return; }
     if(act === 'types'){ if(editMode){ openTypeModal(); } return; }
@@ -1603,25 +1978,37 @@
     var b = db.batch();
     zoneTypes.forEach(function(t){ b.set(db.collection(TYPES_COL).doc(t.id), {name: t.name, color: t.color, order: t.order, updatedAt: Date.now()}); });
     removed.forEach(function(t){ b.delete(db.collection(TYPES_COL).doc(t.id)); });
-    orphanZones.forEach(function(z){ b.set(db.collection(ZONES_COL).doc(z.id), {name: z.name, x: z.x, y: z.y, w: z.w, h: z.h, typeId: '', updatedAt: Date.now()}); });
+    orphanZones.forEach(function(z){ b.set(db.collection(ZONES_COL).doc(z.id), zoneDoc(z)); });
     b.commit().then(saveOk).catch(saveFail);
   });
 
   // ---- 구역 선택/삭제/렌더 ----
-  function selectZone(id){
-    if(selectedZoneId !== id){ selectedItemId = null; }
+  // toggle=true(작업장 버튼): 이미 선택된 작업장을 다시 누르면 확대/전체 전환
+  function selectZone(id, toggle){
+    if(selectedZoneId === id){
+      if(toggle){ zoomOn = !zoomOn; }
+      else if(!zoomOn){ zoomOn = true; }
+      else { return; }
+      renderAll();
+      return;
+    }
+    selectedItemId = null;
     selectedZoneId = id;
+    zoomOn = true;
+    if(drawMode.kind !== 'rect' || drawMode.target){ cancelDrawing(); drawMode = {kind: 'rect', target: null}; polyPts = []; polyCursor = null; hintMsg = ''; }
     renderAll();
   }
   function deleteZone(id, evt){
     if(evt) evt.stopPropagation();
-    var z = zones.find(function(zz){ return zz.id === id; });
+    var z = findZone(id);
     var cnt = nodes.filter(function(n){ return n.zoneId === id; }).length;
     var msg = cnt
       ? '"' + (z ? z.name : '') + '" 구역에는 설비·공기구 항목 ' + cnt + '개가 등록되어 있습니다. 구역을 삭제해도 항목 데이터는 남지만 화면에서 연결이 끊깁니다. 그래도 삭제할까요?'
       : '"' + (z ? z.name : '') + '" 구역을 삭제할까요?';
     if(!confirm(msg)) return;
     zones = zones.filter(function(zz){ return zz.id !== id; });
+    undoStack = undoStack.filter(function(u){ return u.zoneId !== id; });
+    if(drawMode.target === id){ drawMode = {kind: 'rect', target: null}; polyPts = []; polyCursor = null; }
     if(selectedZoneId === id){
       selectedZoneId = null;
       selectedItemId = null;
@@ -1629,36 +2016,89 @@
     renderAll();
     deleteZoneFromFirestore(id);
   }
+  function pathD(shapes){
+    return shapes.map(function(pts){
+      return 'M' + pts.map(function(p){ return p.x + ' ' + p.y; }).join('L') + 'Z';
+    }).join('');
+  }
   function renderZonesOnImage(){
-    overlay.querySelectorAll('.zone-box').forEach(function(el){ el.remove(); });
-    zones.forEach(function(z){
-      var od = overdueInZone(z.id);
+    overlay.querySelectorAll('#zoneSvg,.zone-label,.vh,.pdot').forEach(function(el){ el.remove(); });
+    var zoomed = !!(selectedZone() && zoomOn);
+    var order = zones.slice().sort(function(a, b){ return b.w * b.h - a.w * a.h; });
+    var selZ = selectedZone();
+    if(selZ){ order = order.filter(function(z){ return z !== selZ; }).concat([selZ]); }
+    var defs = '', body = '';
+    var labels = document.createDocumentFragment();
+    order.forEach(function(z, idx){
       var t = zoneType(z);
-      var box = document.createElement('div');
-      box.className = 'zone-box' + (t ? '' : ' untyped') + (od > 0 ? ' alert' : '') + (z.id === selectedZoneId ? ' selected' : '');
-      if(t){
-        box.style.setProperty('--zc', t.color);
-        box.style.setProperty('--zf', rgba(t.color, 0.16));
-        box.style.setProperty('--zfs', rgba(t.color, 0.32));
-        box.style.setProperty('--zt', textOn(t.color));
-      }
-      box.style.left = z.x + '%';
-      box.style.top = z.y + '%';
-      box.style.width = z.w + '%';
-      box.style.height = z.h + '%';
-      box.dataset.zoneId = z.id;
-      var label = document.createElement('span');
-      label.className = 'zone-label';
-      label.textContent = z.name + (od > 0 ? ' (지연 ' + od + ')' : '');
-      box.title = z.name + ' · ' + (t ? t.name : '구분 미지정');
-      box.appendChild(label);
-      box.addEventListener('click', function(evt){
-        if(editMode) return;
-        evt.stopPropagation();
-        selectZone(z.id);
-      });
-      overlay.appendChild(box);
+      var od = overdueInZone(z.id);
+      var sel = z.id === selectedZoneId;
+      var color = t ? t.color : '#98a2b3';
+      var line = sel ? '#ff8a00' : (od > 0 ? '#e0473f' : color);
+      var d = pathD(z.shapes);
+      var mid = 'zm' + idx;
+      // 테두리는 바깥쪽에만 그려서, 여러 영역을 합친 구역도 안쪽 이음선 없이 하나의 외곽선으로 보이게 함
+      defs += '<mask id="' + mid + '" maskUnits="userSpaceOnUse" x="-10" y="-10" width="120" height="120">' +
+        '<rect x="-10" y="-10" width="120" height="120" fill="#fff"/><path d="' + d + '" fill="#000"/></mask>';
+      body += '<g class="zg' + (zoomed && !sel ? ' dim' : '') + (sel ? ' sel' : '') + (t ? '' : ' untyped') + (od > 0 ? ' alert' : '') + '" data-zone-id="' + escapeHtml(z.id) + '">' +
+        '<path class="zfill" d="' + d + '" fill="' + rgba(color, sel ? 0.32 : 0.16) + '"/>' +
+        (sel ? '<path class="zline" d="' + d + '" stroke="rgba(255,138,0,0.35)" stroke-width="10" mask="url(#' + mid + ')"/>' : '') +
+        '<path class="zline" d="' + d + '" stroke="' + line + '" stroke-width="' + (sel ? 6 : 4) + '"' + (t ? '' : ' stroke-dasharray="7 4"') + ' mask="url(#' + mid + ')"/>' +
+        '</g>';
+      var a = labelAnchor(z);
+      var lb = document.createElement('div');
+      lb.className = 'zone-label' + (zoomed && !sel ? ' dim' : '') + (sel ? ' sel' : '');
+      lb.dataset.zoneId = z.id;
+      lb.style.left = a.x + '%';
+      lb.style.top = a.y + '%';
+      lb.style.background = sel ? '#ff8a00' : (od > 0 ? '#e0473f' : color);
+      lb.style.color = (sel || od > 0 || !t) ? '#fff' : textOn(t.color);
+      lb.textContent = z.name + (od > 0 ? ' (지연 ' + od + ')' : '');
+      lb.title = z.name + ' · ' + (t ? t.name : '구분 미지정');
+      labels.appendChild(lb);
     });
+    // 다각형 그리는 중 미리보기
+    if(editMode && drawMode.kind === 'poly' && polyPts.length){
+      var pts = polyPts.concat(polyCursor ? [polyCursor] : []);
+      body += '<polyline class="ppre" points="' + pts.map(function(p){ return p.x + ',' + p.y; }).join(' ') + '"/>';
+      if(pts.length >= 3){
+        var last = pts[pts.length - 1];
+        body += '<line class="ppre-close" x1="' + last.x + '" y1="' + last.y + '" x2="' + polyPts[0].x + '" y2="' + polyPts[0].y + '"/>';
+      }
+      polyPts.forEach(function(p, i){
+        var dot = document.createElement('div');
+        dot.className = 'pdot' + (i === 0 ? ' first' : '');
+        dot.style.left = p.x + '%';
+        dot.style.top = p.y + '%';
+        labels.appendChild(dot);
+      });
+    }
+    // 선택 구역의 꼭짓점 손잡이 (편집 모드, 기본 도구일 때)
+    if(editMode && selZ && drawMode.kind === 'rect' && !drawMode.target){
+      selZ.shapes.forEach(function(pts, si){
+        pts.forEach(function(p, pi){
+          var q = pts[(pi + 1) % pts.length];
+          var m = document.createElement('div');
+          m.className = 'vh mid';
+          m.dataset.si = si; m.dataset.pi = pi; m.dataset.mid = '1';
+          m.style.left = ((p.x + q.x) / 2) + '%';
+          m.style.top = ((p.y + q.y) / 2) + '%';
+          m.title = '끌면 꼭짓점이 추가됩니다';
+          labels.appendChild(m);
+        });
+        pts.forEach(function(p, pi){
+          var v = document.createElement('div');
+          v.className = 'vh';
+          v.dataset.si = si; v.dataset.pi = pi;
+          v.style.left = p.x + '%';
+          v.style.top = p.y + '%';
+          v.title = '끌어서 이동 · 우클릭 삭제' + (selZ.shapes.length > 1 ? ' (영역' + (si + 1) + ')' : '');
+          labels.appendChild(v);
+        });
+      });
+    }
+    overlay.insertAdjacentHTML('afterbegin', '<svg id="zoneSvg" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><defs>' + defs + '</defs>' + body + '</svg>');
+    overlay.appendChild(labels);
   }
   function renderZoneBar(){
     var h = '<span class="bar-label">작업장 ' + zones.length + '</span>';
@@ -1688,6 +2128,8 @@
     renderZoneBar();
     renderZoneItems();
     renderDetail();
+    updateView();
+    updateDrawHint();
     layoutPlan();
   }
 
@@ -1696,15 +2138,42 @@
   var CROP = {left: 2.5, top: 16.5, right: 96, bottom: 80.5};
   var IMG_W = 2339, IMG_H = 3309;
   var CROP_AR = ((CROP.right - CROP.left) * IMG_W) / ((CROP.bottom - CROP.top) * IMG_H);
-  function applyCrop(){
-    var cw = (CROP.right - CROP.left) / 100, ch = (CROP.bottom - CROP.top) / 100;
+  // 보이는 범위(v: 원본 기준 %)에 맞춰 도면 안쪽 판을 확대·이동
+  function applyView(v){
+    var cw = (v.right - v.left) / 100, ch = (v.bottom - v.top) / 100;
     var inner = byId('planInner');
     inner.style.setProperty('--cW', (100 / cw) + '%');
     inner.style.setProperty('--cH', (100 / ch) + '%');
-    inner.style.setProperty('--cL', (-CROP.left / cw / 100 * 100) + '%');
-    inner.style.setProperty('--cT', (-CROP.top / ch / 100 * 100) + '%');
-    planWrap.style.setProperty('--cropAR', String(CROP_AR));
+    inner.style.setProperty('--cL', (-v.left / cw) + '%');
+    inner.style.setProperty('--cT', (-v.top / ch) + '%');
   }
+  // 구역을 감싸는 사각형 + 여백, 도면 칸 비율 유지, 최대 확대 약 4.5배, 잘라낸 도면 범위 안으로 제한
+  function zoomView(z){
+    var cL = CROP.left * IMG_W / 100, cT = CROP.top * IMG_H / 100;
+    var cW = (CROP.right - CROP.left) * IMG_W / 100, cH = (CROP.bottom - CROP.top) * IMG_H / 100;
+    var bx = z.x * IMG_W / 100, by = z.y * IMG_H / 100, bw = z.w * IMG_W / 100, bh = z.h * IMG_H / 100;
+    var pad = Math.max(bw, bh) * 0.12 + 40;
+    var w = bw + pad * 2, h = bh + pad * 2;
+    if(w / h < CROP_AR){ w = h * CROP_AR; } else { h = w / CROP_AR; }
+    var minW = cW * 0.22;
+    if(w < minW){ w = minW; h = w / CROP_AR; }
+    if(w > cW){ w = cW; h = cH; }
+    var cx = bx + bw / 2, cy = by + bh / 2;
+    var left = clamp(cx - w / 2, cL, cL + cW - w), top = clamp(cy - h / 2, cT, cT + cH - h);
+    return {left: left / IMG_W * 100, top: top / IMG_H * 100, right: (left + w) / IMG_W * 100, bottom: (top + h) / IMG_H * 100};
+  }
+  function currentView(){
+    var z = selectedZone();
+    return (z && zoomOn) ? zoomView(z) : CROP;
+  }
+  function updateView(){
+    applyView(currentView());
+    var z = selectedZone();
+    var ctl = byId('zoomCtl');
+    ctl.classList.toggle('hidden', !z);
+    if(z){ byId('btnZoom').textContent = zoomOn ? '전체 도면 보기' : '"' + z.name + '" 확대'; }
+  }
+  byId('btnZoom').addEventListener('click', function(){ zoomOn = !zoomOn; renderAll(); });
   var lastLayoutKey = '';
   function layoutPlan(){
     var root = document.documentElement;
@@ -1728,11 +2197,13 @@
     root.style.setProperty('--panelH', planH + 'px');
   }
   window.addEventListener('resize', layoutPlan);
-  applyCrop();
+  planWrap.style.setProperty('--cropAR', String(CROP_AR));
+  applyView(CROP);
 
   // ---- 구역 내보내기/가져오기 ----
   function exportZones(){
-    var blob = new Blob([JSON.stringify(zones, null, 2)], {type: 'application/json'});
+    var out = zones.map(function(z){ return {id: z.id, name: z.name, x: z.x, y: z.y, w: z.w, h: z.h, typeId: z.typeId || '', shapes: shapesToDoc(z.shapes)}; });
+    var blob = new Blob([JSON.stringify(out, null, 2)], {type: 'application/json'});
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
@@ -1748,7 +2219,8 @@
       try{
         var data = JSON.parse(reader.result);
         if(Array.isArray(data)){
-          zones = data;
+          zones = data.filter(function(z){ return z && typeof z === 'object'; }).map(normalizeZone);
+          undoStack = [];
           selectedZoneId = null;
           selectedItemId = null;
           renderAll();
@@ -1770,6 +2242,34 @@
     }
   });
   overlay.addEventListener('mousedown', onOverlayMouseDown);
+  overlay.addEventListener('click', function(evt){
+    if(editMode) return;
+    var el = evt.target.closest ? evt.target.closest('[data-zone-id]') : null;
+    if(!el) return;
+    evt.stopPropagation();
+    selectZone(el.getAttribute('data-zone-id'));
+  });
+  overlay.addEventListener('dblclick', function(evt){
+    if(editMode && drawMode.kind === 'poly'){ evt.preventDefault(); finishPolygon(); }
+  });
+  overlay.addEventListener('contextmenu', function(evt){
+    if(!editMode) return;
+    var h = evt.target.closest ? evt.target.closest('.vh') : null;
+    if(drawMode.kind === 'poly' || h){ evt.preventDefault(); }
+    if(!h || h.dataset.mid) return;
+    deleteVertex(+h.dataset.si, +h.dataset.pi);
+  });
+  window.addEventListener('keydown', function(e){
+    if(!editMode) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(tag === 'input' || tag === 'select' || tag === 'textarea') return;
+    if(!nameModal.classList.contains('hidden')) return;
+    if(drawMode.kind === 'poly'){
+      if(e.key === 'Enter'){ e.preventDefault(); finishPolygon(); }
+      else if(e.key === 'Escape'){ resetDrawMode(); }
+      else if(e.key === 'Backspace'){ e.preventDefault(); polyPts.pop(); polyCursor = polyPts.length ? polyCursor : null; updateDrawHint(); renderZonesOnImage(); }
+    } else if(drawMode.target && e.key === 'Escape'){ resetDrawMode(); }
+  });
   window.addEventListener('mousemove', onOverlayMouseMove);
   window.addEventListener('mouseup', onOverlayMouseUp);
 
@@ -1780,7 +2280,7 @@
     getZones: function(){ return zones.slice(); },
     getNodes: function(){ return nodes.slice(); },
     addZoneProgrammatic: function(z){
-      var zz = Object.assign({id: uid('z')}, z);
+      var zz = normalizeZone(Object.assign({id: uid('z')}, z));
       zones.push(zz);
       renderAll();
       saveZoneToFirestore(zz);
@@ -1797,7 +2297,16 @@
     selectItem: selectItem,
     getState: function(){ return {zone: selectedZoneId, item: selectedItemId, editMode: editMode}; },
     crop: CROP,
-    getTypes: function(){ return zoneTypes.map(function(t){ return Object.assign({}, t); }); }
+    getTypes: function(){ return zoneTypes.map(function(t){ return Object.assign({}, t); }); },
+    getView: function(){ return currentView(); },
+    isZoomed: function(){ return !!(selectedZone() && zoomOn); },
+    zoomView: zoomView,
+    zoneAt: zoneAt,
+    pointInPoly: pointInPoly,
+    normalizeZone: normalizeZone,
+    zoneDoc: zoneDoc,
+    mergeZones: mergeZones,
+    getDrawMode: function(){ return {kind: drawMode.kind, target: drawMode.target, pts: polyPts.length, undo: undoStack.length}; }
   };
 })();
 </script>
