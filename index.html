@@ -386,7 +386,7 @@
     <div id="detailPanel" class="card"></div>
   </div>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.9 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.9.1 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -3082,6 +3082,59 @@
     overlay.insertAdjacentHTML('afterbegin', '<svg id="zoneSvg" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><defs>' + defs + '</defs>' + body + '</svg>');
     overlay.appendChild(labels);
   }
+  // 라벨이 서로 겹치면 위아래로 벌려 준다. 선택한 구역 라벨은 제자리를 지키고 나머지가 비켜난다.
+  var spreadRaf = 0;
+  function scheduleSpread(){
+    if(spreadRaf) return;
+    var raf = window.requestAnimationFrame || function(f){ return setTimeout(f, 16); };
+    spreadRaf = raf(function(){ spreadRaf = 0; spreadLabels(); });
+  }
+  function spreadLabels(){
+    var crop = planWrap.getBoundingClientRect();
+    if(!crop.width || !crop.height) return;
+    var els = [].slice.call(overlay.querySelectorAll('.zone-label'));
+    els.forEach(function(el){ el.style.transform = ''; });
+    if(els.length < 2) return;
+    var it = [];
+    els.forEach(function(el){
+      var r = el.getBoundingClientRect();
+      if(r.bottom < crop.top || r.top > crop.bottom || r.right < crop.left || r.left > crop.right) return;  // 보이지 않는 라벨은 제외
+      it.push({el: el, l: r.left, r: r.right, t: r.top, h: r.height, dy: 0, fixed: el.classList.contains('sel')});
+    });
+    if(it.length < 2) return;
+    var GAP = 3;
+    var lo = crop.top + 1, hi = crop.bottom - 1;
+    function clampAll(){
+      it.forEach(function(a){
+        if(a.t + a.dy < lo) a.dy = lo - a.t;
+        if(a.t + a.dy + a.h > hi) a.dy = hi - a.h - a.t;
+      });
+    }
+    for(var pass = 0; pass < 12; pass++){
+      var moved = false;
+      for(var i = 0; i < it.length; i++){
+        for(var j = i + 1; j < it.length; j++){
+          var a = it[i], b = it[j];
+          if(a.l >= b.r - 1 || b.l >= a.r - 1) continue;           // 가로로 안 겹치면 그대로 둠
+          var at = a.t + a.dy, bt = b.t + b.dy;
+          var ov = Math.min(at + a.h, bt + b.h) - Math.max(at, bt) + GAP;
+          if(ov <= 0) continue;
+          var up = at <= bt ? a : b, down = up === a ? b : a;       // 위에 있던 쪽은 더 위로, 아래쪽은 더 아래로
+          if(up.fixed && down.fixed){ continue; }
+          else if(up.fixed){ down.dy += ov; }
+          else if(down.fixed){ up.dy -= ov; }
+          else { up.dy -= ov / 2; down.dy += ov / 2; }
+          moved = true;
+        }
+      }
+      clampAll();
+      if(!moved) break;
+    }
+    it.forEach(function(a){
+      if(Math.abs(a.dy) < 0.5) return;
+      a.el.style.transform = 'translateY(-100%) translateY(' + Math.round(a.dy) + 'px)';
+    });
+  }
   function renderZoneBar(){
     var h = '<span class="bar-label">작업장 ' + zones.length + '</span>';
     if(!zones.length){
@@ -3119,6 +3172,7 @@
     updateDrawHint();
     syncMobile();
     layoutPlan();
+    scheduleSpread();
   }
 
   // ---- 도면 여백 잘라내기 + 화면 높이에 맞춘 크기 ----
@@ -3134,6 +3188,7 @@
     inner.style.setProperty('--cH', (100 / ch) + '%');
     inner.style.setProperty('--cL', (-v.left / cw) + '%');
     inner.style.setProperty('--cT', (-v.top / ch) + '%');
+    scheduleSpread();
   }
   // 구역을 감싸는 사각형 + 여백, 도면 칸 비율 유지, 최대 확대 약 4.5배, 잘라낸 도면 범위 안으로 제한
   function zoomView(z){
@@ -3334,7 +3389,7 @@
     root.style.setProperty('--planW', planW + 'px');
     root.style.setProperty('--panelH', planH + 'px');
   }
-  window.addEventListener('resize', layoutPlan);
+  window.addEventListener('resize', function(){ layoutPlan(); scheduleSpread(); });
   planWrap.style.setProperty('--cropAR', String(CROP_AR));
   applyView(CROP);
 
