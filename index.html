@@ -28,6 +28,7 @@
   .zone-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
   .bar-label{font-size:12px;font-weight:700;color:#475467;margin-right:4px;white-space:nowrap;}
   .zchip{position:relative;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:14px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;white-space:nowrap;}
+  .zchips{display:contents;}
   .zchip:hover{border-color:var(--accent);}
   .zchip.selected{background:var(--sel);border-color:var(--sel);color:#fff;font-weight:600;}
   .zchip .cnt{font-size:10px;color:#fff;background:var(--danger);border-radius:9px;padding:0 6px;}
@@ -69,6 +70,7 @@
   .plan-crop{position:relative;overflow:hidden;width:100%;aspect-ratio:var(--cropAR, 1);user-select:none;}
   .plan-crop.edit-mode{cursor:crosshair;outline:2px dashed var(--accent);outline-offset:-2px;}
   .plan-inner{position:absolute;left:var(--cL,0);top:var(--cT,0);width:var(--cW,100%);height:var(--cH,100%);transition:left .35s ease, top .35s ease, width .35s ease, height .35s ease;}
+  .plan-inner.no-anim{transition:none;}
   #floorplanImg{display:block;width:100%;height:100%;pointer-events:none;}
   #overlay{position:absolute;inset:0;}
   #zoneSvg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;display:block;}
@@ -170,32 +172,108 @@
   #lightbox.hidden{display:none;}
   #lightbox img{max-width:95vw;max-height:92vh;}
   footer{padding:2px 16px 10px;font-size:11px;color:#8a94a6;}
+  .show-m,.menu-btn,.menu-note,#mBar{display:none;}
+  @media (pointer: coarse){ .plan-crop{touch-action:none;} }
 
+  /* ---- 휴대폰 (폭 820px 이하): 단계형 화면 plan → list → detail ---- */
   @media (max-width: 820px){
+    .hide-m{display:none !important;}
+    .show-m{display:initial;}
+    header{position:relative;flex-wrap:nowrap;padding:8px 12px;}
+    header h1{font-size:16px;white-space:nowrap;}
+    header > div:first-child{min-width:0;}
+    header .status{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .menu-btn{display:inline-block;font-size:20px;line-height:1;padding:6px 12px;background:#2b3545;border-color:#3b4658;color:#fff;}
+    header .toolbar{display:none;position:absolute;left:0;right:0;top:100%;z-index:40;background:#1c2430;padding:8px 12px 12px;flex-direction:column;gap:8px;box-shadow:0 8px 16px rgba(0,0,0,.25);}
+    header.menu-open .toolbar{display:flex;}
+    header .toolbar button{font-size:15px;padding:11px 12px;text-align:left;}
+    .menu-note{display:block;font-size:12px;color:#aab3c2;margin-top:-2px;}
+    .page{padding:10px 10px 6px;}
+    #mBar{position:sticky;top:0;z-index:30;align-items:center;gap:8px;background:var(--bg);padding:6px 0 8px;margin-bottom:4px;}
+    body[data-mstep="list"] #mBar,body[data-mstep="detail"] #mBar{display:flex;}
+    #mBack{font-size:15px;padding:9px 12px;white-space:nowrap;flex-shrink:0;}
+    #mTitle{font-size:16px;font-weight:700;min-width:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+    #mTitle .sub{font-size:12px;color:#667085;font-weight:400;}
+    #topPanel{padding:8px 10px;margin-bottom:10px;}
+    .zone-bar{flex-wrap:wrap;row-gap:6px;}
+    .zchips{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;width:100%;padding:8px 8px 4px 0;-webkit-overflow-scrolling:touch;}
+    .zchip{padding:7px 12px;font-size:14px;flex-shrink:0;}
+    .bar-label{display:none;}
+    .legend{order:2;margin-left:0;}
+    .zchips{order:0;}
+    #zoneItems{height:auto;margin-top:0;border-top:none;padding-top:0;}
+    .zi-head{flex-wrap:wrap;row-gap:4px;}
+    .zi-head .zname{white-space:nowrap;}
+    .zi-cols{grid-template-columns:1fr;gap:14px;}
+    .zi-col-title{font-size:14px;margin-bottom:6px;}
+    .icards{flex-direction:column;}
+    .icard{max-width:none;width:100%;padding:11px 12px;font-size:15px;}
+    .icard .s{font-size:12px;}
+    .icard.add{display:none;}
+    .m-addrow{display:flex;gap:8px;margin-top:14px;}
+    .m-addrow button{flex:1;font-size:13px;color:var(--accent);border-style:dashed;}
+    .zset input{width:100%;}
+    .zset label{flex:1 1 140px;}
     .work{flex-direction:column;}
     .plan-card{width:100%;}
-    #detailPanel{width:100%;height:auto;}
-    .zi-cols{grid-template-columns:1fr;}
-    #zoneItems{height:auto;max-height:260px;}
+    #detailPanel{width:100%;height:auto;padding:12px;}
+    .zoom-ctl button{padding:8px 12px;font-size:14px;}
+    .draw-hint{font-size:12px;}
     .stats{grid-template-columns:repeat(3,minmax(0,1fr));}
+    .stat .l{font-size:11px;}
+    .d-head{flex-direction:column;}
+    .d-acts{justify-content:flex-start;}
+    .d-acts button{padding:8px 12px;font-size:14px;}
+    .d-title{font-size:19px;}
+    .node-row{padding:10px 2px;font-size:15px;flex-wrap:wrap;}
+    .node-row .acts{display:none;width:100%;padding:6px 0 2px 18px;opacity:1;gap:6px;}
+    .node-row.open{background:#f7f9ff;}
+    .node-row.open .acts{display:flex;}
+    .node-row .acts button{padding:7px 12px;font-size:13px;}
+    .badge{font-size:11px;}
+    .kv{grid-template-columns:110px 1fr;font-size:15px;}
+    table.due thead{display:none;}
+    table.due,table.due tbody{display:block;}
+    table.due tr{display:grid;grid-template-columns:1fr auto;column-gap:8px;padding:9px 2px;border-bottom:1px solid #f0f1f3;}
+    table.due td{border:none;padding:0;font-size:12px;}
+    table.due td.c-zone{grid-column:1 / -1;color:#667085;font-size:11px;}
+    table.due td.c-path{grid-column:1;font-size:14px;font-weight:600;}
+    table.due td.c-status{grid-column:2;grid-row:span 3;align-self:center;}
+    table.due td.c-cyc,table.due td.c-last{grid-column:1;color:#667085;}
+    table.due td.c-cyc::before{content:'주기 ';}
+    table.due td.c-last::before{content:'최근 점검 ';}
+    /* 단계별로 보이는 부분 */
+    body[data-mstep="plan"]:not(.editing) #zoneItems{display:none;}
+    body[data-mstep="list"] .zone-bar{display:none;}
+    body[data-mstep="list"] .plan-card{order:2;}
+    body[data-mstep="list"] #detailPanel{order:1;}
+    body[data-mstep="list"] .plan-card::before{content:'위치';display:block;font-size:13px;font-weight:700;color:#344054;margin:2px 0 6px 2px;}
+    body[data-mstep="detail"] #topPanel,body[data-mstep="detail"] .plan-card{display:none;}
+    body[data-mstep="list"] .zi-head .zname,body[data-mstep="list"] .zi-head .tbadge{display:none;}
+    body[data-mstep="list"] #detailPanel [data-act="allzones"]{display:none;}
+    body[data-mstep="detail"] #detailPanel .d-crumb,body[data-mstep="detail"] #detailPanel [data-act="close"]{display:none;}
+    .modal-box{max-width:96vw;}
   }
 </style>
 </head>
 <body>
 <header>
   <div>
-    <h1>이물관리 · 순수본 2공장 1층 설비/공기구 점검 관리 (프로토타입)</h1>
+    <h1>이물관리<span class="hide-m"> · 순수본 2공장 1층 설비/공기구 점검 관리 (프로토타입)</span><span class="show-m"> · 2공장 1층</span></h1>
     <div class="status" id="statusLine">연결 확인 중...</div>
   </div>
-  <div class="toolbar">
+  <button id="btnMenu" class="menu-btn" aria-label="메뉴" aria-expanded="false">☰</button>
+  <div class="toolbar" id="toolbar">
     <button id="btnBulk">일괄 등록 (엑셀+사진)</button>
     <button id="btnEditMode">구역 편집 모드 켜기</button>
     <button id="btnExport">구역 내보내기</button>
     <button id="btnImportTrigger">구역 가져오기</button>
+    <div class="menu-note">구역 편집(모양 그리기·꼭짓점 이동)은 PC에서 하는 것을 권장합니다.</div>
     <input type="file" id="importFile" accept="application/json" style="display:none;">
   </div>
 </header>
 <div class="page">
+  <div id="mBar"><button id="mBack">← 도면</button><div id="mTitle"></div></div>
   <div id="topPanel" class="card">
     <div class="zone-bar" id="zoneBar"></div>
     <div id="zoneItems"></div>
@@ -214,7 +292,7 @@
     <div id="detailPanel" class="card"></div>
   </div>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.6.1 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.7 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -352,6 +430,10 @@
   var vDrag = null;
   var undoStack = [];
   var hintMsg = '';
+  var manualView = null;                          // 손가락으로 확대·이동한 보기 {key, v}
+  var mq = window.matchMedia ? window.matchMedia('(max-width: 820px)') : null;
+  var lastStep = null;
+  var popping = false;
 
   var CAT_LABEL = {equip: '설비', tool: '공기구'};
   var UNIT_LABEL = {day: '일', week: '주', month: '개월'};
@@ -1275,7 +1357,8 @@
       if(!z){
         box.innerHTML = '<div class="zi-empty"><b>구역 편집 모드</b> · 도면에 드래그하면 <b>사각형</b> 새 구역을 그립니다(이름·구분 입력). ' +
           '<button data-act="newpoly" style="padding:2px 8px;font-size:12px;">다각형으로 새 구역 그리기</button><br>' +
-          '기존 구역의 이름·구분·모양을 바꾸려면 위 작업장 버튼을 누르거나 도면의 구역을 클릭하세요. 구분 목록과 색상은 오른쪽 위 <b>구분·색상 관리</b>에서 바꿉니다.</div>';
+          '기존 구역의 이름·구분·모양을 바꾸려면 위 작업장 버튼을 누르거나 도면의 구역을 클릭하세요. 구분 목록과 색상은 오른쪽 위 <b>구분·색상 관리</b>에서 바꿉니다.' +
+          '<br class="show-m"><button class="show-m" data-act="editoff" style="margin-top:6px;">편집 모드 끄기</button></div>';
         return;
       }
       var prev = byId('zsName');
@@ -1297,6 +1380,7 @@
       zones.forEach(function(o){ if(o.id !== z.id) h += '<option value="' + escapeHtml(o.id) + '">' + escapeHtml(o.name) + '</option>'; });
       h += '</select><button data-act="zmerge" data-id="' + z.id + '">이 구역으로 합치기</button>' +
         '<span class="sep"></span><button data-act="undo"' + (undoStack.length ? '' : ' disabled') + '>되돌리기' + (undoStack.length ? ' (' + undoStack.length + ')' : '') + '</button></div>';
+      h += '<button class="show-m" data-act="editoff" style="margin-top:8px;">편집 모드 끄기</button>';
       h += '<div class="zi-empty" style="margin-top:4px;">흰 네모(꼭짓점)를 끌어 옮기고, 회색 점(변 가운데)을 끌면 꼭짓점이 생깁니다. 꼭짓점 우클릭 = 삭제. 끌 때 다른 꼭짓점이나 같은 줄에 자석처럼 붙습니다(Alt 누르면 해제).</div>';
       box.innerHTML = h;
       return;
@@ -1330,6 +1414,7 @@
       h += '<button class="icard add" data-act="addtop" data-cat="' + cat + '">+ ' + CAT_LABEL[cat] + ' 추가</button></div></div>';
     });
     h += '</div>';
+    h += '<div class="m-addrow show-m"><button data-act="addtop" data-cat="equip">+ 설비 추가</button><button data-act="addtop" data-cat="tool">+ 공기구 추가</button></div>';
     box.innerHTML = h;
   }
 
@@ -1405,6 +1490,7 @@
         (n.category === 'tool' ? '<div>기준 보유 수량</div><div>' + (n.stdQty === null || n.stdQty === undefined ? '미입력' : n.stdQty + '개') + '</div>' : '') +
         '</div><div class="placeholder" style="font-size:12px;margin-top:10px;">하위 부품이 있으면 "+ 하위 항목"으로 추가하세요. 하위 항목이 생기면 이 항목의 점검주기 대신 하위 항목별 주기가 적용됩니다.</div>';
     }
+    if(kids){ h += '<div class="placeholder show-m" style="margin-top:8px;font-size:12px;">하위 항목 줄을 누르면 하위 추가·사진·수정·삭제 버튼이 나옵니다.</div>'; }
     h += '<div class="placeholder" style="margin-top:14px;font-size:11px;">점검 기록(점검일·입력자·이상 유무·교체 여부·수량)은 다음 단계에서 연결됩니다.</div>';
     detailPanel.innerHTML = h;
     if(pc){
@@ -1448,9 +1534,9 @@
       h += '<table class="due"><thead><tr>' + (z ? '' : '<th>작업장</th>') + '<th>항목</th><th>주기</th><th>최근 점검</th><th>상태</th></tr></thead><tbody>';
       due.forEach(function(x){
         var zz = zoneIds[x.n.zoneId];
-        h += '<tr class="go" data-act="goto" data-id="' + x.n.id + '">' + (z ? '' : '<td>' + escapeHtml(zz ? zz.name : '') + '</td>') +
-          '<td>' + escapeHtml(pathNames(x.n).join(' › ')) + '</td><td>' + x.n.cycleValue + UNIT_LABEL[x.n.cycleUnit] + '</td><td>' + x.n.lastDate + '</td>' +
-          '<td><span class="badge ' + x.st.cls + '" style="margin-left:0;">' + x.st.text + '</span></td></tr>';
+        h += '<tr class="go" data-act="goto" data-id="' + x.n.id + '">' + (z ? '' : '<td class="c-zone">' + escapeHtml(zz ? zz.name : '') + '</td>') +
+          '<td class="c-path">' + escapeHtml(pathNames(x.n).join(' › ')) + '</td><td class="c-cyc">' + x.n.cycleValue + UNIT_LABEL[x.n.cycleUnit] + '</td><td class="c-last">' + x.n.lastDate + '</td>' +
+          '<td class="c-status"><span class="badge ' + x.st.cls + '" style="margin-left:0;">' + x.st.text + '</span></td></tr>';
       });
       h += '</tbody></table>';
     }
@@ -1468,7 +1554,16 @@
 
   function onPanelClick(evt){
     var el = evt.target.closest('[data-act]');
-    if(!el) return;
+    if(!el){
+      // 휴대폰: 트리 줄을 누르면 그 줄의 버튼(하위 추가·사진·수정·삭제)을 펼침
+      var row = isMobile() ? evt.target.closest('.node-row') : null;
+      if(row){
+        var wasOpen = row.classList.contains('open');
+        detailPanel.querySelectorAll('.node-row.open').forEach(function(r){ r.classList.remove('open'); });
+        if(!wasOpen) row.classList.add('open');
+      }
+      return;
+    }
     var act = el.dataset.act;
     var id = el.dataset.id;
     if(act === 'zoom'){
@@ -1495,8 +1590,9 @@
     if(act === 'zdel'){ deleteZone(id, evt); return; }
     if(act === 'zsave'){ saveZoneSettings(id); return; }
     if(act === 'types'){ if(editMode){ openTypeModal(); } return; }
-    if(act === 'close'){ selectedItemId = null; renderAll(); return; }
-    if(act === 'allzones'){ selectedZoneId = null; selectedItemId = null; renderAll(); return; }
+    if(act === 'editoff'){ setEditMode(false); return; }
+    if(act === 'close'){ if(isMobile()){ mobileUp(); return; } selectedItemId = null; renderAll(); return; }
+    if(act === 'allzones'){ if(isMobile() && !selectedItemId){ mobileUp(); return; } selectedZoneId = null; selectedItemId = null; renderAll(); return; }
     if(act === 'addtop'){ openNodeModal({mode: 'add', category: el.dataset.cat, parentId: null}); return; }
     var n = findNode(id);
     if(!n) return;
@@ -2105,6 +2201,7 @@
     if(!zones.length){
       h += '<span class="placeholder" style="font-size:12px;">아직 그려진 구역이 없습니다. "구역 편집 모드"를 켜고 도면에 드래그하세요.</span>';
     }
+    h += '<span class="zchips">';
     zones.forEach(function(z){
       var od = overdueInZone(z.id);
       var t = zoneType(z);
@@ -2113,6 +2210,7 @@
         (od > 0 ? '<span class="cnt">지연 ' + od + '</span>' : '') +
         (editMode ? '<span class="zx" data-act="zdel" data-id="' + z.id + '" title="구역 삭제">✕</span>' : '') + '</span>';
     });
+    h += '</span>';
     h += '<span class="legend">';
     zoneTypes.forEach(function(t){
       h += '<span><i class="dot" style="background:' + escapeHtml(t.color) + ';"></i>' + escapeHtml(t.name) + '</span>';
@@ -2130,6 +2228,7 @@
     renderDetail();
     updateView();
     updateDrawHint();
+    syncMobile();
     layoutPlan();
   }
 
@@ -2162,18 +2261,168 @@
     var left = clamp(cx - w / 2, cL, cL + cW - w), top = clamp(cy - h / 2, cT, cT + cH - h);
     return {left: left / IMG_W * 100, top: top / IMG_H * 100, right: (left + w) / IMG_W * 100, bottom: (top + h) / IMG_H * 100};
   }
+  function viewKey(){ return (selectedZoneId || '') + '|' + (zoomOn ? 1 : 0); }
+  function hasManualView(){
+    if(manualView && manualView.key !== viewKey()){ manualView = null; }
+    return !!manualView;
+  }
   function currentView(){
+    if(hasManualView()) return manualView.v;
     var z = selectedZone();
     return (z && zoomOn) ? zoomView(z) : CROP;
   }
   function updateView(){
     applyView(currentView());
     var z = selectedZone();
+    var manual = hasManualView();
     var ctl = byId('zoomCtl');
-    ctl.classList.toggle('hidden', !z);
-    if(z){ byId('btnZoom').textContent = zoomOn ? '전체 도면 보기' : '"' + z.name + '" 확대'; }
+    ctl.classList.toggle('hidden', !z && !manual);
+    byId('btnZoom').textContent = (manual || (z && zoomOn)) ? '전체 도면 보기' : (z ? '"' + z.name + '" 확대' : '');
   }
-  byId('btnZoom').addEventListener('click', function(){ zoomOn = !zoomOn; renderAll(); });
+  byId('btnZoom').addEventListener('click', function(){
+    if(hasManualView()){ manualView = null; if(selectedZone()){ zoomOn = false; } }
+    else { zoomOn = !zoomOn; }
+    renderAll();
+  });
+
+  // ---- 터치: 두 손가락 확대, 한 손가락 이동 (편집 모드에서는 그리기/꼭짓점 끌기) ----
+  var gp = {};
+  var gBase = null;
+  var gMoved = false;
+  var suppressClickUntil = 0;
+  function gPoints(){ return Object.keys(gp).map(function(k){ return gp[k]; }); }
+  function gCenter(pts){
+    var x = 0, y = 0;
+    pts.forEach(function(p){ x += p.x; y += p.y; });
+    return {x: x / pts.length, y: y / pts.length};
+  }
+  function gDist(pts){ return pts.length > 1 ? Math.sqrt(Math.pow(pts[0].x - pts[1].x, 2) + Math.pow(pts[0].y - pts[1].y, 2)) : 0; }
+  function gRebase(){
+    var pts = gPoints();
+    if(!pts.length){ gBase = null; return; }
+    var r = planWrap.getBoundingClientRect();
+    var c = gCenter(pts);
+    gBase = {v: Object.assign({}, currentView()), mx: c.x - r.left, my: c.y - r.top, d: gDist(pts), n: pts.length, L: r.left, T: r.top, W: r.width, H: r.height};
+  }
+  function gestureDown(e){
+    gp[e.pointerId] = {x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY};
+    gMoved = Object.keys(gp).length > 1 ? true : false;
+    gRebase();
+  }
+  function gestureMove(e){
+    var p = gp[e.pointerId];
+    if(!p || !gBase || !gBase.W) return;
+    p.x = e.clientX; p.y = e.clientY;
+    if(!gMoved && Math.sqrt(Math.pow(p.x - p.sx, 2) + Math.pow(p.y - p.sy, 2)) < 8) return;
+    gMoved = true;
+    var pts = gPoints();
+    var b = gBase;
+    var c = gCenter(pts);
+    var mx = c.x - b.L, my = c.y - b.T;
+    var s = (b.n > 1 && pts.length > 1 && b.d > 0) ? gDist(pts) / b.d : 1;
+    var vw0 = b.v.right - b.v.left, vh0 = b.v.bottom - b.v.top;
+    var cW = CROP.right - CROP.left;
+    var nw = clamp(vw0 / s, cW * 0.1, cW), nh = nw * vh0 / vw0;
+    var ix = b.v.left + b.mx / b.W * vw0, iy = b.v.top + b.my / b.H * vh0;
+    var left = clamp(ix - mx / b.W * nw, CROP.left, CROP.right - nw);
+    var top = clamp(iy - my / b.H * nh, CROP.top, CROP.bottom - nh);
+    manualView = {key: viewKey(), v: {left: left, top: top, right: left + nw, bottom: top + nh}};
+    byId('planInner').classList.add('no-anim');
+    updateView();
+  }
+  function gestureUp(e){
+    if(!gp[e.pointerId]) return;
+    delete gp[e.pointerId];
+    if(gMoved){ suppressClickUntil = Date.now() + 250; }   // 확대·이동 직후 손을 떼며 생기는 탭은 무시
+    gRebase();
+    if(!gBase){ byId('planInner').classList.remove('no-anim'); }
+  }
+  planWrap.addEventListener('pointerdown', function(e){
+    if(e.pointerType === 'mouse') return;
+    if(e.target.closest && e.target.closest('#zoomCtl')) return;
+    if(editMode){
+      if(!overlay.contains(e.target)) return;
+      e.preventDefault();
+      onOverlayMouseDown(e);
+      return;
+    }
+    gestureDown(e);
+  });
+  window.addEventListener('pointermove', function(e){
+    if(e.pointerType === 'mouse') return;
+    if(editMode){ onOverlayMouseMove(e); return; }
+    gestureMove(e);
+  });
+  function onTouchEnd(e){
+    if(e.pointerType === 'mouse') return;
+    if(editMode){ onOverlayMouseUp(e); return; }
+    gestureUp(e);
+  }
+  window.addEventListener('pointerup', onTouchEnd);
+  window.addEventListener('pointercancel', onTouchEnd);
+
+  // ---- 휴대폰 단계 화면: plan(도면) → list(작업장 목록) → detail(항목 상세) ----
+  function isMobile(){ return !!(mq && mq.matches); }
+  var STEP_DEPTH = {plan: 0, list: 1, detail: 2};
+  function mStep(){
+    if(!isMobile()) return 'pc';
+    if(editMode || !selectedZone()) return 'plan';
+    return selectedItemId ? 'detail' : 'list';
+  }
+  function syncMobile(){
+    var st = mStep();
+    document.body.setAttribute('data-mstep', st);
+    document.body.classList.toggle('editing', editMode);
+    var z = selectedZone();
+    if(st === 'list' && z){
+      byId('mBack').textContent = '← 도면';
+      byId('mTitle').innerHTML = escapeHtml(z.name) + typeBadge(zoneType(z));
+    } else if(st === 'detail' && z){
+      var n = findNode(selectedItemId);
+      byId('mBack').textContent = '← ' + z.name;
+      byId('mTitle').innerHTML = '<span class="sub">' + escapeHtml(z.name) + (n ? ' › ' + CAT_LABEL[n.category] : '') + '</span>';
+    }
+    if(st !== lastStep){
+      if(st !== 'pc' && lastStep !== null && lastStep !== 'pc' && !popping){
+        var diff = STEP_DEPTH[st] - STEP_DEPTH[lastStep];
+        for(var i = 0; i < diff; i++){
+          try{ history.pushState({m: st, i: i}, ''); }catch(err){}
+        }
+      }
+      if(st !== 'pc' && lastStep !== null){ try{ window.scrollTo(0, 0); }catch(err){} }
+      lastStep = st;
+    }
+  }
+  function goBackStep(){
+    if(selectedItemId){ selectedItemId = null; }
+    else if(selectedZoneId){ selectedZoneId = null; }
+    renderAll();
+  }
+  function mobileUp(){
+    if(history.state && history.state.m){ history.back(); }
+    else { goBackStep(); }
+  }
+  window.addEventListener('popstate', function(){
+    if(!isMobile()) return;
+    popping = true;
+    try{ goBackStep(); } finally { popping = false; }
+  });
+  byId('mBack').addEventListener('click', mobileUp);
+  if(mq){
+    var onMq = function(){ lastStep = null; renderAll(); };
+    if(mq.addEventListener){ mq.addEventListener('change', onMq); } else if(mq.addListener){ mq.addListener(onMq); }
+  }
+  // ☰ 메뉴
+  var headerEl = document.querySelector('header');
+  byId('btnMenu').addEventListener('click', function(e){
+    e.stopPropagation();
+    var open = !headerEl.classList.contains('menu-open');
+    headerEl.classList.toggle('menu-open', open);
+    byId('btnMenu').setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  function closeMenu(){ headerEl.classList.remove('menu-open'); byId('btnMenu').setAttribute('aria-expanded', 'false'); }
+  byId('toolbar').addEventListener('click', function(e){ if(e.target.closest('button')) closeMenu(); });
+  document.addEventListener('click', function(e){ if(headerEl.classList.contains('menu-open') && !headerEl.contains(e.target)) closeMenu(); });
   var lastLayoutKey = '';
   function layoutPlan(){
     var root = document.documentElement;
@@ -2244,6 +2493,7 @@
   overlay.addEventListener('mousedown', onOverlayMouseDown);
   overlay.addEventListener('click', function(evt){
     if(editMode) return;
+    if(Date.now() < suppressClickUntil) return;
     var el = evt.target.closest ? evt.target.closest('[data-zone-id]') : null;
     if(!el) return;
     evt.stopPropagation();
@@ -2306,6 +2556,8 @@
     normalizeZone: normalizeZone,
     zoneDoc: zoneDoc,
     mergeZones: mergeZones,
+    getStep: function(){ return mStep(); },
+    hasManualView: hasManualView,
     getDrawMode: function(){ return {kind: drawMode.kind, target: drawMode.target, pts: polyPts.length, undo: undoStack.length}; }
   };
 })();
