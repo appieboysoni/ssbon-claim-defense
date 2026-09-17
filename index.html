@@ -109,7 +109,7 @@
   .strip img{height:92px;width:auto;max-width:160px;object-fit:cover;border-radius:4px;border:1px solid #e4e7ec;cursor:zoom-in;flex:0 0 auto;background:#f2f4f7;}
   .kv{display:grid;grid-template-columns:120px 1fr;gap:4px 10px;font-size:13px;}
   .kv div:nth-child(odd){color:#667085;}
-  .stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:8px 0 12px;}
+  .stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:8px 0 12px;}
   .stat{background:#f7f8fa;border-radius:8px;padding:8px 10px;}
   .stat .l{font-size:11px;color:#667085;}
   .stat .v{font-size:20px;font-weight:700;}
@@ -172,6 +172,51 @@
   #lightbox.hidden{display:none;}
   #lightbox img{max-width:95vw;max-height:92vh;}
   footer{padding:2px 16px 10px;font-size:11px;color:#8a94a6;}
+  /* 사용자·권한 */
+  .status-row{display:flex;align-items:center;gap:8px;margin-top:3px;min-width:0;}
+  .status-row .status{margin-top:0;min-width:0;}
+  header .who{font:inherit;font-size:11px;padding:1px 9px;border-radius:10px;border:1px solid #3b4658;background:#2b3545;color:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  header .who .r{color:#9fc0ff;margin-left:4px;}
+  body:not(.can-manage) .need-manage{display:none !important;}
+  body:not(.is-master) .need-master{display:none !important;}
+  .linkish{border:none;background:none;color:var(--accent);padding:0;font-size:12px;cursor:pointer;}
+  /* 점검 기록 */
+  .rec-bar{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;margin:16px 0 8px;}
+  .rec-bar .d-sec{margin:0;}
+  .rec-bar label{font-size:12px;color:#475467;display:inline-flex;align-items:center;gap:4px;}
+  .recs{display:flex;flex-direction:column;gap:6px;}
+  .rec{border:1px solid #e4e7ec;border-radius:8px;padding:8px 10px;background:#fff;}
+  .rec.deleted{background:#f4f4f6;}
+  .rec.deleted .rec-top b{text-decoration:line-through;color:#8a94a6;}
+  .rec-top{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+  .rec-top b{font-variant-numeric:tabular-nums;margin-right:4px;}
+  .rec-top .badge{margin-left:0;}
+  .rec-sub{font-size:11px;color:#667085;margin-top:3px;}
+  .rec-note{font-size:13px;margin-top:4px;white-space:pre-wrap;overflow-wrap:anywhere;}
+  .rec-acts{display:flex;gap:6px;margin-top:6px;}
+  .rec-acts button{padding:3px 10px;font-size:12px;}
+  .rec details{margin-top:6px;font-size:12px;color:#475467;}
+  .rec details summary{cursor:pointer;}
+  .rec details ul{margin:4px 0 0;padding-left:18px;}
+  .seg{display:flex;margin-bottom:14px;}
+  .seg label{flex:1;margin:0;position:relative;}
+  .seg input{position:absolute;opacity:0;width:1px;height:1px;margin:0;padding:0;}
+  .seg span{display:block;text-align:center;padding:9px 4px;border:1px solid var(--border);font-size:14px;cursor:pointer;background:#fff;}
+  .seg label + label span{border-left:none;}
+  .seg label:first-child span{border-radius:6px 0 0 6px;}
+  .seg label:last-child span{border-radius:0 6px 6px 0;}
+  .seg input:checked + span{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+  .seg input.bad:checked + span{background:var(--danger);border-color:var(--danger);}
+  .seg input:focus-visible + span{outline:2px solid var(--accent);outline-offset:1px;}
+  .modal-box textarea{width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;margin-bottom:14px;font-family:inherit;min-height:64px;resize:vertical;}
+  .modal-box input[readonly]{background:#f2f4f7;color:#475467;}
+  .form-msg{font-size:12px;color:#b42318;min-height:16px;margin:-4px 0 10px;}
+  .pin-sec{border:1px solid #e4e7ec;border-radius:8px;padding:10px 12px 0;margin-bottom:12px;}
+  .pin-sec .m-title{margin-bottom:4px;}
+  .audit-list{max-height:62vh;overflow:auto;font-size:12px;border-top:1px solid #eef0f3;}
+  .audit-row{display:grid;grid-template-columns:118px 120px 1fr;gap:2px 10px;padding:6px 2px;border-bottom:1px solid #eef0f3;}
+  .audit-row .t{color:#667085;font-variant-numeric:tabular-nums;}
+  .audit-row .d{overflow-wrap:anywhere;}
   .show-m,.menu-btn,.menu-note,#mBar{display:none;}
   @media (pointer: coarse){ .plan-crop{touch-action:none;} }
 
@@ -253,6 +298,9 @@
     body[data-mstep="list"] #detailPanel [data-act="allzones"]{display:none;}
     body[data-mstep="detail"] #detailPanel .d-crumb,body[data-mstep="detail"] #detailPanel [data-act="close"]{display:none;}
     .modal-box{max-width:96vw;}
+    .audit-row{grid-template-columns:1fr;}
+    .rec-acts button{padding:7px 14px;font-size:13px;}
+    .rec-bar .primary{padding:10px 14px;font-size:15px;}
   }
 </style>
 </head>
@@ -260,15 +308,18 @@
 <header>
   <div>
     <h1>이물관리<span class="hide-m"> · 순수본 2공장 1층 설비/공기구 점검 관리 (프로토타입)</span><span class="show-m"> · 2공장 1층</span></h1>
-    <div class="status" id="statusLine">연결 확인 중...</div>
+    <div class="status-row"><button class="who" id="whoTag" type="button" title="사용자 전환">로그인</button><div class="status" id="statusLine">연결 확인 중...</div></div>
   </div>
   <button id="btnMenu" class="menu-btn" aria-label="메뉴" aria-expanded="false">☰</button>
   <div class="toolbar" id="toolbar">
-    <button id="btnBulk">일괄 등록 (엑셀+사진)</button>
-    <button id="btnEditMode">구역 편집 모드 켜기</button>
-    <button id="btnExport">구역 내보내기</button>
-    <button id="btnImportTrigger">구역 가져오기</button>
-    <div class="menu-note">구역 편집(모양 그리기·꼭짓점 이동)은 PC에서 하는 것을 권장합니다.</div>
+    <button id="btnBulk" class="need-manage">일괄 등록 (엑셀+사진)</button>
+    <button id="btnEditMode" class="need-manage">구역 편집 모드 켜기</button>
+    <button id="btnExport" class="need-manage">구역 내보내기</button>
+    <button id="btnImportTrigger" class="need-manage">구역 가져오기</button>
+    <button id="btnPins" class="need-master">권한·PIN 관리</button>
+    <button id="btnAudit" class="need-master">변경 이력</button>
+    <button id="btnSwitch" class="show-m">사용자 전환</button>
+    <div class="menu-note need-manage">구역 편집(모양 그리기·꼭짓점 이동)은 PC에서 하는 것을 권장합니다.</div>
     <input type="file" id="importFile" accept="application/json" style="display:none;">
   </div>
 </header>
@@ -292,7 +343,7 @@
     <div id="detailPanel" class="card"></div>
   </div>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.7 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.8 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -345,7 +396,7 @@
   <div class="modal-box mid">
     <div id="photoTitle" class="m-title"></div>
     <div class="step-line">
-      <button id="photoAddBtn" class="primary">+ 사진 추가</button>
+      <button id="photoAddBtn" class="primary need-manage">+ 사진 추가</button>
       <input type="file" id="photoInput" accept="image/*" multiple>
       <span id="photoStatus" class="muted" style="margin:0;"></span>
     </div>
@@ -396,6 +447,92 @@
       <button id="typeCancel">취소</button>
       <button id="typeSave" class="primary">저장</button>
     </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="recModal">
+  <div class="modal-box">
+    <div id="recTitle" class="m-title"></div>
+    <label for="recDate">점검일</label>
+    <input id="recDate" type="date">
+    <label for="recBy">점검자</label>
+    <input id="recBy" type="text" readonly>
+    <label>이상 유무</label>
+    <div class="seg"><label><input type="radio" name="recResult" value="ok" id="recResOk"><span>정상</span></label><label><input type="radio" name="recResult" value="abnormal" id="recResBad" class="bad"><span>이상 있음</span></label></div>
+    <label>교체 여부</label>
+    <div class="seg"><label><input type="radio" name="recRepl" value="no" id="recReplNo"><span>교체 안 함</span></label><label><input type="radio" name="recRepl" value="yes" id="recReplYes"><span>교체함</span></label></div>
+    <div id="recQtyWrap">
+      <label for="recQty" id="recQtyLabel">보유 수량 (실제 확인)</label>
+      <input id="recQty" type="number" min="0" inputmode="numeric">
+    </div>
+    <label for="recNote">비고 <span class="muted" id="recNoteHint" style="margin:0;"></span></label>
+    <textarea id="recNote" placeholder="예: 날 끝 마모, 오링 교체"></textarea>
+    <div id="recReasonWrap">
+      <label for="recReason">수정 사유 *</label>
+      <input id="recReason" type="text" placeholder="예: 점검일 오기 수정">
+    </div>
+    <div class="form-msg" id="recMsg"></div>
+    <div class="modal-actions">
+      <button id="recCancel">취소</button>
+      <button id="recSave" class="primary">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="loginModal">
+  <div class="modal-box">
+    <div class="m-title">사용자 확인</div>
+    <label for="lgName">이름</label>
+    <input id="lgName" type="text" maxlength="20" autocomplete="name" placeholder="예: 홍길동">
+    <label>권한</label>
+    <div class="seg"><label><input type="radio" name="lgRole" value="inspector" id="lgRoleI"><span>점검자</span></label><label><input type="radio" name="lgRole" value="manager" id="lgRoleM"><span>관리자</span></label><label><input type="radio" name="lgRole" value="master" id="lgRoleS"><span>마스터</span></label></div>
+    <div id="lgPinWrap">
+      <label for="lgPin" id="lgPinLabel">PIN</label>
+      <input id="lgPin" type="password" autocomplete="off">
+      <div id="lgPin2Wrap">
+        <label for="lgPin2">PIN 한 번 더</label>
+        <input id="lgPin2" type="password" autocomplete="off">
+      </div>
+    </div>
+    <div class="muted" id="lgHint">점검자: 점검 기록 입력 · 관리자: 설비·공기구 등록·수정·삭제, 구역 편집, 일괄 등록 · 마스터: 점검 기록 수정·삭제와 PIN 관리까지</div>
+    <div class="form-msg" id="lgMsg"></div>
+    <div class="modal-actions">
+      <button id="lgLogout" style="margin-right:auto;">로그아웃</button>
+      <button id="lgCancel">취소</button>
+      <button id="lgOk" class="primary">확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="pinModal">
+  <div class="modal-box mid">
+    <div class="m-title">권한·PIN 관리</div>
+    <div class="muted">PIN은 화면에서 권한을 나누는 용도입니다. 바꾸면 그 권한으로 로그인해 있던 다른 기기는 다음 접속 때 다시 PIN을 물어봅니다. 추측하기 어려운 6자 이상을 권장합니다.</div>
+    <div class="pin-sec">
+      <div class="m-title">관리자 PIN</div>
+      <div class="muted" id="pinMgrState"></div>
+      <input id="pinMgr1" type="password" autocomplete="new-password" placeholder="새 관리자 PIN (4자 이상)">
+      <input id="pinMgr2" type="password" autocomplete="new-password" placeholder="새 관리자 PIN 한 번 더">
+    </div>
+    <div class="pin-sec">
+      <div class="m-title">마스터 PIN</div>
+      <div class="muted">바꿀 때만 입력하세요.</div>
+      <input id="pinMst1" type="password" autocomplete="new-password" placeholder="새 마스터 PIN (4자 이상)">
+      <input id="pinMst2" type="password" autocomplete="new-password" placeholder="새 마스터 PIN 한 번 더">
+    </div>
+    <div class="form-msg" id="pinMsg"></div>
+    <div class="modal-actions">
+      <button id="pinClose">닫기</button>
+      <button id="pinSave" class="primary">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="auditModal">
+  <div class="modal-box wide">
+    <div class="m-title">변경 이력 (최근 300건)</div>
+    <div class="audit-list" id="auditList"></div>
+    <div class="modal-actions" style="margin-top:12px;"><button id="auditClose">닫기</button></div>
   </div>
 </div>
 
@@ -458,6 +595,9 @@
   var NODES_COL = 'claimdefense_nodes';
   var PHOTOS_COL = 'claimdefense_photos';
   var TYPES_COL = 'claimdefense_zonetypes';
+  var RECORDS_COL = 'claimdefense_records';
+  var AUDIT_COL = 'claimdefense_audit';
+  var SETTINGS_COL = 'claimdefense_settings';
   function initFB(){
     try{
       if(FB_DB) return FB_DB;
@@ -490,7 +630,8 @@
       cycleValue: d.cycleValue || null, cycleUnit: d.cycleUnit || 'month',
       lastDate: d.lastDate || '', stdQty: (d.stdQty === undefined ? null : d.stdQty),
       photoNames: Array.isArray(d.photoNames) ? d.photoNames : [],
-      order: d.order || 0
+      order: d.order || 0,
+      lastRecDate: d.lastRecDate || '', lastRecQty: (d.lastRecQty === undefined ? null : d.lastRecQty), lastRecResult: d.lastRecResult || ''
     };
   }
   function nodeToDoc(n){
@@ -500,7 +641,8 @@
       cycleValue: n.cycleValue || null, cycleUnit: n.cycleUnit || 'month',
       lastDate: n.lastDate || '', stdQty: (n.stdQty === undefined ? null : n.stdQty),
       photoNames: n.photoNames || [],
-      order: n.order || 0, updatedAt: Date.now()
+      order: n.order || 0, updatedAt: Date.now(),
+      lastRecDate: n.lastRecDate || '', lastRecQty: (n.lastRecQty === undefined ? null : n.lastRecQty), lastRecResult: n.lastRecResult || ''
     };
   }
   function loadAll(){
@@ -508,10 +650,15 @@
     if(!db){
       setStatus('Firebase 연결 안 됨 · 로컬 메모리에만 보관(새로고침 시 사라짐)', false);
       renderAll();
+      validateSession(true);
       return;
     }
     setStatus('불러오는 중...');
-    Promise.all([db.collection(ZONES_COL).get(), db.collection(NODES_COL).get(), db.collection(TYPES_COL).get()]).then(function(res){
+    var settingsP = db.collection(SETTINGS_COL).doc('roles').get().then(function(doc){
+      var d = (doc && doc.exists) ? doc.data() : {};
+      settings = {managerPinHash: d.managerPinHash || '', masterPinHash: d.masterPinHash || ''};
+    }, function(e){ console.warn('권한 설정 불러오기 실패', e); });
+    Promise.all([db.collection(ZONES_COL).get(), db.collection(NODES_COL).get(), db.collection(TYPES_COL).get(), settingsP]).then(function(res){
       zones = [];
       res[0].forEach(function(doc){
         zones.push(normalizeZone(Object.assign({}, doc.data(), {id: doc.id})));
@@ -528,10 +675,12 @@
       res[1].forEach(function(doc){ nodes.push(nodeFromDoc(doc.id, doc.data())); });
       renderAll();
       setStatus('Firebase 연결됨 · 구역 ' + zones.length + '개 · 항목 ' + nodes.length + '개 불러옴 · 자동 저장됨', true);
+      validateSession();
     }).catch(function(e){
       console.warn('불러오기 실패', e);
       setStatus('Firebase 연결 실패 · 로컬 메모리에만 보관(새로고침 시 사라짐)', false);
       renderAll();
+      validateSession();
     });
   }
   function saveZoneToFirestore(z){
@@ -587,11 +736,25 @@
     }
     return ymd(d);
   }
+  // 최근 점검일 = 등록 때 넣은 날짜와 점검 기록 중 늦은 날짜
+  function effectiveLast(n){ var a = n.lastDate || '', b = n.lastRecDate || ''; return a > b ? a : b; }
+  function qtyShort(n){
+    return n.category === 'tool' && n.stdQty !== null && n.stdQty !== undefined && n.lastRecQty !== null && n.lastRecQty !== undefined && n.lastRecQty !== '' && +n.lastRecQty < +n.stdQty;
+  }
+  function recAbnormal(n){ return n.lastRecResult === 'abnormal'; }
+  function needsCheck(n){ return qtyShort(n) || recAbnormal(n); }
+  function alertText(n){
+    var t = [];
+    if(recAbnormal(n)) t.push('최근 점검 이상');
+    if(qtyShort(n)) t.push('수량 부족 ' + n.lastRecQty + '/' + n.stdQty);
+    return t.join(' · ');
+  }
   function nodeStatus(n, today){
     today = today || todayStr();
     if(!n.cycleValue){ return {cls: 'b-gray', text: '주기 미설정', level: 0}; }
-    if(!n.lastDate){ return {cls: 'b-warn', text: '최근점검일 미입력', level: 1}; }
-    var due = addCycle(n.lastDate, n.cycleValue, n.cycleUnit);
+    var last = effectiveLast(n);
+    if(!last){ return {cls: 'b-warn', text: '최근점검일 미입력', level: 1}; }
+    var due = addCycle(last, n.cycleValue, n.cycleUnit);
     var diff = Math.round((parseYmd(due) - parseYmd(today)) / 86400000);
     if(diff < 0){ return {cls: 'b-bad', text: '지연 ' + (-diff) + '일 (예정 ' + due + ')', level: 2, due: due}; }
     if(diff <= 7){ return {cls: 'b-warn', text: '임박 D-' + diff + ' (' + due + ')', level: 1, due: due}; }
@@ -802,7 +965,7 @@
         var dt = p.createdAt ? ymd(new Date(p.createdAt)) : '';
         h += '<div class="ph-item"><img src="' + p.data + '" data-act="zoom" alt="">' +
           '<div class="ph-meta"><span title="' + escapeHtml(p.fileName || '') + '">' + escapeHtml(p.fileName || '') + '<br>' + dt + (p.source === 'bulk' ? ' · 일괄' : '') + '</span>' +
-          '<button class="danger" data-act="phdel" data-id="' + p.id + '" data-name="' + escapeHtml(p.fileName || '') + '">삭제</button></div></div>';
+          '<button class="danger need-manage" data-act="phdel" data-id="' + p.id + '" data-name="' + escapeHtml(p.fileName || '') + '">삭제</button></div></div>';
       });
       grid.innerHTML = h;
     }).catch(function(e){
@@ -814,7 +977,7 @@
     var files = Array.prototype.slice.call(evt.target.files || []);
     evt.target.value = '';
     var n = findNode(photoNodeId);
-    if(!n || !files.length) return;
+    if(!n || !files.length || !canManage()) return;
     var st = byId('photoStatus');
     var done = 0, failed = [];
     var chain = Promise.resolve();
@@ -826,6 +989,7 @@
     });
     chain.then(function(){
       st.textContent = done + '장 저장' + (failed.length ? ' · 실패 ' + failed.length + '장: ' + failed.join(' / ') : '');
+      if(done){ audit('사진 추가', nodeLabel(n), done + '장'); }
       loadPhotoGrid();
       renderAll();
     });
@@ -839,6 +1003,7 @@
       return;
     }
     if(el.dataset.act === 'phdel'){
+      if(!canManage()) return;
       if(!confirm('이 사진을 삭제할까요?')) return;
       var n = findNode(photoNodeId);
       var db = initFB();
@@ -850,6 +1015,7 @@
         var i = arr.indexOf(name);
         if(i >= 0){ arr.splice(i, 1); } else if(arr.length){ arr.pop(); }
         n.photoNames = arr;
+        audit('사진 삭제', nodeLabel(n), name);
         return saveNodeToFirestore(n);
       }).then(function(){
         loadPhotoGrid();
@@ -860,6 +1026,436 @@
   byId('photoClose').addEventListener('click', function(){ byId('photoModal').classList.add('hidden'); photoNodeId = null; });
   byId('lightbox').addEventListener('click', function(){ byId('lightbox').classList.add('hidden'); });
 
+  // ---- 사용자·권한 (역할별 PIN, 화면 단계 제한) ----
+  var ROLE_LEVEL = {inspector: 1, manager: 2, master: 3};
+  var ROLE_LABEL = {inspector: '점검자', manager: '관리자', master: '마스터'};
+  var SESSION_KEY = 'claimdefense_session';
+  var settings = {managerPinHash: '', masterPinHash: ''};
+  var me = null;
+  var lgFails = 0, lgLockUntil = 0;
+  function level(){ return me ? (ROLE_LEVEL[me.role] || 0) : 0; }
+  function canRecord(){ return level() >= 1; }
+  function canManage(){ return level() >= 2; }
+  function isMaster(){ return level() >= 3; }
+  function sha256hex(str){
+    var bytes = [], i, j;
+    var u = unescape(encodeURIComponent(str));
+    for(i = 0; i < u.length; i++){ bytes.push(u.charCodeAt(i)); }
+    var K = [], H = [], n = 2, c = 0;
+    function frac(x){ return ((x - Math.floor(x)) * 4294967296) | 0; }
+    while(c < 64){
+      var prime = true;
+      for(j = 2; j * j <= n; j++){ if(n % j === 0){ prime = false; break; } }
+      if(prime){ if(c < 8){ H[c] = frac(Math.pow(n, 1 / 2)); } K[c] = frac(Math.pow(n, 1 / 3)); c++; }
+      n++;
+    }
+    var bitLen = bytes.length * 8;
+    bytes.push(0x80);
+    while(bytes.length % 64 !== 56){ bytes.push(0); }
+    var hi = Math.floor(bitLen / 4294967296), lo = bitLen >>> 0;
+    bytes.push((hi >>> 24) & 255, (hi >>> 16) & 255, (hi >>> 8) & 255, hi & 255, (lo >>> 24) & 255, (lo >>> 16) & 255, (lo >>> 8) & 255, lo & 255);
+    var w = new Array(64);
+    for(var off = 0; off < bytes.length; off += 64){
+      for(i = 0; i < 16; i++){ w[i] = (bytes[off + i * 4] << 24) | (bytes[off + i * 4 + 1] << 16) | (bytes[off + i * 4 + 2] << 8) | bytes[off + i * 4 + 3]; }
+      for(i = 16; i < 64; i++){
+        var a1 = w[i - 15], a2 = w[i - 2];
+        var s0 = ((a1 >>> 7) | (a1 << 25)) ^ ((a1 >>> 18) | (a1 << 14)) ^ (a1 >>> 3);
+        var s1 = ((a2 >>> 17) | (a2 << 15)) ^ ((a2 >>> 19) | (a2 << 13)) ^ (a2 >>> 10);
+        w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+      }
+      var A = H[0], B = H[1], C = H[2], D = H[3], E = H[4], F = H[5], G = H[6], HH = H[7];
+      for(i = 0; i < 64; i++){
+        var t1 = (HH + (((E >>> 6) | (E << 26)) ^ ((E >>> 11) | (E << 21)) ^ ((E >>> 25) | (E << 7))) + ((E & F) ^ (~E & G)) + K[i] + w[i]) | 0;
+        var t2 = ((((A >>> 2) | (A << 30)) ^ ((A >>> 13) | (A << 19)) ^ ((A >>> 22) | (A << 10))) + ((A & B) ^ (A & C) ^ (B & C))) | 0;
+        HH = G; G = F; F = E; E = (D + t1) | 0; D = C; C = B; B = A; A = (t1 + t2) | 0;
+      }
+      H[0] = (H[0] + A) | 0; H[1] = (H[1] + B) | 0; H[2] = (H[2] + C) | 0; H[3] = (H[3] + D) | 0;
+      H[4] = (H[4] + E) | 0; H[5] = (H[5] + F) | 0; H[6] = (H[6] + G) | 0; H[7] = (H[7] + HH) | 0;
+    }
+    var hex = '';
+    for(i = 0; i < 8; i++){ hex += ('00000000' + (H[i] >>> 0).toString(16)).slice(-8); }
+    return hex;
+  }
+  function pinHash(role, pin){ return sha256hex('claimdefense:' + role + ':' + pin); }
+  function readSession(){ try{ return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }catch(e){ return null; } }
+  function writeSession(v){ try{ if(v){ localStorage.setItem(SESSION_KEY, JSON.stringify(v)); } else { localStorage.removeItem(SESSION_KEY); } }catch(e){} }
+  function applyRole(){
+    document.body.classList.toggle('can-manage', canManage());
+    document.body.classList.toggle('is-master', isMaster());
+    document.body.classList.toggle('signed-in', !!me);
+    byId('whoTag').innerHTML = me ? escapeHtml(me.name) + '<span class="r">' + ROLE_LABEL[me.role] + '</span>' : '로그인';
+    if(editMode && !canManage()){ setEditMode(false); }
+  }
+  // offline: Firebase가 없으면 저장 자체가 불가능하므로 기기에 기억된 권한을 그대로 씀
+  function validateSession(offline){
+    var sv = readSession();
+    me = null;
+    if(sv && sv.name && ROLE_LEVEL[sv.role]){
+      if(sv.role === 'inspector' || offline){ me = {name: sv.name, role: sv.role}; }
+      else {
+        var need = settings[sv.role + 'PinHash'];
+        if(need && sv.h === need){ me = {name: sv.name, role: sv.role}; }
+      }
+    }
+    applyRole();
+    renderAll();
+    if(!me){ openLogin(sv && sv.name ? sv.name : '', sv && sv.role ? sv.role : 'inspector'); }
+  }
+  function lgRole(){ var el = document.querySelector('input[name="lgRole"]:checked'); return el ? el.value : 'inspector'; }
+  function updateLoginForm(){
+    var role = lgRole();
+    var pinWrap = byId('lgPinWrap'), pin2 = byId('lgPin2Wrap');
+    byId('lgMsg').textContent = '';
+    if(role === 'inspector'){ pinWrap.style.display = 'none'; return; }
+    pinWrap.style.display = '';
+    var setup = role === 'master' && !settings.masterPinHash;
+    pin2.style.display = setup ? '' : 'none';
+    byId('lgPinLabel').textContent = setup ? '마스터 PIN 처음 정하기 (4자 이상)' : ROLE_LABEL[role] + ' PIN';
+    if(role === 'manager' && !settings.managerPinHash){
+      byId('lgMsg').textContent = '관리자 PIN이 아직 없습니다. 마스터가 [권한·PIN 관리]에서 먼저 정해야 합니다.';
+    }
+  }
+  function openLogin(name, role){
+    byId('lgName').value = name !== undefined ? name : (me ? me.name : '');
+    var r = role || (me ? me.role : 'inspector');
+    ({inspector: byId('lgRoleI'), manager: byId('lgRoleM'), master: byId('lgRoleS')})[r].checked = true;
+    byId('lgPin').value = ''; byId('lgPin2').value = '';
+    byId('lgCancel').style.display = me ? '' : 'none';
+    byId('lgLogout').style.display = me ? '' : 'none';
+    updateLoginForm();
+    byId('loginModal').classList.remove('hidden');
+    setTimeout(function(){ (byId('lgName').value ? byId('lgPin') : byId('lgName')).focus(); }, 0);
+  }
+  function closeLogin(){ byId('loginModal').classList.add('hidden'); }
+  function finishLogin(name, role, h){
+    var prevRole = me ? me.role : '';
+    me = {name: name, role: role};
+    writeSession({name: name, role: role, h: h || ''});
+    lgFails = 0;
+    closeLogin();
+    applyRole();
+    renderAll();
+    if(role !== 'inspector' && prevRole !== role){ audit('로그인', ROLE_LABEL[role], ''); }
+  }
+  function submitLogin(){
+    var msg = byId('lgMsg');
+    var name = byId('lgName').value.trim();
+    var role = lgRole();
+    if(!name){ msg.textContent = '이름을 입력하세요. 점검 기록에 점검자로 남습니다.'; byId('lgName').focus(); return; }
+    if(role === 'inspector'){ finishLogin(name, role, ''); return; }
+    var pin = byId('lgPin').value;
+    if(Date.now() < lgLockUntil){ msg.textContent = 'PIN을 여러 번 틀렸습니다. ' + Math.ceil((lgLockUntil - Date.now()) / 1000) + '초 뒤에 다시 시도하세요.'; return; }
+    if(role === 'master' && !settings.masterPinHash){
+      var pin2 = byId('lgPin2').value;
+      if(pin.length < 4){ msg.textContent = 'PIN은 4자 이상으로 정하세요.'; return; }
+      if(pin !== pin2){ msg.textContent = '두 PIN이 서로 다릅니다.'; return; }
+      var db = initFB();
+      if(!db){ msg.textContent = 'Firebase에 연결되지 않아 PIN을 저장할 수 없습니다.'; return; }
+      var hh = pinHash('master', pin);
+      settings.masterPinHash = hh;
+      byId('lgOk').disabled = true;
+      db.collection(SETTINGS_COL).doc('roles').set({managerPinHash: settings.managerPinHash, masterPinHash: hh, updatedAt: Date.now(), updatedBy: name}).then(function(){
+        byId('lgOk').disabled = false;
+        finishLogin(name, 'master', hh);
+        audit('PIN 설정', '마스터', '마스터 PIN 처음 설정');
+      }, function(e){ byId('lgOk').disabled = false; settings.masterPinHash = ''; msg.textContent = 'PIN 저장 실패: ' + (e.message || e); });
+      return;
+    }
+    var need = settings[role + 'PinHash'];
+    if(!need){ updateLoginForm(); return; }
+    if(!pin){ msg.textContent = 'PIN을 입력하세요.'; byId('lgPin').focus(); return; }
+    var h = pinHash(role, pin);
+    if(h !== need){
+      lgFails++;
+      if(lgFails >= 5){ lgLockUntil = Date.now() + 30000; lgFails = 0; msg.textContent = 'PIN을 5번 틀렸습니다. 30초 뒤에 다시 시도하세요.'; }
+      else { msg.textContent = 'PIN이 맞지 않습니다. (' + lgFails + '/5)'; }
+      byId('lgPin').value = '';
+      return;
+    }
+    finishLogin(name, role, h);
+  }
+  document.querySelectorAll('input[name="lgRole"]').forEach(function(el){ el.addEventListener('change', updateLoginForm); });
+  byId('lgOk').addEventListener('click', submitLogin);
+  byId('lgCancel').addEventListener('click', function(){ if(me) closeLogin(); });
+  byId('lgLogout').addEventListener('click', function(){
+    me = null; writeSession(null); applyRole(); renderAll(); openLogin('', 'inspector');
+  });
+  byId('loginModal').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ submitLogin(); } });
+  byId('whoTag').addEventListener('click', function(){ openLogin(); });
+  byId('btnSwitch').addEventListener('click', function(){ openLogin(); });
+
+  // PIN 관리 (마스터)
+  function openPins(){
+    if(!isMaster()) return;
+    ['pinMgr1', 'pinMgr2', 'pinMst1', 'pinMst2'].forEach(function(k){ byId(k).value = ''; });
+    byId('pinMsg').textContent = '';
+    byId('pinMgrState').textContent = settings.managerPinHash ? '관리자 PIN이 정해져 있습니다. 바꿀 때만 입력하세요.' : '아직 관리자 PIN이 없습니다. 정해야 관리자가 로그인할 수 있습니다.';
+    byId('pinModal').classList.remove('hidden');
+  }
+  byId('btnPins').addEventListener('click', openPins);
+  byId('pinClose').addEventListener('click', function(){ byId('pinModal').classList.add('hidden'); });
+  byId('pinSave').addEventListener('click', function(){
+    if(!isMaster()) return;
+    var msg = byId('pinMsg');
+    var m1 = byId('pinMgr1').value, m2 = byId('pinMgr2').value, s1 = byId('pinMst1').value, s2 = byId('pinMst2').value;
+    if(!m1 && !m2 && !s1 && !s2){ msg.textContent = '바꿀 PIN을 입력하세요.'; return; }
+    var next = {managerPinHash: settings.managerPinHash, masterPinHash: settings.masterPinHash};
+    var changed = [];
+    if(m1 || m2){
+      if(m1.length < 4){ msg.textContent = '관리자 PIN은 4자 이상이어야 합니다.'; return; }
+      if(m1 !== m2){ msg.textContent = '관리자 PIN 두 칸이 서로 다릅니다.'; return; }
+      next.managerPinHash = pinHash('manager', m1); changed.push('관리자');
+    }
+    if(s1 || s2){
+      if(s1.length < 4){ msg.textContent = '마스터 PIN은 4자 이상이어야 합니다.'; return; }
+      if(s1 !== s2){ msg.textContent = '마스터 PIN 두 칸이 서로 다릅니다.'; return; }
+      next.masterPinHash = pinHash('master', s1); changed.push('마스터');
+    }
+    var db = initFB();
+    if(!db){ msg.textContent = 'Firebase에 연결되지 않아 저장할 수 없습니다.'; return; }
+    db.collection(SETTINGS_COL).doc('roles').set({managerPinHash: next.managerPinHash, masterPinHash: next.masterPinHash, updatedAt: Date.now(), updatedBy: me.name}).then(function(){
+      settings = next;
+      if(changed.indexOf('마스터') >= 0){ writeSession({name: me.name, role: 'master', h: next.masterPinHash}); }
+      audit('PIN 변경', changed.join(', '), '');
+      byId('pinModal').classList.add('hidden');
+      saveOk();
+    }, function(e){ msg.textContent = '저장 실패: ' + (e.message || e); });
+  });
+
+  // 변경 이력 (누가·언제·무엇을)
+  function audit(action, target, detail){
+    var db = initFB();
+    if(!db || !me) return;
+    db.collection(AUDIT_COL).add({at: Date.now(), by: me.name, role: me.role, action: action, target: String(target || ''), detail: String(detail || '')}).catch(function(e){ console.warn('이력 저장 실패', e); });
+  }
+  function fmtTime(ms){
+    if(!ms) return '';
+    var d = new Date(ms);
+    return ymd(d) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function zoneName(id){ var z = findZone(id); return z ? z.name : ''; }
+  function nodeLabel(n){ return (zoneName(n.zoneId) ? zoneName(n.zoneId) + ' › ' : '') + pathNames(n).join(' › '); }
+  function openAudit(){
+    if(!isMaster()) return;
+    var box = byId('auditList');
+    byId('auditModal').classList.remove('hidden');
+    var db = initFB();
+    if(!db){ box.innerHTML = '<div class="placeholder">Firebase 연결이 없습니다.</div>'; return; }
+    box.innerHTML = '<div class="placeholder">불러오는 중...</div>';
+    db.collection(AUDIT_COL).orderBy('at', 'desc').limit(300).get().then(function(snap){
+      var h = '';
+      snap.forEach(function(doc){
+        var a = doc.data();
+        h += '<div class="audit-row"><span class="t">' + fmtTime(a.at) + '</span><span>' + escapeHtml(a.by || '') + ' (' + (ROLE_LABEL[a.role] || '') + ')</span>' +
+          '<span class="d"><b>' + escapeHtml(a.action || '') + '</b> ' + escapeHtml(a.target || '') + (a.detail ? ' — ' + escapeHtml(a.detail) : '') + '</span></div>';
+      });
+      box.innerHTML = h || '<div class="placeholder">아직 이력이 없습니다.</div>';
+    }).catch(function(e){ box.innerHTML = '<div class="placeholder">이력을 불러오지 못했습니다: ' + escapeHtml(e.message || e) + '</div>'; });
+  }
+  byId('btnAudit').addEventListener('click', openAudit);
+  byId('auditClose').addEventListener('click', function(){ byId('auditModal').classList.add('hidden'); });
+
+  // ---- 점검 기록 ----
+  var recCache = {};
+  var recLists = {};
+  var showDeleted = false;
+  var recEdit = null;
+  function getRecords(nodeId, force){
+    if(!force && recCache[nodeId]) return recCache[nodeId];
+    var db = initFB();
+    if(!db){ return Promise.reject(new Error('Firebase 연결 안 됨')); }
+    var p = db.collection(RECORDS_COL).where('nodeId', '==', nodeId).get().then(function(snap){
+      var list = [];
+      snap.forEach(function(doc){ var d = doc.data(); d.id = doc.id; list.push(d); });
+      list.sort(function(a, b){
+        if(a.date !== b.date) return a.date < b.date ? 1 : -1;
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      });
+      return list;
+    });
+    recCache[nodeId] = p;
+    p.catch(function(){ if(recCache[nodeId] === p) delete recCache[nodeId]; });
+    return p;
+  }
+  function recFields(r){ return {date: r.date, result: r.result, replaced: !!r.replaced, qty: (r.qty === undefined ? null : r.qty), note: r.note || ''}; }
+  function recDoc(r){ var o = Object.assign({}, r); delete o.id; return o; }
+  function describeRec(b){
+    return b.date + ' · ' + (b.result === 'abnormal' ? '이상 있음' : '정상') + ' · ' + (b.replaced ? '교체함' : '교체 안 함') +
+      (b.qty !== null && b.qty !== undefined ? ' · 수량 ' + b.qty : '') + (b.note ? ' · "' + b.note + '"' : '');
+  }
+  function recHtml(n, r){
+    var hist = r.history || [];
+    var h = '<div class="rec' + (r.deleted ? ' deleted' : '') + '" data-rid="' + escapeHtml(r.id) + '">';
+    h += '<div class="rec-top"><b>' + escapeHtml(r.date) + '</b>' +
+      (r.result === 'abnormal' ? '<span class="badge b-bad">이상 있음</span>' : '<span class="badge b-ok">정상</span>') +
+      (r.replaced ? '<span class="badge b-warn">교체함</span>' : '<span class="badge b-gray">교체 안 함</span>');
+    if(r.qty !== null && r.qty !== undefined){
+      var short = n.stdQty !== null && n.stdQty !== undefined && +r.qty < +n.stdQty;
+      h += '<span class="badge ' + (short ? 'b-bad' : 'b-gray') + '">수량 ' + r.qty + (n.stdQty !== null && n.stdQty !== undefined ? ' / 기준 ' + n.stdQty : '') + (short ? ' 부족' : '') + '</span>';
+    }
+    if(r.deleted) h += '<span class="badge b-bad">삭제됨</span>';
+    h += '</div><div class="rec-sub">점검자 ' + escapeHtml(r.inspector || '') + ' · 입력 ' + fmtTime(r.createdAt) + (hist.length ? ' · 변경 ' + hist.length + '회' : '') + '</div>';
+    if(r.note) h += '<div class="rec-note">' + escapeHtml(r.note) + '</div>';
+    if(r.deleted) h += '<div class="rec-sub">삭제: ' + escapeHtml(r.deletedBy || '') + ' · ' + fmtTime(r.deletedAt) + ' · 사유: ' + escapeHtml(r.deleteReason || '') + '</div>';
+    if(isMaster()){
+      h += '<div class="rec-acts">' + (r.deleted
+        ? '<button data-act="recrestore" data-id="' + n.id + '" data-rid="' + escapeHtml(r.id) + '">복원</button>'
+        : '<button data-act="recedit" data-id="' + n.id + '" data-rid="' + escapeHtml(r.id) + '">수정</button><button class="danger" data-act="recdel" data-id="' + n.id + '" data-rid="' + escapeHtml(r.id) + '">삭제</button>') + '</div>';
+    }
+    if(hist.length){
+      h += '<details><summary>변경 이력 ' + hist.length + '건</summary><ul>' + hist.map(function(x){
+        return '<li>' + fmtTime(x.at) + ' ' + escapeHtml(x.by || '') + ' · ' + escapeHtml(x.action || '') + (x.reason ? ' (사유: ' + escapeHtml(x.reason) + ')' : '') +
+          (x.before ? ' — 바뀌기 전: ' + escapeHtml(describeRec(x.before)) : '') + '</li>';
+      }).join('') + '</ul></details>';
+    }
+    return h + '</div>';
+  }
+  function loadRecordList(n){
+    var el = byId('recList');
+    if(!el) return;
+    if(!initFB()){ el.innerHTML = '<div class="placeholder">Firebase 연결이 없어 기록을 불러올 수 없습니다.</div>'; return; }
+    getRecords(n.id).then(function(list){
+      var box = byId('recList');
+      if(!box || box.dataset.node !== n.id) return;
+      recLists[n.id] = list;
+      var shown = list.filter(function(r){ return !r.deleted || (showDeleted && isMaster()); });
+      box.innerHTML = shown.length ? shown.map(function(r){ return recHtml(n, r); }).join('')
+        : '<div class="placeholder" style="font-size:12px;">아직 점검 기록이 없습니다.' + (list.length ? ' (삭제된 기록 ' + list.length + '건)' : '') + '</div>';
+    }, function(e){
+      var box = byId('recList');
+      if(box) box.innerHTML = '<div class="placeholder">기록을 불러오지 못했습니다: ' + escapeHtml(e.message || e) + '</div>';
+    });
+  }
+  function findRec(nodeId, rid){ return (recLists[nodeId] || []).find(function(r){ return r.id === rid; }) || null; }
+  function recRadio(name, value){ var el = document.querySelector('input[name="' + name + '"][value="' + value + '"]'); if(el) el.checked = true; }
+  function recRadioVal(name){ var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ''; }
+  function openRecModal(nodeId, rec){
+    var n = findNode(nodeId);
+    if(!n) return;
+    if(!me){ openLogin(); return; }
+    if(rec && !isMaster()) return;
+    recEdit = {nodeId: nodeId, rec: rec || null};
+    byId('recTitle').textContent = (rec ? '점검 기록 수정 · ' : '점검 기록 · ') + nodeLabel(n);
+    byId('recDate').max = todayStr();
+    byId('recDate').value = rec ? rec.date : todayStr();
+    byId('recBy').value = rec ? (rec.inspector || '') : me.name;
+    recRadio('recResult', rec ? rec.result : 'ok');
+    recRadio('recRepl', rec ? (rec.replaced ? 'yes' : 'no') : 'no');
+    var isTool = n.category === 'tool';
+    byId('recQtyWrap').style.display = isTool ? '' : 'none';
+    byId('recQtyLabel').textContent = '보유 수량 (실제 확인)' + (n.stdQty !== null && n.stdQty !== undefined ? ' · 기준 ' + n.stdQty + '개' : '');
+    byId('recQty').value = rec && rec.qty !== null && rec.qty !== undefined ? rec.qty : '';
+    byId('recNote').value = rec ? (rec.note || '') : '';
+    byId('recReasonWrap').style.display = rec ? '' : 'none';
+    byId('recReason').value = '';
+    byId('recMsg').textContent = '';
+    updateRecHint();
+    byId('recSave').disabled = false;
+    byId('recModal').classList.remove('hidden');
+  }
+  function updateRecHint(){ byId('recNoteHint').textContent = recRadioVal('recResult') === 'abnormal' ? '(이상 내용을 적어 주세요 · 필수)' : '(선택)'; }
+  document.querySelectorAll('input[name="recResult"]').forEach(function(el){ el.addEventListener('change', updateRecHint); });
+  function closeRecModal(){ byId('recModal').classList.add('hidden'); recEdit = null; }
+  byId('recCancel').addEventListener('click', closeRecModal);
+  function recomputeNodeLast(n){
+    var db = initFB();
+    if(!db) return Promise.resolve();
+    return db.collection(RECORDS_COL).where('nodeId', '==', n.id).get().then(function(snap){
+      var best = null;
+      snap.forEach(function(doc){
+        var d = doc.data();
+        if(d.deleted) return;
+        if(!best || d.date > best.date || (d.date === best.date && (d.createdAt || 0) > (best.createdAt || 0))) best = d;
+      });
+      n.lastRecDate = best ? best.date : '';
+      n.lastRecQty = best && best.qty !== null && best.qty !== undefined ? best.qty : null;
+      n.lastRecResult = best ? best.result : '';
+      delete recCache[n.id];
+      return saveNodeToFirestore(n);
+    });
+  }
+  byId('recSave').addEventListener('click', function(){
+    var ctx = recEdit;
+    if(!ctx || !me) return;
+    var n = findNode(ctx.nodeId);
+    if(!n) return;
+    var msg = byId('recMsg');
+    var date = byId('recDate').value;
+    var result = recRadioVal('recResult') || 'ok';
+    var replaced = recRadioVal('recRepl') === 'yes';
+    var note = byId('recNote').value.trim();
+    var qty = null;
+    if(!date){ msg.textContent = '점검일을 입력하세요.'; return; }
+    if(date > todayStr()){ msg.textContent = '점검일은 오늘 이후로 적을 수 없습니다.'; return; }
+    if(n.category === 'tool'){
+      var qv = byId('recQty').value;
+      if(qv === ''){ msg.textContent = '공기구는 실제 보유 수량을 입력하세요.'; return; }
+      qty = Number(qv);
+      if(!(qty >= 0) || Math.floor(qty) !== qty){ msg.textContent = '수량은 0 이상의 정수로 입력하세요.'; return; }
+    }
+    if(result === 'abnormal' && !note){ msg.textContent = '이상 있음이면 비고에 내용을 적어 주세요.'; byId('recNote').focus(); return; }
+    var db = initFB();
+    if(!db){ msg.textContent = 'Firebase에 연결되지 않아 저장할 수 없습니다.'; return; }
+    var data = {date: date, result: result, replaced: replaced, qty: qty, note: note};
+    byId('recSave').disabled = true;
+    var done = function(){ delete recCache[n.id]; closeRecModal(); renderAll(); saveOk(); };
+    var fail = function(e){ byId('recSave').disabled = false; msg.textContent = '저장 실패: ' + (e.message || e); };
+    if(!ctx.rec){
+      var doc = Object.assign({nodeId: n.id, zoneId: n.zoneId, inspector: me.name, inspectorRole: me.role, createdAt: Date.now(), deleted: false, history: []}, data);
+      db.collection(RECORDS_COL).add(doc).then(function(){
+        audit('점검 기록 추가', nodeLabel(n), describeRec(data));
+        if(!n.lastRecDate || date >= n.lastRecDate){
+          n.lastRecDate = date; n.lastRecQty = qty; n.lastRecResult = result;
+          return saveNodeToFirestore(n);
+        }
+      }).then(done, fail);
+    } else {
+      if(!isMaster()){ fail(new Error('마스터만 수정할 수 있습니다.')); return; }
+      var reason = byId('recReason').value.trim();
+      if(!reason){ byId('recSave').disabled = false; msg.textContent = '수정 사유를 입력하세요.'; byId('recReason').focus(); return; }
+      var r = ctx.rec;
+      var full = Object.assign(recDoc(r), data, {
+        history: (r.history || []).concat([{at: Date.now(), by: me.name, action: '수정', reason: reason, before: recFields(r)}]),
+        updatedAt: Date.now(), updatedBy: me.name
+      });
+      db.collection(RECORDS_COL).doc(r.id).set(full).then(function(){
+        audit('점검 기록 수정', nodeLabel(n), '사유: ' + reason + ' / 전: ' + describeRec(recFields(r)) + ' / 후: ' + describeRec(data));
+        return recomputeNodeLast(n);
+      }).then(done, fail);
+    }
+  });
+  function deleteRec(n, r){
+    if(!isMaster() || !r || r.deleted) return;
+    var reason = prompt('이 점검 기록을 삭제합니다. 삭제 사유를 적어 주세요.\n(기록은 화면에서만 숨겨지고 원본과 사유가 보관됩니다)');
+    if(reason === null) return;
+    reason = reason.trim();
+    if(!reason){ alert('삭제 사유를 적어야 삭제할 수 있습니다.'); return; }
+    var db = initFB();
+    if(!db) return;
+    var full = Object.assign(recDoc(r), {
+      deleted: true, deletedAt: Date.now(), deletedBy: me.name, deleteReason: reason,
+      history: (r.history || []).concat([{at: Date.now(), by: me.name, action: '삭제', reason: reason, before: recFields(r)}])
+    });
+    db.collection(RECORDS_COL).doc(r.id).set(full).then(function(){
+      audit('점검 기록 삭제', nodeLabel(n), '사유: ' + reason + ' / ' + describeRec(recFields(r)));
+      return recomputeNodeLast(n);
+    }).then(function(){ renderAll(); saveOk(); }, saveFail);
+  }
+  function restoreRec(n, r){
+    if(!isMaster() || !r || !r.deleted) return;
+    if(!confirm(r.date + ' 점검 기록을 복원할까요?')) return;
+    var db = initFB();
+    if(!db) return;
+    var full = Object.assign(recDoc(r), {
+      deleted: false, deletedAt: null, deletedBy: '', deleteReason: '',
+      history: (r.history || []).concat([{at: Date.now(), by: me.name, action: '복원', reason: '', before: null}])
+    });
+    db.collection(RECORDS_COL).doc(r.id).set(full).then(function(){
+      audit('점검 기록 복원', nodeLabel(n), describeRec(recFields(r)));
+      return recomputeNodeLast(n);
+    }).then(function(){ renderAll(); saveOk(); }, saveFail);
+  }
+
   // ---- 구역 그리기 ----
   function getRelativePoint(evt){
     var rect = overlay.getBoundingClientRect();
@@ -869,6 +1465,7 @@
     };
   }
   function setEditMode(on){
+    if(on && !canManage()) return;
     editMode = on;
     planWrap.classList.toggle('edit-mode', on);
     btnEditMode.textContent = on ? '구역 편집 모드 끄기 (보기 모드로)' : '구역 편집 모드 켜기';
@@ -1042,6 +1639,7 @@
         }
         z.shapes[d.si] = np;
         pushUndo(z.id, d.before, d.label);
+        audit('구역 모양 변경', z.name, d.label);
         updateBBox(z);
         saveZoneToFirestore(z);
       }
@@ -1101,6 +1699,7 @@
         zoomOn = keepZoom;
         renderAll();
         saveZoneToFirestore(z);
+        audit('구역 추가', z.name, (typeById(z.typeId) || {name: '구분 미지정'}).name);
       }
     });
   }
@@ -1118,6 +1717,7 @@
       saveZoneToFirestore(z);
       if(selectedZoneId !== z.id){ selectedZoneId = z.id; selectedItemId = null; zoomOn = true; }
       renderAll();
+      audit('구역 모양 되돌림', z.name, u.label);
       flashMsg('되돌림: "' + z.name + '" ' + u.label);
       return;
     }
@@ -1131,6 +1731,7 @@
     z.shapes.push(normPoly(pts));
     updateBBox(z);
     saveZoneToFirestore(z);
+    audit('구역 모양 변경', z.name, '영역 추가');
     selectedZoneId = z.id;
     renderAll();
     flashMsg('영역을 붙였습니다 (영역 ' + z.shapes.length + '개).');
@@ -1142,6 +1743,7 @@
     z.shapes.splice(si, 1);
     updateBBox(z);
     saveZoneToFirestore(z);
+    audit('구역 모양 변경', z.name, '영역 ' + (si + 1) + ' 삭제');
     renderAll();
     flashMsg('영역 ' + (si + 1) + '을(를) 지웠습니다. 되돌리기로 복구할 수 있습니다.');
   }
@@ -1154,6 +1756,7 @@
     pushUndo(z.id, before, '꼭짓점 삭제');
     updateBBox(z);
     saveZoneToFirestore(z);
+    audit('구역 모양 변경', z.name, '꼭짓점 삭제');
     renderAll();
   }
   function commitOps(db, ops){
@@ -1176,6 +1779,7 @@
       '- "' + src.name + '"의 이름과 구분은 없어지고 "' + t.name + '"의 이름·구분이 남습니다.\n' +
       '이 작업은 되돌리기로 취소할 수 없습니다. 진행할까요?';
     if(!confirm(msg)) return Promise.resolve(false);
+    audit('구역 합치기', t.name, '"' + src.name + '" 합침 · 항목 ' + moved.length + '개 이동');
     t.shapes = t.shapes.concat(cloneShapes(src.shapes));
     updateBBox(t);
     moved.forEach(function(n){ n.zoneId = t.id; });
@@ -1227,6 +1831,7 @@
 
   // ---- 설비/공기구 항목(트리) ----
   function openNodeModal(opts){
+    if(!canManage()) return;
     nodeModalCtx = opts;
     var n = opts.node || null;
     var cat = n ? n.category : opts.category;
@@ -1261,7 +1866,7 @@
   }
   function onNodeSave(){
     var ctx = nodeModalCtx;
-    if(!ctx) return;
+    if(!ctx || !canManage()) return;
     var name = byId('nodeName').value.trim();
     if(!name){ byId('nodeName').focus(); return; }
     var cv = parseInt(byId('nodeCycleVal').value, 10);
@@ -1289,9 +1894,11 @@
     }
     closeNodeModal();
     saveNodeToFirestore(n);
+    audit(ctx.mode === 'add' ? '항목 추가' : '항목 수정', nodeLabel(n), CAT_LABEL[n.category] + (n.cycleValue ? ' · 주기 ' + n.cycleValue + UNIT_LABEL[n.cycleUnit] : '') + (n.lastDate ? ' · 기준일 ' + n.lastDate : '') + (n.stdQty !== null && n.stdQty !== undefined ? ' · 기준수량 ' + n.stdQty : ''));
     renderAll();
   }
   function deleteNode(n){
+    if(!canManage()) return;
     var desc = descendantIds(n.id);
     var ids = [n.id].concat(desc);
     var photoCnt = 0;
@@ -1304,6 +1911,7 @@
       ? '"' + n.name + '"와(과) 그 아래 하위 항목 ' + desc.length + '개를 모두 삭제할까요?'
       : '"' + n.name + '"을(를) 삭제할까요?') + (photoCnt ? '\n연결된 사진 ' + photoCnt + '장도 함께 삭제됩니다.' : '');
     if(!confirm(msg)) return;
+    audit('항목 삭제', nodeLabel(n), (desc.length ? '하위 ' + desc.length + '개 포함' : '') + (photoCnt ? ' 사진 ' + photoCnt + '장' : ''));
     nodes = nodes.filter(function(x){ return ids.indexOf(x.id) < 0; });
     ids.forEach(function(id){ delete photoCache[id]; });
     if(ids.indexOf(selectedItemId) >= 0){ selectedItemId = null; }
@@ -1322,13 +1930,14 @@
     return descendantIds(id).map(findNode).filter(function(x){ return x && !hasChildren(x.id); });
   }
   function countStatus(leaves){
-    var s = {total: leaves.length, bad: 0, warn: 0, nodate: 0, nocycle: 0};
+    var s = {total: leaves.length, bad: 0, warn: 0, nodate: 0, nocycle: 0, alert: 0};
     leaves.forEach(function(l){
       var st = nodeStatus(l);
       if(st.level === 2){ s.bad++; }
       else if(!l.cycleValue){ s.nocycle++; }
-      else if(!l.lastDate){ s.nodate++; }
+      else if(!effectiveLast(l)){ s.nodate++; }
       else if(st.level === 1){ s.warn++; }
+      if(needsCheck(l)){ s.alert++; }
     });
     return s;
   }
@@ -1345,7 +1954,7 @@
     if(!n) return;
     if(selectedZoneId !== n.zoneId){ zoomOn = true; }
     selectedZoneId = n.zoneId;
-    selectedItemId = topAncestor(n).id;
+    selectedItemId = n.id;
     renderAll();
   }
 
@@ -1393,9 +2002,12 @@
     }
     var all = nodes.filter(function(n){ return n.zoneId === z.id; });
     var zs = countStatus(all.filter(function(n){ return !hasChildren(n.id); }));
+    var selNode = selectedItemId ? findNode(selectedItemId) : null;
+    var selTop = selNode ? topAncestor(selNode).id : null;
     var h = '<div class="zi-head"><span class="zname">' + escapeHtml(z.name) + '</span>' + typeBadge(zoneType(z)) +
       '<span class="zsum">설비 ' + childrenOf(z.id, 'equip', null).length + ' · 공기구 ' + childrenOf(z.id, 'tool', null).length +
-      ' · 점검 대상 ' + zs.total + (zs.bad ? ' · <b style="color:#b42318;">지연 ' + zs.bad + '</b>' : '') + (zs.warn ? ' · <span style="color:#a15c00;">임박 ' + zs.warn + '</span>' : '') + '</span></div>';
+      ' · 점검 대상 ' + zs.total + (zs.bad ? ' · <b style="color:#b42318;">지연 ' + zs.bad + '</b>' : '') + (zs.warn ? ' · <span style="color:#a15c00;">임박 ' + zs.warn + '</span>' : '') +
+      (zs.alert ? ' · <b style="color:#b42318;">확인 필요 ' + zs.alert + '</b>' : '') + '</span></div>';
     h += '<div class="zi-cols">';
     ['equip', 'tool'].forEach(function(cat){
       h += '<div><div class="zi-col-title">■ ' + CAT_LABEL[cat] + '</div><div class="icards">';
@@ -1407,14 +2019,15 @@
         if(kids){ sub.push('하위 ' + descendantIds(n.id).length); }
         else { sub.push(nodeStatus(n).text); }
         if(pc){ sub.push('사진 ' + pc); }
-        var flag = s.bad ? ' <span class="badge b-bad">지연 ' + s.bad + '</span>' : (s.warn ? ' <span class="badge b-warn">임박 ' + s.warn + '</span>' : '');
-        h += '<button class="icard' + (n.id === selectedItemId ? ' selected' : '') + '" data-act="item" data-id="' + n.id + '">' +
+        var flag = (s.bad ? ' <span class="badge b-bad">지연 ' + s.bad + '</span>' : (s.warn ? ' <span class="badge b-warn">임박 ' + s.warn + '</span>' : '')) +
+          (s.alert ? ' <span class="badge b-bad">' + (kids ? '확인 필요 ' + s.alert : escapeHtml(alertText(n))) + '</span>' : '');
+        h += '<button class="icard' + (n.id === selTop ? ' selected' : '') + '" data-act="item" data-id="' + n.id + '">' +
           '<div class="t">' + escapeHtml(n.name) + flag + '</div><div class="s">' + escapeHtml(sub.join(' · ')) + (n.note ? ' · ' + escapeHtml(n.note) : '') + '</div></button>';
       });
-      h += '<button class="icard add" data-act="addtop" data-cat="' + cat + '">+ ' + CAT_LABEL[cat] + ' 추가</button></div></div>';
+      h += '<button class="icard add need-manage" data-act="addtop" data-cat="' + cat + '">+ ' + CAT_LABEL[cat] + ' 추가</button></div></div>';
     });
     h += '</div>';
-    h += '<div class="m-addrow show-m"><button data-act="addtop" data-cat="equip">+ 설비 추가</button><button data-act="addtop" data-cat="tool">+ 공기구 추가</button></div>';
+    h += '<div class="m-addrow show-m need-manage"><button data-act="addtop" data-cat="equip">+ 설비 추가</button><button data-act="addtop" data-cat="tool">+ 공기구 추가</button></div>';
     box.innerHTML = h;
   }
 
@@ -1436,14 +2049,17 @@
       if(kids){
         var od = overdueUnder(n.id);
         if(od > 0){ h += '<span class="badge b-bad">하위 지연 ' + od + '</span>'; }
+        var al = leavesOf(n.id).filter(needsCheck).length;
+        if(al > 0){ h += '<span class="badge b-bad">확인 필요 ' + al + '</span>'; }
       } else {
         h += statusBadges(n);
       }
       h += '</span><span class="acts">' +
-        '<button data-act="add" data-id="' + n.id + '" title="하위 항목 추가">+하위</button>' +
+        (kids ? '' : '<button class="primary" data-act="open" data-id="' + n.id + '" title="점검 기록 보기·입력">기록</button>') +
+        '<button class="need-manage" data-act="add" data-id="' + n.id + '" title="하위 항목 추가">+하위</button>' +
         '<button data-act="photo" data-id="' + n.id + '">사진</button>' +
-        '<button data-act="edit" data-id="' + n.id + '">수정</button>' +
-        '<button class="danger" data-act="del" data-id="' + n.id + '">삭제</button>' +
+        '<button class="need-manage" data-act="edit" data-id="' + n.id + '">수정</button>' +
+        '<button class="danger need-manage" data-act="del" data-id="' + n.id + '">삭제</button>' +
         '</span></div>';
       if(kids && !isCol){ h += renderTree(zoneId, category, n.id, no); }
       h += '</li>';
@@ -1458,20 +2074,24 @@
     if(n.category === 'tool' && n.stdQty !== null && n.stdQty !== undefined){
       h += '<span class="badge b-gray">기준 ' + n.stdQty + '개</span>';
     }
+    if(needsCheck(n)){ h += '<span class="badge b-bad">' + escapeHtml(alertText(n)) + '</span>'; }
     return h;
   }
   function renderItemDetail(n){
     var z = zones.find(function(zz){ return zz.id === n.zoneId; });
     var kids = hasChildren(n.id);
     var pc = (n.photoNames || []).length;
-    var h = '<div class="d-head"><div><div class="d-crumb">' + escapeHtml(z ? z.name : '(구역 없음)') + ' › ' + CAT_LABEL[n.category] + '</div>' +
+    var parent = n.parentId ? findNode(n.parentId) : null;
+    var h = '<div class="d-head"><div><div class="d-crumb">' + escapeHtml(z ? z.name : '(구역 없음)') + ' › ' + CAT_LABEL[n.category] +
+      (parent ? ' › ' + escapeHtml(pathNames(parent).join(' › ')) : '') + '</div>' +
+      (parent ? '<button class="linkish" data-act="open" data-id="' + parent.id + '">↑ 상위 항목: ' + escapeHtml(parent.name) + '</button>' : '') +
       '<div class="d-title"><span class="no">' + itemNo(n) + '</span>' + escapeHtml(n.name) +
       (n.note ? '<span class="memo">(' + escapeHtml(n.note) + ')</span>' : '') + '</div></div>' +
       '<div class="d-acts">' +
-      '<button class="primary" data-act="add" data-id="' + n.id + '">+ 하위 항목</button>' +
+      '<button class="primary need-manage" data-act="add" data-id="' + n.id + '">+ 하위 항목</button>' +
       '<button data-act="photo" data-id="' + n.id + '">사진' + (pc ? ' ' + pc : '') + '</button>' +
-      '<button data-act="edit" data-id="' + n.id + '">수정</button>' +
-      '<button class="danger" data-act="del" data-id="' + n.id + '">삭제</button>' +
+      '<button class="need-manage" data-act="edit" data-id="' + n.id + '">수정</button>' +
+      '<button class="danger need-manage" data-act="del" data-id="' + n.id + '">삭제</button>' +
       '<button data-act="close" title="닫기">✕</button></div></div>';
     if(pc){
       h += '<div class="d-sec">사진</div><div class="strip" id="itemPhotos" data-node="' + n.id + '"><span class="placeholder" style="font-size:12px;">불러오는 중...</span></div>';
@@ -1479,20 +2099,28 @@
     if(kids){
       var s = countStatus(leavesOf(n.id));
       h += '<div class="d-sec">하위 항목 ' + descendantIds(n.id).length + '개 · 점검 대상 ' + s.total +
-        (s.bad ? ' · <span style="color:#b42318;">지연 ' + s.bad + '</span>' : '') + (s.warn ? ' · <span style="color:#a15c00;">임박 ' + s.warn + '</span>' : '') + '</div>';
+        (s.bad ? ' · <span style="color:#b42318;">지연 ' + s.bad + '</span>' : '') + (s.warn ? ' · <span style="color:#a15c00;">임박 ' + s.warn + '</span>' : '') +
+        (s.alert ? ' · <span style="color:#b42318;">확인 필요 ' + s.alert + '</span>' : '') + '</div>';
       h += '<div class="tree">' + renderTree(n.zoneId, n.category, n.id, itemNo(n)) + '</div>';
+      h += '<div class="placeholder" style="margin-top:8px;font-size:12px;">점검 기록은 맨 아래 항목(부품·도구)마다 남깁니다. 줄의 <b>기록</b>을 누르세요.' +
+        '<span class="show-m"> 휴대폰에서는 줄을 누르면 버튼이 나옵니다.</span></div>';
     } else {
       var st = nodeStatus(n);
       h += '<div class="d-sec">점검 정보</div><div class="kv">' +
         '<div>점검주기</div><div>' + (n.cycleValue ? n.cycleValue + UNIT_LABEL[n.cycleUnit] : '미설정') + '</div>' +
-        '<div>최근 점검(교체)일</div><div>' + (n.lastDate || '미입력') + '</div>' +
-        '<div>상태</div><div><span class="badge ' + st.cls + '" style="margin-left:0;">' + st.text + '</span></div>' +
-        (n.category === 'tool' ? '<div>기준 보유 수량</div><div>' + (n.stdQty === null || n.stdQty === undefined ? '미입력' : n.stdQty + '개') + '</div>' : '') +
-        '</div><div class="placeholder" style="font-size:12px;margin-top:10px;">하위 부품이 있으면 "+ 하위 항목"으로 추가하세요. 하위 항목이 생기면 이 항목의 점검주기 대신 하위 항목별 주기가 적용됩니다.</div>';
+        '<div>최근 점검일</div><div>' + (effectiveLast(n) || '미입력') + (n.lastRecDate && n.lastRecDate >= (n.lastDate || '') ? ' <span class="placeholder">(점검 기록)</span>' : (n.lastDate ? ' <span class="placeholder">(등록 기준일)</span>' : '')) + '</div>' +
+        '<div>상태</div><div><span class="badge ' + st.cls + '" style="margin-left:0;">' + st.text + '</span>' + (needsCheck(n) ? ' <span class="badge b-bad">' + escapeHtml(alertText(n)) + '</span>' : '') + '</div>' +
+        (n.category === 'tool' ? '<div>기준 보유 수량</div><div>' + (n.stdQty === null || n.stdQty === undefined ? '미입력' : n.stdQty + '개') + '</div>' +
+          '<div>최근 확인 수량</div><div>' + (n.lastRecQty === null || n.lastRecQty === undefined ? '기록 없음' : n.lastRecQty + '개') + '</div>' : '') +
+        '</div>';
+      h += '<div class="rec-bar"><div class="d-sec">점검 기록</div>' +
+        '<button class="primary" data-act="recadd" data-id="' + n.id + '">+ 점검 기록하기</button>' +
+        '<label class="need-master"><input type="checkbox" id="recShowDel"' + (showDeleted ? ' checked' : '') + '> 삭제된 기록 포함</label></div>' +
+        '<div class="recs" id="recList" data-node="' + n.id + '"><span class="placeholder" style="font-size:12px;">불러오는 중...</span></div>';
+      h += '<div class="placeholder need-manage" style="font-size:12px;margin-top:12px;">하위 부품이 있으면 "+ 하위 항목"으로 추가하세요. 하위 항목이 생기면 이 항목 대신 하위 항목마다 주기와 기록을 둡니다.</div>';
     }
-    if(kids){ h += '<div class="placeholder show-m" style="margin-top:8px;font-size:12px;">하위 항목 줄을 누르면 하위 추가·사진·수정·삭제 버튼이 나옵니다.</div>'; }
-    h += '<div class="placeholder" style="margin-top:14px;font-size:11px;">점검 기록(점검일·입력자·이상 유무·교체 여부·수량)은 다음 단계에서 연결됩니다.</div>';
     detailPanel.innerHTML = h;
+    if(!kids){ loadRecordList(n); }
     if(pc){
       getPhotos(n.id).then(function(list){
         var el = byId('itemPhotos');
@@ -1520,7 +2148,8 @@
       '<div class="stat bad"><div class="l">지연</div><div class="v">' + s.bad + '</div></div>' +
       '<div class="stat warn"><div class="l">7일 내 임박</div><div class="v">' + s.warn + '</div></div>' +
       '<div class="stat warn"><div class="l">최근점검일 미입력</div><div class="v">' + s.nodate + '</div></div>' +
-      '<div class="stat"><div class="l">주기 미설정</div><div class="v">' + s.nocycle + '</div></div></div>';
+      '<div class="stat"><div class="l">주기 미설정</div><div class="v">' + s.nocycle + '</div></div>' +
+      '<div class="stat bad"><div class="l">수량 부족·이상</div><div class="v">' + s.alert + '</div></div></div>';
     var due = leaves.map(function(n){ return {n: n, st: nodeStatus(n)}; })
       .filter(function(x){ return x.st.level >= 1 && x.st.due; })
       .sort(function(a, b){ return a.st.due < b.st.due ? -1 : (a.st.due > b.st.due ? 1 : 0); });
@@ -1535,8 +2164,20 @@
       due.forEach(function(x){
         var zz = zoneIds[x.n.zoneId];
         h += '<tr class="go" data-act="goto" data-id="' + x.n.id + '">' + (z ? '' : '<td class="c-zone">' + escapeHtml(zz ? zz.name : '') + '</td>') +
-          '<td class="c-path">' + escapeHtml(pathNames(x.n).join(' › ')) + '</td><td class="c-cyc">' + x.n.cycleValue + UNIT_LABEL[x.n.cycleUnit] + '</td><td class="c-last">' + x.n.lastDate + '</td>' +
+          '<td class="c-path">' + escapeHtml(pathNames(x.n).join(' › ')) + '</td><td class="c-cyc">' + x.n.cycleValue + UNIT_LABEL[x.n.cycleUnit] + '</td><td class="c-last">' + effectiveLast(x.n) + '</td>' +
           '<td class="c-status"><span class="badge ' + x.st.cls + '" style="margin-left:0;">' + x.st.text + '</span></td></tr>';
+      });
+      h += '</tbody></table>';
+    }
+    var alerts = leaves.filter(needsCheck);
+    if(alerts.length){
+      h += '<div class="d-sec">수량 부족·이상 항목 ' + alerts.length + '건 (최근 점검 기준)</div>';
+      h += '<table class="due"><thead><tr>' + (z ? '' : '<th>작업장</th>') + '<th>항목</th><th>최근 점검</th><th>내용</th></tr></thead><tbody>';
+      alerts.forEach(function(n){
+        var zz = zoneIds[n.zoneId];
+        h += '<tr class="go" data-act="goto" data-id="' + n.id + '">' + (z ? '' : '<td class="c-zone">' + escapeHtml(zz ? zz.name : '') + '</td>') +
+          '<td class="c-path">' + escapeHtml(pathNames(n).join(' › ')) + '</td><td class="c-last">' + (n.lastRecDate || '') + '</td>' +
+          '<td class="c-status"><span class="badge b-bad" style="margin-left:0;">' + escapeHtml(alertText(n)) + '</span></td></tr>';
       });
       h += '</tbody></table>';
     }
@@ -1596,6 +2237,17 @@
     if(act === 'addtop'){ openNodeModal({mode: 'add', category: el.dataset.cat, parentId: null}); return; }
     var n = findNode(id);
     if(!n) return;
+    if(act === 'open'){
+      selectedZoneId = n.zoneId;
+      selectedItemId = n.id;
+      renderAll();
+      if(isMobile()){ try{ window.scrollTo(0, 0); }catch(err){} }
+      return;
+    }
+    if(act === 'recadd'){ openRecModal(n.id, null); return; }
+    if(act === 'recedit'){ openRecModal(n.id, findRec(n.id, el.dataset.rid)); return; }
+    if(act === 'recdel'){ deleteRec(n, findRec(n.id, el.dataset.rid)); return; }
+    if(act === 'recrestore'){ restoreRec(n, findRec(n.id, el.dataset.rid)); return; }
     if(act === 'item'){ selectedItemId = (selectedItemId === n.id ? null : n.id); renderAll(); }
     else if(act === 'goto'){ selectItem(n.id); }
     else if(act === 'add'){ openNodeModal({mode: 'add', category: n.category, parentId: n.id}); }
@@ -1604,6 +2256,13 @@
     else if(act === 'photo'){ openPhotoModal(n.id); }
   }
   detailPanel.addEventListener('click', onPanelClick);
+  detailPanel.addEventListener('change', function(e){
+    if(e.target && e.target.id === 'recShowDel'){
+      showDeleted = e.target.checked;
+      var n = selectedItemId ? findNode(selectedItemId) : null;
+      if(n){ loadRecordList(n); }
+    }
+  });
   topPanel.addEventListener('click', onPanelClick);
   byId('nodeSave').addEventListener('click', onNodeSave);
   byId('nodeCancel').addEventListener('click', closeNodeModal);
@@ -1884,6 +2543,7 @@
     });
     return chain.then(function(){
       prog.textContent = '완료 · 항목 ' + savedCount + '개 저장 · 사진 ' + photoDone + '장 저장' + (photoFail.length ? ' · 사진 실패 ' + photoFail.length + '장' : '');
+      audit('일괄 등록', '', '새 항목 ' + plan.newNodes.length + ' · 수정 ' + plan.updatedNodes.length + ' · 사진 ' + photoDone + '장' + (photoFail.length ? ' (실패 ' + photoFail.length + ')' : ''));
       if(photoFail.length){ alert('사진 저장 실패:\n' + photoFail.join('\n')); }
       bulkPlan = null;
       byId('bkPreview').disabled = false;
@@ -1959,6 +2619,7 @@
     if(byId('bkTableWrap').innerHTML){ byId('bkSummary').innerHTML = '<span class="placeholder">파일이 바뀌었습니다. 미리보기를 다시 누르세요.</span>'; byId('bkTableWrap').innerHTML = ''; }
   }
   byId('btnBulk').addEventListener('click', function(){
+    if(!canManage()) return;
     byId('bulkModal').classList.remove('hidden');
     byId('bkProgress').textContent = '';
     loadXlsx().catch(function(e){ byId('bkProgress').textContent = e.message; });
@@ -1991,7 +2652,7 @@
     renderPlan(bulkPlan);
   });
   byId('bkRun').addEventListener('click', function(){
-    if(!bulkPlan) return;
+    if(!bulkPlan || !canManage()) return;
     var p = bulkPlan;
     var msg = '새 항목 ' + p.newNodes.length + '개, 기존 항목 수정 ' + p.updatedNodes.length + '개, 사진 ' + p.photoJobs.length + '장을 등록합니다.' +
       (p.errors ? '\n오류가 있는 ' + p.errors + '개 행은 제외됩니다.' : '') + '\n진행할까요?';
@@ -2005,16 +2666,19 @@
     if(!z) return;
     var nm = byId('zsName').value.trim();
     if(!nm){ byId('zsMsg').textContent = '이름을 입력하세요.'; byId('zsName').focus(); return; }
+    var beforeTxt = z.name + ' / ' + ((typeById(z.typeId) || {name: '미지정'}).name);
     z.name = nm;
     z.typeId = byId('zsType').value;
     lastTypeId = z.typeId;
     saveZoneToFirestore(z);
+    audit('구역 설정 저장', nm, '전: ' + beforeTxt + ' / 후: ' + nm + ' / ' + ((typeById(z.typeId) || {name: '미지정'}).name));
     renderAll();
     var msg = byId('zsMsg');
     if(msg){ msg.textContent = '저장됨'; }
   }
   function zoneCountByType(id){ return zones.filter(function(z){ return z.typeId === id; }).length; }
   function openTypeModal(){
+    if(!canManage()) return;
     typeDraft = zoneTypes.map(function(t){ return Object.assign({}, t); });
     byId('typeMsg').textContent = '';
     renderTypeRows();
@@ -2065,6 +2729,7 @@
     var orphanZones = zones.filter(function(z){ return z.typeId && !keepIds[z.typeId]; });
     if(orphanZones.length && !confirm('삭제한 구분(' + removed.map(function(t){ return t.name; }).join(', ') + ')에 속한 구역 ' + orphanZones.length + '개가 미지정으로 바뀝니다. 저장할까요?')) return;
     var db = initFB();
+    audit('구분·색상 저장', '', typeDraft.map(function(t){ return t.name + ' ' + t.color.toLowerCase(); }).join(', ') + (removed.length ? ' / 삭제: ' + removed.map(function(t){ return t.name; }).join(', ') : ''));
     zoneTypes = typeDraft.map(function(t){ return {id: t.id, name: t.name, color: t.color.toLowerCase(), order: t.order}; });
     orphanZones.forEach(function(z){ z.typeId = ''; });
     byId('typeModal').classList.add('hidden');
@@ -2102,6 +2767,7 @@
       ? '"' + (z ? z.name : '') + '" 구역에는 설비·공기구 항목 ' + cnt + '개가 등록되어 있습니다. 구역을 삭제해도 항목 데이터는 남지만 화면에서 연결이 끊깁니다. 그래도 삭제할까요?'
       : '"' + (z ? z.name : '') + '" 구역을 삭제할까요?';
     if(!confirm(msg)) return;
+    audit('구역 삭제', z ? z.name : id, cnt ? '항목 ' + cnt + '개 연결 끊김' : '');
     zones = zones.filter(function(zz){ return zz.id !== id; });
     undoStack = undoStack.filter(function(u){ return u.zoneId !== id; });
     if(drawMode.target === id){ drawMode = {kind: 'rect', target: null}; polyPts = []; polyCursor = null; }
@@ -2451,6 +3117,7 @@
 
   // ---- 구역 내보내기/가져오기 ----
   function exportZones(){
+    if(!canManage()) return;
     var out = zones.map(function(z){ return {id: z.id, name: z.name, x: z.x, y: z.y, w: z.w, h: z.h, typeId: z.typeId || '', shapes: shapesToDoc(z.shapes)}; });
     var blob = new Blob([JSON.stringify(out, null, 2)], {type: 'application/json'});
     var url = URL.createObjectURL(blob);
@@ -2463,6 +3130,7 @@
     URL.revokeObjectURL(url);
   }
   function importZones(file){
+    if(!canManage()) return;
     var reader = new FileReader();
     reader.onload = function(){
       try{
@@ -2483,7 +3151,7 @@
 
   btnEditMode.addEventListener('click', function(){ setEditMode(!editMode); });
   byId('btnExport').addEventListener('click', exportZones);
-  byId('btnImportTrigger').addEventListener('click', function(){ byId('importFile').click(); });
+  byId('btnImportTrigger').addEventListener('click', function(){ if(canManage()) byId('importFile').click(); });
   byId('importFile').addEventListener('change', function(evt){
     if(evt.target.files && evt.target.files[0]){
       importZones(evt.target.files[0]);
@@ -2557,6 +3225,10 @@
     zoneDoc: zoneDoc,
     mergeZones: mergeZones,
     getStep: function(){ return mStep(); },
+    getMe: function(){ return me ? {name: me.name, role: me.role} : null; },
+    pinHash: pinHash,
+    effectiveLast: function(id){ return effectiveLast(findNode(id)); },
+    needsCheck: function(id){ return needsCheck(findNode(id)); },
     hasManualView: hasManualView,
     getDrawMode: function(){ return {kind: drawMode.kind, target: drawMode.target, pts: polyPts.length, undo: undoStack.length}; }
   };
