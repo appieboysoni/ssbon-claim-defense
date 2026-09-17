@@ -172,6 +172,40 @@
   #lightbox.hidden{display:none;}
   #lightbox img{max-width:95vw;max-height:92vh;}
   footer{padding:2px 16px 10px;font-size:11px;color:#8a94a6;}
+  /* 재질 */
+  .mat-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:5px;padding-top:5px;border-top:1px dashed #e4e7ec;}
+  .mat-bar .bar-label{margin-right:2px;}
+  .mchips{display:contents;}
+  .mchip{font:inherit;display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:14px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;white-space:nowrap;color:#1c2430;}
+  .mchip i{width:9px;height:9px;border-radius:50%;background:var(--mc,#98a2b3);display:inline-block;}
+  .mchip .n{font-size:10px;color:#667085;}
+  .mchip.on{background:#1c2430;border-color:#1c2430;color:#fff;}
+  .mchip.on .n{color:#cbd5e1;}
+  .mchip.none i{background:#fff;border:1px dashed #98a2b3;}
+  .mat-bar .clear{padding:2px 10px;font-size:12px;}
+  .mat-bar .hint{font-size:11px;color:#667085;flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mat-bar.off .mchip{opacity:.45;cursor:default;}
+  .mat-bar .jump{background:#1c2430;border-color:#1c2430;color:#fff;}
+  .mtag{display:inline-flex;align-items:center;gap:3px;font-size:10px;line-height:1.6;padding:0 6px;border-radius:9px;background:#f2f4f7;color:#344054;margin-left:4px;white-space:nowrap;}
+  .mtag i{width:7px;height:7px;border-radius:50%;background:var(--mc,#98a2b3);display:inline-block;}
+  .mtag.hit{background:#1c2430;color:#fff;}
+  .mtags{margin-top:3px;}
+  .mtags .mtag:first-child{margin-left:0;}
+  .icard.mat-miss{opacity:.45;}
+  .icard.mat-hit{border-color:#1c2430;box-shadow:0 0 0 1px #1c2430 inset;}
+  .node-row.mat-hit{background:#eef2ff;}
+  .zchip.mat-dim{opacity:.4;}
+  .zchip .mcnt{font-size:10px;color:#fff;background:#1c2430;border-radius:9px;padding:0 6px;}
+  .zchip.selected .mcnt{background:#fff;color:#1c2430;}
+  table.due tr.zgrp td{background:#f2f4f7;font-weight:700;color:#1c2430;cursor:pointer;border-bottom:1px solid #e4e7ec;}
+  .modal-box .mat-pick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .modal-box .mat-pick label{display:inline-block;margin:0;position:relative;}
+  .modal-box .mat-pick input{position:absolute;opacity:0;width:1px;height:1px;margin:0;padding:0;}
+  .modal-box .mat-pick span{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border:1px solid var(--border);border-radius:16px;font-size:13px;cursor:pointer;background:#fff;}
+  .modal-box .mat-pick span i{width:9px;height:9px;border-radius:50%;background:var(--mc);display:inline-block;}
+  .modal-box .mat-pick input:checked + span{background:#1c2430;border-color:#1c2430;color:#fff;font-weight:600;}
+  .modal-box .mat-pick input:focus-visible + span{outline:2px solid var(--accent);outline-offset:1px;}
+  .modal-box .mat-pick input:checked + span i,.mchip.on i,.mtag.hit i{box-shadow:0 0 0 1.5px #fff;}
   /* 사용자·권한 */
   .status-row{display:flex;align-items:center;gap:8px;margin-top:3px;min-width:0;}
   .status-row .status{margin-top:0;min-width:0;}
@@ -299,6 +333,14 @@
     body[data-mstep="detail"] #detailPanel .d-crumb,body[data-mstep="detail"] #detailPanel [data-act="close"]{display:none;}
     .modal-box{max-width:96vw;}
     .audit-row{grid-template-columns:1fr;}
+    .mat-bar{flex-wrap:wrap;}
+    .mat-bar .hint{display:none;}
+    .mchips{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;width:100%;padding:2px 8px 4px 0;-webkit-overflow-scrolling:touch;}
+    .mchip{padding:6px 12px;font-size:13px;flex-shrink:0;}
+    body[data-mstep="list"] .mat-bar,body[data-mstep="detail"] .mat-bar{display:none;}
+    table.due td.c-cat,table.due td.c-mat{grid-column:1;font-size:11px;color:#667085;}
+    table.due tr.zgrp{display:block;}
+    table.due tr.zgrp td{display:block;padding:6px 8px;}
     .rec-acts button{padding:7px 14px;font-size:13px;}
     .rec-bar .primary{padding:10px 14px;font-size:15px;}
   }
@@ -327,6 +369,7 @@
   <div id="mBar"><button id="mBack">← 도면</button><div id="mTitle"></div></div>
   <div id="topPanel" class="card">
     <div class="zone-bar" id="zoneBar"></div>
+    <div class="mat-bar" id="matBar"></div>
     <div id="zoneItems"></div>
   </div>
   <div class="work">
@@ -343,7 +386,7 @@
     <div id="detailPanel" class="card"></div>
   </div>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.8 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.9 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -365,6 +408,8 @@
     <input id="nodeName" type="text">
     <label for="nodeNote">비고 (선택)</label>
     <input id="nodeNote" type="text" placeholder="예: 색상, 규격, 위치">
+    <label>재질 <span class="muted" style="margin:0;">(여러 개 선택 가능)</span></label>
+    <div class="mat-pick" id="nodeMats"></div>
     <div id="parentWarn" class="muted" style="display:none;color:#a15c00;"></div>
     <div id="leafFields" class="leaf-only">
       <label>점검주기</label>
@@ -574,6 +619,29 @@
 
   var CAT_LABEL = {equip: '설비', tool: '공기구'};
   var UNIT_LABEL = {day: '일', week: '주', month: '개월'};
+  // 재질 분류 (순서 = 화면 표시 순서)
+  var MATERIALS = [
+    {id: 'metal', name: '금속', color: '#64748b'},
+    {id: 'glass', name: '유리·사기', color: '#0ea5e9'},
+    {id: 'plastic', name: '플라스틱', color: '#eab308'},
+    {id: 'rubber', name: '고무', color: '#1f2937'},
+    {id: 'silicone', name: '실리콘', color: '#a855f7'},
+    {id: 'vinyl', name: '비닐', color: '#14b8a6'},
+    {id: 'fiber', name: '섬유', color: '#b45309'},
+    {id: 'stone', name: '돌', color: '#78716c'},
+    {id: 'etc', name: '기타', color: '#9ca3af'}
+  ];
+  var MAT_BY_ID = {};
+  MATERIALS.forEach(function(m, i){ m.order = i; MAT_BY_ID[m.id] = m; });
+  var MAT_ALIAS = {
+    '금속': 'metal', '스텐': 'metal', '스테인리스': 'metal', '스테인레스': 'metal', 'sus': 'metal', '철': 'metal', '알루미늄': 'metal',
+    '유리': 'glass', '사기': 'glass', '도자기': 'glass', '세라믹': 'glass', '유리·사기': 'glass',
+    '플라스틱': 'plastic', 'pp': 'plastic', 'pe': 'plastic',
+    '고무': 'rubber', '실리콘': 'silicone', '비닐': 'vinyl',
+    '섬유': 'fiber', '천': 'fiber', '면': 'fiber',
+    '돌': 'stone', '석재': 'stone', '기타': 'etc'
+  };
+  var matFilter = [];   // 선택한 재질 id들 ('none' = 재질 미지정)
   var XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
   var PHOTO_MAX_SIDE = 1280;
   var PHOTO_MAX_BYTES = 700 * 1024;
@@ -631,7 +699,8 @@
       lastDate: d.lastDate || '', stdQty: (d.stdQty === undefined ? null : d.stdQty),
       photoNames: Array.isArray(d.photoNames) ? d.photoNames : [],
       order: d.order || 0,
-      lastRecDate: d.lastRecDate || '', lastRecQty: (d.lastRecQty === undefined ? null : d.lastRecQty), lastRecResult: d.lastRecResult || ''
+      lastRecDate: d.lastRecDate || '', lastRecQty: (d.lastRecQty === undefined ? null : d.lastRecQty), lastRecResult: d.lastRecResult || '',
+      materials: sortMats(Array.isArray(d.materials) ? d.materials : [])
     };
   }
   function nodeToDoc(n){
@@ -642,7 +711,8 @@
       lastDate: n.lastDate || '', stdQty: (n.stdQty === undefined ? null : n.stdQty),
       photoNames: n.photoNames || [],
       order: n.order || 0, updatedAt: Date.now(),
-      lastRecDate: n.lastRecDate || '', lastRecQty: (n.lastRecQty === undefined ? null : n.lastRecQty), lastRecResult: n.lastRecResult || ''
+      lastRecDate: n.lastRecDate || '', lastRecQty: (n.lastRecQty === undefined ? null : n.lastRecQty), lastRecResult: n.lastRecResult || '',
+      materials: sortMats(n.materials || [])
     };
   }
   function loadAll(){
@@ -812,6 +882,129 @@
       h += '<option value="' + escapeHtml(t.id) + '"' + (t.id === selected ? ' selected' : '') + '>' + escapeHtml(t.name) + '</option>';
     });
     return h;
+  }
+
+  // ---- 재질 도우미 ----
+  function sortMats(list){
+    var seen = {};
+    return (list || []).filter(function(id){ if(!MAT_BY_ID[id] || seen[id]) return false; seen[id] = true; return true; })
+      .sort(function(a, b){ return MAT_BY_ID[a].order - MAT_BY_ID[b].order; });
+  }
+  function nodeMats(n){ return sortMats(n && n.materials); }
+  function matNames(ids){ return ids.map(function(id){ return MAT_BY_ID[id].name; }).join(', '); }
+  function parseMaterials(raw){
+    var s = String(raw === null || raw === undefined ? '' : raw).trim();
+    var ids = [], bad = [];
+    if(!s) return {ids: ids, bad: bad};
+    s = s.replace(/유리\s*[·\/]\s*사기/g, '유리');
+    s.split(/[,，;\/·ㆍ\n]+/).forEach(function(t){
+      var k = t.replace(/\s/g, '').toLowerCase();
+      if(!k) return;
+      var id = MAT_ALIAS[k];
+      if(!id){ bad.push(t.trim()); }
+      else if(ids.indexOf(id) < 0){ ids.push(id); }
+    });
+    return {ids: sortMats(ids), bad: bad};
+  }
+  function filterActive(){ return matFilter.length > 0 && !editMode; }
+  // 여러 재질을 고르면 하나라도 해당하면 표시. '재질 미지정'은 맨 아래 항목 중 재질이 없는 것
+  function matchesFilter(n){
+    if(!filterActive() || !n) return false;
+    var ms = nodeMats(n);
+    return matFilter.some(function(f){
+      if(f === 'none') return ms.length === 0 && !hasChildren(n.id);
+      return ms.indexOf(f) >= 0;
+    });
+  }
+  function zoneMatchCount(zoneId){ return nodes.filter(function(n){ return n.zoneId === zoneId && matchesFilter(n); }).length; }
+  function subtreeMatchCount(id){
+    var n = findNode(id);
+    return (matchesFilter(n) ? 1 : 0) + descendantIds(id).filter(function(did){ return matchesFilter(findNode(did)); }).length;
+  }
+  function matTags(n){
+    return nodeMats(n).map(function(id){
+      var m = MAT_BY_ID[id];
+      return '<span class="mtag' + (filterActive() && matFilter.indexOf(id) >= 0 ? ' hit' : '') + '" style="--mc:' + m.color + ';"><i></i>' + m.name + '</span>';
+    }).join('');
+  }
+  function knownZoneIds(){ var o = {}; zones.forEach(function(z){ o[z.id] = true; }); return o; }
+  function renderMatBar(){
+    var bar = byId('matBar');
+    var off = !!editMode;
+    bar.classList.toggle('off', off);
+    var zid = knownZoneIds();
+    var inZones = nodes.filter(function(n){ return zid[n.zoneId]; });
+    var h = '<span class="bar-label">재질</span><span class="mchips">';
+    MATERIALS.forEach(function(m){
+      var cnt = inZones.filter(function(n){ return nodeMats(n).indexOf(m.id) >= 0; }).length;
+      var on = !off && matFilter.indexOf(m.id) >= 0;
+      h += '<button type="button" class="mchip' + (on ? ' on' : '') + '" data-act="mat" data-mat="' + m.id + '" aria-pressed="' + on + '"' + (off ? ' disabled' : '') + ' style="--mc:' + m.color + ';"><i></i>' + m.name + '<span class="n">' + cnt + '</span></button>';
+    });
+    var noneCnt = inZones.filter(function(n){ return !nodeMats(n).length && !hasChildren(n.id); }).length;
+    var onNone = !off && matFilter.indexOf('none') >= 0;
+    h += '<button type="button" class="mchip none' + (onNone ? ' on' : '') + '" data-act="mat" data-mat="none" aria-pressed="' + onNone + '"' + (off ? ' disabled' : '') + '><i></i>재질 미지정<span class="n">' + noneCnt + '</span></button>';
+    h += '</span>';
+    var hint = '';
+    if(off){ hint = '구역 편집 중에는 재질 필터가 꺼집니다'; }
+    else if(matFilter.length){
+      var sz = selectedZone();
+      var hitN = sz ? zoneMatchCount(sz.id) : inZones.filter(matchesFilter).length;
+      h += '<button type="button" class="clear" data-act="matclear">필터 해제</button>' +
+        '<button type="button" class="clear jump show-m" data-act="matjump">결과 ' + hitN + '개 보기 ↓</button>';
+    }
+    else { hint = '재질을 누르면 해당 품목이 있는 작업장과 목록이 나옵니다 (여러 개 선택 가능)'; }
+    if(hint){ h += '<span class="hint" title="' + hint + '">' + hint + '</span>'; }
+    bar.innerHTML = h;
+  }
+  function toggleMat(id){
+    if(editMode) return;
+    var i = matFilter.indexOf(id);
+    if(i >= 0){ matFilter.splice(i, 1); } else { matFilter.push(id); }
+    matFilter.sort(function(a, b){ return (a === 'none' ? 99 : MAT_BY_ID[a].order) - (b === 'none' ? 99 : MAT_BY_ID[b].order); });
+    selectedItemId = null;
+    renderAll();
+  }
+  function renderMatResult(z){
+    var list = z ? [z] : zones.slice();
+    var groups = [], total = 0;
+    list.forEach(function(zz){
+      var items = nodes.filter(function(n){ return n.zoneId === zz.id && matchesFilter(n); })
+        .sort(function(a, b){
+          if(a.category !== b.category) return a.category === 'equip' ? -1 : 1;
+          var pa = pathNames(a).join('\u0001'), pb = pathNames(b).join('\u0001');
+          return pa < pb ? -1 : (pa > pb ? 1 : 0);
+        });
+      if(items.length){ groups.push({z: zz, items: items}); total += items.length; }
+    });
+    var names = matFilter.map(function(f){ return f === 'none' ? '재질 미지정' : MAT_BY_ID[f].name; }).join(' · ');
+    var h = '<div class="d-head"><div><div class="d-crumb">재질 필터 · ' + (z ? escapeHtml(z.name) : '공장 전체') + '</div>' +
+      '<div class="d-title">' + escapeHtml(names) + '</div></div><div class="d-acts">' +
+      (z ? '<button data-act="allzones">전체 작업장 결과</button>' : '') +
+      '<button data-act="matclear">필터 해제</button></div></div>';
+    h += '<div class="d-sec">' + (z ? '' : '작업장 ' + groups.length + '곳 · ') + '품목 ' + total + '개' +
+      (matFilter.length > 1 ? ' <span class="placeholder" style="font-weight:400;">(고른 재질 중 하나라도 해당)</span>' : '') + '</div>';
+    if(!total){
+      h += '<div class="placeholder" style="line-height:1.7;">' + (z ? '이 작업장에는 ' : '') + '해당 재질로 등록된 품목이 없습니다. 항목의 <b>수정</b>에서 재질을 지정할 수 있습니다.</div>';
+      detailPanel.innerHTML = h;
+      return;
+    }
+    h += '<table class="due mat-table"><thead><tr><th>품목</th><th>구분</th><th>재질</th><th>상태</th></tr></thead><tbody>';
+    groups.forEach(function(g){
+      if(!z){ h += '<tr class="zgrp" data-act="zone" data-id="' + g.z.id + '"><td colspan="4">' + escapeHtml(g.z.name) + ' · ' + g.items.length + '개</td></tr>'; }
+      g.items.forEach(function(n){
+        var kids = hasChildren(n.id);
+        var st = kids ? '하위 ' + descendantIds(n.id).length + '개' : nodeStatus(n).text;
+        var cls = kids ? 'b-gray' : nodeStatus(n).cls;
+        h += '<tr class="go" data-act="goto" data-id="' + n.id + '">' +
+          '<td class="c-path">' + escapeHtml(pathNames(n).join(' › ')) + (n.note ? ' <span class="placeholder">(' + escapeHtml(n.note) + ')</span>' : '') + '</td>' +
+          '<td class="c-cat">' + CAT_LABEL[n.category] + '</td>' +
+          '<td class="c-mat">' + (nodeMats(n).length ? matTags(n) : '<span class="placeholder">미지정</span>') + '</td>' +
+          '<td class="c-status"><span class="badge ' + cls + '" style="margin-left:0;">' + escapeHtml(st) + '</span>' +
+          (needsCheck(n) ? ' <span class="badge b-bad" style="margin-left:0;">' + escapeHtml(alertText(n)) + '</span>' : '') + '</td></tr>';
+      });
+    });
+    h += '</tbody></table>';
+    detailPanel.innerHTML = h;
   }
 
   // ---- 구역 모양(다각형) 도우미: 좌표는 원본 도면 기준 % ----
@@ -1843,6 +2036,10 @@
     byId('nodeName').value = n ? n.name : '';
     byId('nodeName').placeholder = cat === 'tool' ? '예: 청소도구, 스퀴즈(청색)' : '예: 자숙탱크1, 원심펌프, 메카니칼씰';
     byId('nodeNote').value = n ? n.note : '';
+    var cur = n ? nodeMats(n) : [];
+    byId('nodeMats').innerHTML = MATERIALS.map(function(m){
+      return '<label><input type="checkbox" value="' + m.id + '"' + (cur.indexOf(m.id) >= 0 ? ' checked' : '') + '><span style="--mc:' + m.color + ';"><i></i>' + m.name + '</span></label>';
+    }).join('');
     byId('nodeCycleVal').value = (n && n.cycleValue) ? n.cycleValue : '';
     byId('nodeCycleUnit').value = n ? n.cycleUnit : 'month';
     byId('nodeLastDate').value = n ? n.lastDate : '';
@@ -1876,7 +2073,7 @@
     if(ctx.mode === 'add'){
       n = {
         id: uid('n'), zoneId: selectedZoneId, parentId: ctx.parentId || null, category: ctx.category,
-        name: '', note: '', cycleValue: null, cycleUnit: 'month', lastDate: '', stdQty: null, photoNames: [], order: Date.now()
+        name: '', note: '', cycleValue: null, cycleUnit: 'month', lastDate: '', stdQty: null, photoNames: [], order: Date.now(), materials: []
       };
       nodes.push(n);
       if(ctx.parentId){ collapsed[ctx.parentId] = false; }
@@ -1886,6 +2083,7 @@
     }
     n.name = name;
     n.note = byId('nodeNote').value.trim();
+    n.materials = sortMats([].map.call(byId('nodeMats').querySelectorAll('input:checked'), function(el){ return el.value; }));
     if(leafShown){
       n.cycleValue = cv > 0 ? cv : null;
       n.cycleUnit = byId('nodeCycleUnit').value;
@@ -1894,7 +2092,7 @@
     }
     closeNodeModal();
     saveNodeToFirestore(n);
-    audit(ctx.mode === 'add' ? '항목 추가' : '항목 수정', nodeLabel(n), CAT_LABEL[n.category] + (n.cycleValue ? ' · 주기 ' + n.cycleValue + UNIT_LABEL[n.cycleUnit] : '') + (n.lastDate ? ' · 기준일 ' + n.lastDate : '') + (n.stdQty !== null && n.stdQty !== undefined ? ' · 기준수량 ' + n.stdQty : ''));
+    audit(ctx.mode === 'add' ? '항목 추가' : '항목 수정', nodeLabel(n), CAT_LABEL[n.category] + (nodeMats(n).length ? ' · 재질 ' + matNames(nodeMats(n)) : '') + (n.cycleValue ? ' · 주기 ' + n.cycleValue + UNIT_LABEL[n.cycleUnit] : '') + (n.lastDate ? ' · 기준일 ' + n.lastDate : '') + (n.stdQty !== null && n.stdQty !== undefined ? ' · 기준수량 ' + n.stdQty : ''));
     renderAll();
   }
   function deleteNode(n){
@@ -2021,8 +2219,12 @@
         if(pc){ sub.push('사진 ' + pc); }
         var flag = (s.bad ? ' <span class="badge b-bad">지연 ' + s.bad + '</span>' : (s.warn ? ' <span class="badge b-warn">임박 ' + s.warn + '</span>' : '')) +
           (s.alert ? ' <span class="badge b-bad">' + (kids ? '확인 필요 ' + s.alert : escapeHtml(alertText(n))) + '</span>' : '');
-        h += '<button class="icard' + (n.id === selTop ? ' selected' : '') + '" data-act="item" data-id="' + n.id + '">' +
-          '<div class="t">' + escapeHtml(n.name) + flag + '</div><div class="s">' + escapeHtml(sub.join(' · ')) + (n.note ? ' · ' + escapeHtml(n.note) : '') + '</div></button>';
+        var mcnt = filterActive() ? subtreeMatchCount(n.id) : 0;
+        var mcls = filterActive() ? (mcnt ? ' mat-hit' : ' mat-miss') : '';
+        if(mcnt){ flag += ' <span class="badge" style="background:#1c2430;color:#fff;">재질 ' + mcnt + '</span>'; }
+        h += '<button class="icard' + (n.id === selTop ? ' selected' : '') + mcls + '" data-act="item" data-id="' + n.id + '">' +
+          '<div class="t">' + escapeHtml(n.name) + flag + '</div><div class="s">' + escapeHtml(sub.join(' · ')) + (n.note ? ' · ' + escapeHtml(n.note) : '') + '</div>' +
+          (nodeMats(n).length ? '<div class="mtags">' + matTags(n) + '</div>' : '') + '</button>';
       });
       h += '<button class="icard add need-manage" data-act="addtop" data-cat="' + cat + '">+ ' + CAT_LABEL[cat] + ' 추가</button></div></div>';
     });
@@ -2041,10 +2243,11 @@
       var kids = hasChildren(n.id);
       var isCol = !!collapsed[n.id];
       var pc = (n.photoNames || []).length;
-      h += '<li><div class="node-row" data-node-id="' + n.id + '">';
+      h += '<li><div class="node-row' + (matchesFilter(n) ? ' mat-hit' : '') + '" data-node-id="' + n.id + '">';
       h += '<span class="tg" data-act="toggle" data-id="' + n.id + '">' + (kids ? (isCol ? '▸' : '▾') : '·') + '</span>';
       h += '<span class="nm"><span class="no">' + no + '</span>' + escapeHtml(n.name);
       if(n.note){ h += ' <span class="memo">(' + escapeHtml(n.note) + ')</span>'; }
+      h += matTags(n);
       if(pc > 0){ h += '<span class="badge b-photo" data-act="photo" data-id="' + n.id + '">사진 ' + pc + '</span>'; }
       if(kids){
         var od = overdueUnder(n.id);
@@ -2086,7 +2289,8 @@
       (parent ? ' › ' + escapeHtml(pathNames(parent).join(' › ')) : '') + '</div>' +
       (parent ? '<button class="linkish" data-act="open" data-id="' + parent.id + '">↑ 상위 항목: ' + escapeHtml(parent.name) + '</button>' : '') +
       '<div class="d-title"><span class="no">' + itemNo(n) + '</span>' + escapeHtml(n.name) +
-      (n.note ? '<span class="memo">(' + escapeHtml(n.note) + ')</span>' : '') + '</div></div>' +
+      (n.note ? '<span class="memo">(' + escapeHtml(n.note) + ')</span>' : '') + '</div>' +
+      '<div class="mtags">' + (nodeMats(n).length ? matTags(n) : '<span class="mtag">재질 미지정</span>') + '</div></div>' +
       '<div class="d-acts">' +
       '<button class="primary need-manage" data-act="add" data-id="' + n.id + '">+ 하위 항목</button>' +
       '<button data-act="photo" data-id="' + n.id + '">사진' + (pc ? ' ' + pc : '') + '</button>' +
@@ -2189,7 +2393,11 @@
   function renderDetail(){
     var n = selectedItemId ? findNode(selectedItemId) : null;
     if(n && n.zoneId !== selectedZoneId){ n = null; }
-    if(!n){ selectedItemId = null; renderOverview(); return; }
+    if(!n){
+      selectedItemId = null;
+      if(filterActive()){ renderMatResult(selectedZone()); } else { renderOverview(); }
+      return;
+    }
     renderItemDetail(n);
   }
 
@@ -2217,6 +2425,9 @@
       return;
     }
     if(act === 'zone'){ selectZone(id, true); return; }
+    if(act === 'mat'){ toggleMat(el.dataset.mat); return; }
+    if(act === 'matclear'){ matFilter = []; renderAll(); return; }
+    if(act === 'matjump'){ detailPanel.scrollIntoView({behavior: 'smooth', block: 'start'}); return; }
     if(act === 'newpoly'){ setDrawMode('poly', null); return; }
     if(act === 'addrect'){ setDrawMode('rect', id); return; }
     if(act === 'addpoly'){ setDrawMode('poly', id); return; }
@@ -2272,7 +2483,7 @@
   });
 
   // ---- 일괄 등록 ----
-  var TEMPLATE_HEADERS = ['구역', '구분', '1단계', '2단계', '3단계', '4단계', '5단계', '비고', '점검주기', '주기단위', '최근점검일', '기준수량', '사진파일명'];
+  var TEMPLATE_HEADERS = ['구역', '구분', '1단계', '2단계', '3단계', '4단계', '5단계', '비고', '재질', '점검주기', '주기단위', '최근점검일', '기준수량', '사진파일명'];
   var bulkRows = null;
   var bulkPhotos = {};
   var bulkPlan = null;
@@ -2382,6 +2593,8 @@
       if(!info.path.length){ info.errors.push('1단계 이름 없음'); }
       else if(!cellStr(row[levelCols[0].i])){ info.errors.push('1단계가 비어 있음'); }
       var note = cellStr(get(row, '비고'));
+      var mp = parseMaterials(get(row, '재질'));
+      if(mp.bad.length){ info.errors.push("재질 '" + mp.bad.join(', ') + "'은(는) 목록에 없음(" + MATERIALS.map(function(m){ return m.name; }).join('/') + ')'); }
       var cycRaw = cellStr(get(row, '점검주기'));
       var cyc = null;
       if(cycRaw !== ''){
@@ -2412,6 +2625,7 @@
       info.lastDate = dt.ok ? dt.value : '';
       info.qty = qty;
       info.note = note;
+      info.mats = mp.ids;
 
       if(info.errors.length){
         info.status = '오류(제외)';
@@ -2431,7 +2645,7 @@
         node = pathMap[key];
         if(!node){
           node = {id: uid('n'), zoneId: z.id, parentId: parentId, category: cat, name: info.path[li], note: '',
-            cycleValue: null, cycleUnit: 'month', lastDate: '', stdQty: null, photoNames: [], order: orderBase + result.newNodes.length, _new: true};
+            cycleValue: null, cycleUnit: 'month', lastDate: '', stdQty: null, photoNames: [], materials: [], order: orderBase + result.newNodes.length, _new: true};
           pathMap[key] = node;
           result.newNodes.push(node);
           if(li === info.path.length - 1) createdLeaf = true;
@@ -2440,6 +2654,7 @@
       }
       var changed = false;
       if(note && node.note !== note){ node.note = note; changed = true; }
+      if(mp.ids.length && mp.ids.join(',') !== nodeMats(node).join(',')){ node.materials = mp.ids.slice(); changed = true; }
       if(cyc && (node.cycleValue !== cyc || node.cycleUnit !== unit)){ node.cycleValue = cyc; node.cycleUnit = unit; changed = true; }
       if(dt.value && node.lastDate !== dt.value){ node.lastDate = dt.value; changed = true; }
       if(qty !== null && node.stdQty !== qty){ node.stdQty = qty; changed = true; }
@@ -2497,12 +2712,12 @@
     sum.innerHTML = '읽은 행 <b>' + plan.rows.length + '</b> · 등록 가능 <b>' + okRows + '</b> · ' +
       '<span style="color:#b42318;">오류(제외) <b>' + plan.errors + '</b></span> · 경고 ' + plan.warnings +
       ' &nbsp;|&nbsp; 새로 만들 항목 <b>' + plan.newNodes.length + '</b>개(중간 단계 포함) · 수정될 기존 항목 <b>' + plan.updatedNodes.length + '</b>개 · 올릴 사진 <b>' + plan.photoJobs.length + '</b>장';
-    var h = '<div class="pv-wrap"><table class="pv"><thead><tr><th>행</th><th>상태</th><th>구역</th><th>구분</th><th>경로</th><th>비고</th><th>주기</th><th>최근점검일</th><th>기준수량</th><th>사진</th><th>오류·경고</th></tr></thead><tbody>';
+    var h = '<div class="pv-wrap"><table class="pv"><thead><tr><th>행</th><th>상태</th><th>구역</th><th>구분</th><th>경로</th><th>비고</th><th>재질</th><th>주기</th><th>최근점검일</th><th>기준수량</th><th>사진</th><th>오류·경고</th></tr></thead><tbody>';
     plan.rows.forEach(function(r){
       var msgs = r.errors.map(function(m){ return '<span style="color:#b42318;">' + escapeHtml(m) + '</span>'; })
         .concat(r.warnings.map(function(m){ return '<span style="color:#a15c00;">' + escapeHtml(m) + '</span>'; }));
       h += '<tr class="' + (r.errors.length ? 'err' : '') + '"><td>' + r.rowNo + '</td><td>' + escapeHtml(r.status) + '</td><td>' + escapeHtml(r.zone) + '</td><td>' + escapeHtml(r.cat) + '</td>' +
-        '<td>' + escapeHtml(r.path.join(' > ')) + '</td><td>' + escapeHtml(r.note || '') + '</td><td>' + escapeHtml(r.cycle || '') + '</td><td>' + escapeHtml(r.lastDate || '') + '</td>' +
+        '<td>' + escapeHtml(r.path.join(' > ')) + '</td><td>' + escapeHtml(r.note || '') + '</td><td>' + escapeHtml(r.mats ? matNames(r.mats) : '') + '</td><td>' + escapeHtml(r.cycle || '') + '</td><td>' + escapeHtml(r.lastDate || '') + '</td>' +
         '<td>' + (r.qty === null || r.qty === undefined ? '' : r.qty) + '</td><td>' + (r.photoCount || '') + '</td><td>' + msgs.join('<br>') + '</td></tr>';
     });
     h += '</tbody></table></div>';
@@ -2562,13 +2777,13 @@
       ws1['!cols'] = TEMPLATE_HEADERS.map(function(h){ return {wch: h === '사진파일명' ? 28 : (h.indexOf('단계') > 0 ? 16 : 11)}; });
       X.utils.book_append_sheet(wb, ws1, '목록');
       var ex = [TEMPLATE_HEADERS,
-        ['자숙실', '설비', '자숙탱크1', '', '', '', '', '', '', '', '', '', '자숙탱크1.jpg'],
-        ['자숙실', '설비', '자숙탱크1', '원심펌프', '메카니칼씰', '', '', '', 6, '개월', '2026-09-01', '', ''],
-        ['자숙실', '설비', '자숙탱크1', '원심펌프', '오링', '', '', '', 3, '개월', '2026-09-01', '', ''],
-        ['자숙실', '설비', '자숙탱크1', '배관', '오링', '', '', '', 3, '개월', '2026-09-01', '', ''],
-        ['자숙실', '공기구', '청소도구', '스퀴즈', '', '', '', '청색', 1, '주', '2026-09-14', 2, '스퀴즈_청색.jpg'],
-        ['자숙실', '공기구', '청소도구', '바닥솔', '', '', '', '백색', 1, '주', '2026-09-14', 3, '바닥솔_1.jpg, 바닥솔_2.jpg'],
-        ['자숙실', '공기구', '수리도구', '십자드라이버', '', '', '', '', 1, '개월', '', 1, '']];
+        ['자숙실', '설비', '자숙탱크1', '', '', '', '', '', '금속', '', '', '', '', '자숙탱크1.jpg'],
+        ['자숙실', '설비', '자숙탱크1', '원심펌프', '메카니칼씰', '', '', '', '금속, 고무', 6, '개월', '2026-09-01', '', ''],
+        ['자숙실', '설비', '자숙탱크1', '원심펌프', '오링', '', '', '', '고무', 3, '개월', '2026-09-01', '', ''],
+        ['자숙실', '설비', '자숙탱크1', '배관', '오링', '', '', '', '실리콘', 3, '개월', '2026-09-01', '', ''],
+        ['자숙실', '공기구', '청소도구', '스퀴즈', '', '', '', '청색', '플라스틱, 고무', 1, '주', '2026-09-14', 2, '스퀴즈_청색.jpg'],
+        ['자숙실', '공기구', '청소도구', '바닥솔', '', '', '', '백색', '플라스틱, 섬유', 1, '주', '2026-09-14', 3, '바닥솔_1.jpg, 바닥솔_2.jpg'],
+        ['자숙실', '공기구', '수리도구', '십자드라이버', '', '', '', '', '금속, 플라스틱', 1, '개월', '', 1, '']];
       var ws2 = X.utils.aoa_to_sheet(ex);
       ws2['!cols'] = ws1['!cols'];
       X.utils.book_append_sheet(wb, ws2, '작성예시');
@@ -2584,6 +2799,7 @@
         ['4. 1단계~5단계: 위에서부터 차례로 적습니다. 예) 자숙탱크1 / 원심펌프 / 메카니칼씰. 중간 단계는 자동으로 만들어지며, 같은 이름·같은 경로는 하나로 합쳐집니다.'],
         ['5. 점검주기·주기단위·최근점검일은 맨 아래 항목에만 적습니다. 주기단위는 일/주/개월, 날짜는 2026-09-01 형식.'],
         ['6. 기준수량은 공기구에만 적습니다.'],
+        ['6-1. 재질: ' + MATERIALS.map(function(m){ return m.name; }).join(' / ') + ' 중에서 적습니다. 여러 개는 쉼표로 구분(예: 플라스틱, 고무). 빈 칸이면 기존 재질을 그대로 둡니다.'],
         ['7. 사진파일명: 올릴 사진의 파일 이름(확장자 포함). 여러 장은 쉼표로 구분. 설비 자체 사진은 그 설비만 적힌 줄(예: 1단계만 있는 줄)에 적습니다.'],
         ['8. 이미 등록된 항목과 경로가 같으면 새로 만들지 않고, 적은 값만 덮어씁니다(빈 칸은 기존 값 유지). 같은 사진 파일명은 다시 올리지 않습니다.'],
         ['9. 사진은 긴 변 1280px JPEG로 줄여서 저장됩니다.']
@@ -2795,6 +3011,8 @@
       var t = zoneType(z);
       var od = overdueInZone(z.id);
       var sel = z.id === selectedZoneId;
+      var mcount = filterActive() ? zoneMatchCount(z.id) : 0;
+      var dimIt = (zoomed && !sel) || (filterActive() && !mcount && !sel);
       var color = t ? t.color : '#98a2b3';
       var line = sel ? '#ff8a00' : (od > 0 ? '#e0473f' : color);
       var d = pathD(z.shapes);
@@ -2802,21 +3020,23 @@
       // 테두리는 바깥쪽에만 그려서, 여러 영역을 합친 구역도 안쪽 이음선 없이 하나의 외곽선으로 보이게 함
       defs += '<mask id="' + mid + '" maskUnits="userSpaceOnUse" x="-10" y="-10" width="120" height="120">' +
         '<rect x="-10" y="-10" width="120" height="120" fill="#fff"/><path d="' + d + '" fill="#000"/></mask>';
-      body += '<g class="zg' + (zoomed && !sel ? ' dim' : '') + (sel ? ' sel' : '') + (t ? '' : ' untyped') + (od > 0 ? ' alert' : '') + '" data-zone-id="' + escapeHtml(z.id) + '">' +
+      body += '<g class="zg' + (dimIt ? ' dim' : '') + (mcount ? ' mat-hit' : '') + (sel ? ' sel' : '') + (t ? '' : ' untyped') + (od > 0 ? ' alert' : '') + '" data-zone-id="' + escapeHtml(z.id) + '">' +
         '<path class="zfill" d="' + d + '" fill="' + rgba(color, sel ? 0.32 : 0.16) + '"/>' +
         (sel ? '<path class="zline" d="' + d + '" stroke="rgba(255,138,0,0.35)" stroke-width="10" mask="url(#' + mid + ')"/>' : '') +
         '<path class="zline" d="' + d + '" stroke="' + line + '" stroke-width="' + (sel ? 6 : 4) + '"' + (t ? '' : ' stroke-dasharray="7 4"') + ' mask="url(#' + mid + ')"/>' +
         '</g>';
       var a = labelAnchor(z);
       var lb = document.createElement('div');
-      lb.className = 'zone-label' + (zoomed && !sel ? ' dim' : '') + (sel ? ' sel' : '');
+      lb.className = 'zone-label' + (dimIt ? ' dim' : '') + (sel ? ' sel' : '');
       lb.dataset.zoneId = z.id;
       lb.style.left = a.x + '%';
       lb.style.top = a.y + '%';
       lb.style.background = sel ? '#ff8a00' : (od > 0 ? '#e0473f' : color);
       lb.style.color = (sel || od > 0 || !t) ? '#fff' : textOn(t.color);
-      lb.textContent = z.name + (od > 0 ? ' (지연 ' + od + ')' : '');
-      lb.title = z.name + ' · ' + (t ? t.name : '구분 미지정');
+      // 재질 필터 중에는 라벨을 짧게(이름 · 해당 개수). 지연 표시는 테두리 색과 작업장 버튼에 남음
+      lb.textContent = filterActive() ? z.name + (mcount ? ' · ' + mcount : '') : z.name + (od > 0 ? ' (지연 ' + od + ')' : '');
+      if(mcount && !sel){ lb.style.background = '#1c2430'; lb.style.color = '#fff'; }
+      lb.title = z.name + ' · ' + (t ? t.name : '구분 미지정') + (mcount ? ' · 재질 해당 ' + mcount + '개' : '') + (od > 0 ? ' · 지연 ' + od : '');
       labels.appendChild(lb);
     });
     // 다각형 그리는 중 미리보기
@@ -2871,8 +3091,10 @@
     zones.forEach(function(z){
       var od = overdueInZone(z.id);
       var t = zoneType(z);
-      h += '<span class="zchip' + (z.id === selectedZoneId ? ' selected' : '') + '" data-act="zone" data-id="' + z.id + '">' +
+      var mc = filterActive() ? zoneMatchCount(z.id) : 0;
+      h += '<span class="zchip' + (z.id === selectedZoneId ? ' selected' : '') + (filterActive() && !mc ? ' mat-dim' : '') + '" data-act="zone" data-id="' + z.id + '">' +
         (t ? '<i class="dot" style="background:' + escapeHtml(t.color) + ';"></i>' : '<i class="dot untyped"></i>') + escapeHtml(z.name) +
+        (mc ? '<span class="mcnt">' + mc + '</span>' : '') +
         (od > 0 ? '<span class="cnt">지연 ' + od + '</span>' : '') +
         (editMode ? '<span class="zx" data-act="zdel" data-id="' + z.id + '" title="구역 삭제">✕</span>' : '') + '</span>';
     });
@@ -2890,6 +3112,7 @@
     if(selectedZoneId && !zones.some(function(z){ return z.id === selectedZoneId; })){ selectedZoneId = null; selectedItemId = null; }
     renderZonesOnImage();
     renderZoneBar();
+    renderMatBar();
     renderZoneItems();
     renderDetail();
     updateView();
@@ -3100,7 +3323,7 @@
     var work = document.querySelector('.work');
     var top = work.getBoundingClientRect().top + window.scrollY;
     var footerH = 30;
-    var availH = Math.max(380, vh - top - footerH - 4);
+    var availH = Math.max(340, vh - top - footerH - 4);
     var pageW = work.clientWidth || (vw - 32);
     var planW = Math.min(Math.round((availH - 14) * CROP_AR), Math.round(pageW * 0.62));
     planW = Math.max(360, planW);
@@ -3225,6 +3448,9 @@
     zoneDoc: zoneDoc,
     mergeZones: mergeZones,
     getStep: function(){ return mStep(); },
+    getMatFilter: function(){ return matFilter.slice(); },
+    setMatFilter: function(list){ matFilter = list.slice(); selectedItemId = null; renderAll(); },
+    parseMaterials: parseMaterials,
     getMe: function(){ return me ? {name: me.name, role: me.role} : null; },
     pinHash: pinHash,
     effectiveLast: function(id){ return effectiveLast(findNode(id)); },
