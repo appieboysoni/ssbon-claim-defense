@@ -214,7 +214,7 @@
     <div id="detailPanel" class="card"></div>
   </div>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.6 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.6.1 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -2247,7 +2247,7 @@
     var el = evt.target.closest ? evt.target.closest('[data-zone-id]') : null;
     if(!el) return;
     evt.stopPropagation();
-    selectZone(el.getAttribute('data-zone-id'));
+    selectZone(el.getAttribute('data-zone-id'), true);
   });
   overlay.addEventListener('dblclick', function(evt){
     if(editMode && drawMode.kind === 'poly'){ evt.preventDefault(); finishPolygon(); }
