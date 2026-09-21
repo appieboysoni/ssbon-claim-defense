@@ -248,6 +248,28 @@
   .pin-sec{border:1px solid #e4e7ec;border-radius:8px;padding:10px 12px 0;margin-bottom:12px;}
   .pin-sec .m-title{margin-bottom:4px;}
   .audit-list{max-height:62vh;overflow:auto;font-size:12px;border-top:1px solid #eef0f3;}
+  .audit-list.short{max-height:30vh;}
+  /* 사용자 관리 */
+  .u-actions{display:flex;align-items:center;gap:10px;margin:6px 0 8px;}
+  .u-list{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;max-height:38vh;overflow-y:auto;}
+  .urow{display:grid;grid-template-columns:1.4fr 1fr 1.3fr auto;gap:4px 10px;align-items:center;padding:8px 10px;border-bottom:1px solid #eef0f3;font-size:13px;}
+  .urow:last-child{border-bottom:none;}
+  .urow.head{background:#f7f8fa;font-weight:700;font-size:12px;color:#475467;}
+  .urow.off{opacity:.55;}
+  .urow .un{font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .urow .ubadge{font-size:10px;font-weight:700;padding:1px 7px;border-radius:9px;background:#eef2ff;color:#1c2430;}
+  .urow .ubadge.master{background:#1c2430;color:#fff;}
+  .urow .ubadge.manager{background:#dbeafe;color:#123a99;}
+  .urow .unote{font-size:11px;color:#667085;font-weight:400;}
+  .urow .umuted{color:#667085;font-size:12px;}
+  .urow .ua{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;}
+  .urow .ua button{padding:3px 9px;font-size:12px;}
+  .u-form{border:1px solid var(--accent);border-radius:8px;padding:10px 12px;margin-bottom:12px;}
+  .u-form.hidden{display:none;}
+  .u-form label{display:block;font-size:12px;color:#475467;margin:6px 0 3px;}
+  .u-form input[type="text"],.u-form input[type="password"],.u-form select{width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:6px;font-size:14px;}
+  .u-form .chk{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:13px;color:#344054;}
+  .u-form .chk input{width:auto;}
   .audit-row{display:grid;grid-template-columns:118px 120px 1fr;gap:2px 10px;padding:6px 2px;border-bottom:1px solid #eef0f3;}
   .audit-row .t{color:#667085;font-variant-numeric:tabular-nums;}
   .audit-row .d{overflow-wrap:anywhere;}
@@ -335,6 +357,12 @@
     body[data-mstep="detail"] #detailPanel .d-crumb,body[data-mstep="detail"] #detailPanel [data-act="close"]{display:none;}
     .modal-box{max-width:96vw;}
     .audit-row{grid-template-columns:1fr;}
+    .u-list{max-height:none;overflow:visible;}
+    .audit-list.short{max-height:none;overflow:visible;}
+    .urow{grid-template-columns:1fr;}
+    .urow.head{display:none;}
+    .urow .ua{justify-content:flex-start;}
+    .urow .ua button{padding:7px 12px;font-size:13px;}
     .mat-bar{flex-wrap:wrap;}
     .mat-bar .hint{display:none;}
     .mchips{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;width:100%;padding:2px 8px 4px 0;-webkit-overflow-scrolling:touch;}
@@ -360,7 +388,8 @@
     <button id="btnEditMode" class="need-manage">구역 편집 모드 켜기</button>
     <button id="btnExport" class="need-manage">구역 내보내기</button>
     <button id="btnImportTrigger" class="need-manage">구역 가져오기</button>
-    <button id="btnPins" class="need-master">권한·PIN 관리</button>
+    <button id="btnUsers" class="need-master">사용자 관리</button>
+    <button id="btnPins" class="need-master">공용 PIN 관리</button>
     <button id="btnAudit" class="need-master">변경 이력</button>
     <button id="btnSwitch" class="show-m">사용자 전환</button>
     <div class="menu-note need-manage">구역 편집(모양 그리기·꼭짓점 이동)은 PC에서 하는 것을 권장합니다.</div>
@@ -388,7 +417,7 @@
     <div id="detailPanel" class="card"></div>
   </div>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.9.2 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.10 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -529,10 +558,16 @@
 <div class="modal hidden" id="loginModal">
   <div class="modal-box">
     <div class="m-title">사용자 확인</div>
-    <label for="lgName">이름</label>
-    <input id="lgName" type="text" maxlength="20" autocomplete="name" placeholder="예: 홍길동">
-    <label>권한</label>
-    <div class="seg"><label><input type="radio" name="lgRole" value="inspector" id="lgRoleI"><span>점검자</span></label><label><input type="radio" name="lgRole" value="manager" id="lgRoleM"><span>관리자</span></label><label><input type="radio" name="lgRole" value="master" id="lgRoleS"><span>마스터</span></label></div>
+    <div id="lgPickWrap" style="display:none;">
+      <label for="lgUser">이름</label>
+      <select id="lgUser"></select>
+    </div>
+    <div id="lgFreeWrap">
+      <label for="lgName">이름</label>
+      <input id="lgName" type="text" maxlength="20" autocomplete="name" placeholder="예: 홍길동">
+      <label>권한</label>
+      <div class="seg"><label><input type="radio" name="lgRole" value="inspector" id="lgRoleI"><span>점검자</span></label><label><input type="radio" name="lgRole" value="manager" id="lgRoleM"><span>관리자</span></label><label><input type="radio" name="lgRole" value="master" id="lgRoleS"><span>마스터</span></label></div>
+    </div>
     <div id="lgPinWrap">
       <label for="lgPin" id="lgPinLabel">PIN</label>
       <input id="lgPin" type="password" autocomplete="off">
@@ -541,6 +576,7 @@
         <input id="lgPin2" type="password" autocomplete="off">
       </div>
     </div>
+    <div class="muted" id="lgPickHint" style="display:none;">목록에 이름이 없으면 마스터에게 사용자 등록을 요청하세요.</div>
     <div class="muted" id="lgHint">점검자: 점검 기록 입력 · 관리자: 설비·공기구 등록·수정·삭제, 구역 편집, 일괄 등록 · 마스터: 점검 기록 수정·삭제와 PIN 관리까지</div>
     <div class="form-msg" id="lgMsg"></div>
     <div class="modal-actions">
@@ -553,8 +589,8 @@
 
 <div class="modal hidden" id="pinModal">
   <div class="modal-box mid">
-    <div class="m-title">권한·PIN 관리</div>
-    <div class="muted">PIN은 화면에서 권한을 나누는 용도입니다. 바꾸면 그 권한으로 로그인해 있던 다른 기기는 다음 접속 때 다시 PIN을 물어봅니다. 추측하기 어려운 6자 이상을 권장합니다.</div>
+<div class="m-title">공용 PIN 관리</div>
+    <div class="muted">사람마다 PIN을 정하지 않았을 때 쓰는 역할 공용 PIN입니다. 화면에서 권한을 나누는 용도입니다. 바꾸면 그 권한으로 로그인해 있던 다른 기기는 다음 접속 때 다시 PIN을 물어봅니다. 추측하기 어려운 6자 이상을 권장합니다.</div>
     <div class="pin-sec">
       <div class="m-title">관리자 PIN</div>
       <div class="muted" id="pinMgrState"></div>
@@ -572,6 +608,36 @@
       <button id="pinClose">닫기</button>
       <button id="pinSave" class="primary">저장</button>
     </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="usersModal">
+  <div class="modal-box wide">
+    <div class="m-title">사용자 관리</div>
+    <div class="muted">여기 등록한 사람만 로그인 창 목록에 나옵니다. PIN은 되돌릴 수 없는 암호값으로만 저장되어 숫자는 볼 수 없고, 잊었으면 새로 정해 주면 됩니다.</div>
+    <div class="u-actions"><button id="uAdd" class="primary">+ 사용자 추가</button><span class="muted" id="uCount"></span></div>
+    <div class="u-form hidden" id="uForm">
+      <div class="m-title" id="uFormTitle">사용자 추가</div>
+      <label for="uName">이름</label>
+      <input id="uName" type="text" maxlength="20" placeholder="예: 홍길동">
+      <label for="uRole">권한</label>
+      <select id="uRole"><option value="inspector">점검자 (점검 기록만)</option><option value="manager">관리자 (설비·공기구·구역 편집)</option><option value="master">마스터 (기록 수정·삭제, 사용자 관리)</option></select>
+      <label for="uNote">비고 (선택)</label>
+      <input id="uNote" type="text" maxlength="40" placeholder="예: 품질팀">
+      <div id="uPinWrap">
+        <label for="uPin1" id="uPinLabel">PIN (4자 이상)</label>
+        <input id="uPin1" type="password" autocomplete="new-password">
+        <label for="uPin2">PIN 한 번 더</label>
+        <input id="uPin2" type="password" autocomplete="new-password">
+      </div>
+      <label class="chk"><input type="checkbox" id="uActive" checked> 사용 중 (끄면 로그인 목록에서 빠집니다)</label>
+      <div class="form-msg" id="uMsg"></div>
+      <div class="modal-actions"><button id="uCancel">취소</button><button id="uSave" class="primary">저장</button></div>
+    </div>
+    <div class="u-list" id="userList"></div>
+    <div class="m-title">접속 이력 (최근 100건)</div>
+    <div class="audit-list short" id="loginList"></div>
+    <div class="modal-actions" style="margin-top:12px;"><button id="uClose">닫기</button></div>
   </div>
 </div>
 
@@ -668,6 +734,7 @@
   var RECORDS_COL = 'claimdefense_records';
   var AUDIT_COL = 'claimdefense_audit';
   var SETTINGS_COL = 'claimdefense_settings';
+  var USERS_COL = 'claimdefense_users';
   function initFB(){
     try{
       if(FB_DB) return FB_DB;
@@ -730,7 +797,12 @@
       var d = (doc && doc.exists) ? doc.data() : {};
       settings = {managerPinHash: d.managerPinHash || '', masterPinHash: d.masterPinHash || ''};
     }, function(e){ console.warn('권한 설정 불러오기 실패', e); });
-    Promise.all([db.collection(ZONES_COL).get(), db.collection(NODES_COL).get(), db.collection(TYPES_COL).get(), settingsP]).then(function(res){
+    var usersP = db.collection(USERS_COL).get().then(function(snap){
+      var list = [];
+      snap.forEach(function(doc){ list.push(userFromDoc(doc.id, doc.data())); });
+      users = list;
+    }, function(e){ console.warn('사용자 목록 불러오기 실패', e); });
+    Promise.all([db.collection(ZONES_COL).get(), db.collection(NODES_COL).get(), db.collection(TYPES_COL).get(), settingsP, usersP]).then(function(res){
       zones = [];
       res[0].forEach(function(doc){
         zones.push(normalizeZone(Object.assign({}, doc.data(), {id: doc.id})));
@@ -1226,6 +1298,7 @@
   var ROLE_LABEL = {inspector: '점검자', manager: '관리자', master: '마스터'};
   var SESSION_KEY = 'claimdefense_session';
   var settings = {managerPinHash: '', masterPinHash: ''};
+  var users = [];
   var me = null;
   var lgFails = 0, lgLockUntil = 0;
   function level(){ return me ? (ROLE_LEVEL[me.role] || 0) : 0; }
@@ -1272,6 +1345,34 @@
     return hex;
   }
   function pinHash(role, pin){ return sha256hex('claimdefense:' + role + ':' + pin); }
+  function userPinHash(id, pin){ return sha256hex('claimdefense:user:' + id + ':' + pin); }
+  function userFromDoc(id, d){
+    return {id: id, name: d.name || '', role: ROLE_LEVEL[d.role] ? d.role : 'inspector', pinHash: d.pinHash || '',
+      active: d.active !== false, note: d.note || '', createdAt: d.createdAt || 0, createdBy: d.createdBy || '',
+      updatedAt: d.updatedAt || 0, updatedBy: d.updatedBy || '', lastLoginAt: d.lastLoginAt || 0, loginCount: d.loginCount || 0};
+  }
+  function userToDoc(u){
+    return {name: u.name, role: u.role, pinHash: u.pinHash || '', active: u.active !== false, note: u.note || '',
+      createdAt: u.createdAt || Date.now(), createdBy: u.createdBy || '', updatedAt: Date.now(), updatedBy: (me ? me.name : ''),
+      lastLoginAt: u.lastLoginAt || 0, loginCount: u.loginCount || 0};
+  }
+  function sortUsers(list){
+    return list.slice().sort(function(a, b){
+      if(a.active !== b.active) return a.active ? -1 : 1;
+      if(ROLE_LEVEL[b.role] !== ROLE_LEVEL[a.role]) return ROLE_LEVEL[b.role] - ROLE_LEVEL[a.role];
+      return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0);
+    });
+  }
+  function findUser(id){ for(var i = 0; i < users.length; i++){ if(users[i].id === id) return users[i]; } return null; }
+  function userByName(name){
+    var hit = null;
+    users.forEach(function(u){ if(u.active && u.name === name && !hit) hit = u; });
+    return hit;
+  }
+  function activeUsers(){ return users.filter(function(u){ return u.active; }); }
+  function pickMode(){ return activeUsers().length > 0; }       // 명단이 있으면 목록에서 고르는 방식
+  function needHash(u){ return u.role === 'inspector' ? '' : (u.pinHash || settings[u.role + 'PinHash'] || ''); }
+  function activeMasters(){ return users.filter(function(u){ return u.active && u.role === 'master'; }); }
   function readSession(){ try{ return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }catch(e){ return null; } }
   function writeSession(v){ try{ if(v){ localStorage.setItem(SESSION_KEY, JSON.stringify(v)); } else { localStorage.removeItem(SESSION_KEY); } }catch(e){} }
   function applyRole(){
@@ -1286,10 +1387,18 @@
     var sv = readSession();
     me = null;
     if(sv && sv.name && ROLE_LEVEL[sv.role]){
-      if(sv.role === 'inspector' || offline){ me = {name: sv.name, role: sv.role}; }
+      if(offline){ me = {name: sv.name, role: sv.role, uid: sv.uid || ''}; }
       else {
-        var need = settings[sv.role + 'PinHash'];
-        if(need && sv.h === need){ me = {name: sv.name, role: sv.role}; }
+        var u = (sv.uid ? findUser(sv.uid) : null) || userByName(sv.name);
+        if(u){
+          // 명단에 있는 사람: 지금 등록된 권한·PIN 기준으로 다시 확인 (마스터가 바꿨으면 다시 로그인)
+          var nd = needHash(u);
+          if(u.active && (!nd || sv.h === nd)){ me = {name: u.name, role: u.role, uid: u.id}; }
+        } else if(sv.role === 'inspector'){ me = {name: sv.name, role: sv.role, uid: ''}; }
+        else {
+          var need = settings[sv.role + 'PinHash'];
+          if(need && sv.h === need){ me = {name: sv.name, role: sv.role, uid: ''}; }
+        }
       }
     }
     applyRole();
@@ -1297,10 +1406,38 @@
     if(!me){ openLogin(sv && sv.name ? sv.name : '', sv && sv.role ? sv.role : 'inspector'); }
   }
   function lgRole(){ var el = document.querySelector('input[name="lgRole"]:checked'); return el ? el.value : 'inspector'; }
+  function lgPickedUser(){ var el = byId('lgUser'); return el && el.value ? findUser(el.value) : null; }
+  function fillUserPicker(preferId, preferName){
+    var sel = byId('lgUser');
+    var list = sortUsers(activeUsers());
+    var h = '<option value="">이름을 고르세요</option>';
+    list.forEach(function(u){
+      h += '<option value="' + u.id + '">' + escapeHtml(u.name) + ' (' + ROLE_LABEL[u.role] + ')' + (u.note ? ' · ' + escapeHtml(u.note) : '') + '</option>';
+    });
+    sel.innerHTML = h;
+    var want = (preferId && findUser(preferId)) ? preferId : ((preferName && userByName(preferName)) ? userByName(preferName).id : '');
+    sel.value = want || '';
+  }
   function updateLoginForm(){
-    var role = lgRole();
-    var pinWrap = byId('lgPinWrap'), pin2 = byId('lgPin2Wrap');
+    var pick = pickMode();
+    byId('lgPickWrap').style.display = pick ? '' : 'none';
+    byId('lgFreeWrap').style.display = pick ? 'none' : '';
+    byId('lgPickHint').style.display = pick ? '' : 'none';
+    byId('lgHint').style.display = pick ? 'none' : '';
+    var pw = byId('lgPinWrap'), p2 = byId('lgPin2Wrap');
     byId('lgMsg').textContent = '';
+    if(pick){
+      var u = lgPickedUser();
+      p2.style.display = 'none';
+      if(!u || u.role === 'inspector'){ pw.style.display = 'none'; return; }
+      pw.style.display = '';
+      byId('lgPinLabel').textContent = ROLE_LABEL[u.role] + ' PIN';
+      if(!needHash(u)){ byId('lgMsg').textContent = ROLE_LABEL[u.role] + ' PIN이 아직 없습니다. 마스터가 [사용자 관리]에서 정해야 합니다.'; }
+      else if(!u.pinHash){ byId('lgMsg').textContent = '개인 PIN이 없어 ' + ROLE_LABEL[u.role] + ' 공용 PIN으로 들어갑니다.'; }
+      return;
+    }
+    var role = lgRole();
+    var pinWrap = pw, pin2 = p2;
     if(role === 'inspector'){ pinWrap.style.display = 'none'; return; }
     pinWrap.style.display = '';
     var setup = role === 'master' && !settings.masterPinHash;
@@ -1311,7 +1448,9 @@
     }
   }
   function openLogin(name, role){
-    byId('lgName').value = name !== undefined ? name : (me ? me.name : '');
+    var nm = name !== undefined ? name : (me ? me.name : '');
+    fillUserPicker(me ? me.uid : (readSession() || {}).uid, nm);
+    byId('lgName').value = nm;
     var r = role || (me ? me.role : 'inspector');
     ({inspector: byId('lgRoleI'), manager: byId('lgRoleM'), master: byId('lgRoleS')})[r].checked = true;
     byId('lgPin').value = ''; byId('lgPin2').value = '';
@@ -1322,18 +1461,28 @@
     setTimeout(function(){ (byId('lgName').value ? byId('lgPin') : byId('lgName')).focus(); }, 0);
   }
   function closeLogin(){ byId('loginModal').classList.add('hidden'); }
-  function finishLogin(name, role, h){
-    var prevRole = me ? me.role : '';
-    me = {name: name, role: role};
-    writeSession({name: name, role: role, h: h || ''});
+  function finishLogin(name, role, h, uid){
+    me = {name: name, role: role, uid: uid || ''};
+    writeSession({uid: uid || '', name: name, role: role, h: h || ''});
     lgFails = 0;
     closeLogin();
     applyRole();
     renderAll();
-    if(role !== 'inspector' && prevRole !== role){ audit('로그인', ROLE_LABEL[role], ''); }
+    audit('로그인', ROLE_LABEL[role], uid ? '' : '명단에 없는 이름');
+    touchUserLogin(uid);
+  }
+  function touchUserLogin(uid){
+    var u = uid ? findUser(uid) : null;
+    if(!u) return;
+    u.lastLoginAt = Date.now();
+    u.loginCount = (u.loginCount || 0) + 1;
+    var db = initFB();
+    if(!db) return;
+    db.collection(USERS_COL).doc(u.id).update({lastLoginAt: u.lastLoginAt, loginCount: u.loginCount}).catch(function(e){ console.warn('접속 기록 저장 실패', e); });
   }
   function submitLogin(){
     var msg = byId('lgMsg');
+    if(pickMode()){ submitPickLogin(msg); return; }
     var name = byId('lgName').value.trim();
     var role = lgRole();
     if(!name){ msg.textContent = '이름을 입력하세요. 점검 기록에 점검자로 남습니다.'; byId('lgName').focus(); return; }
@@ -1369,6 +1518,26 @@
     }
     finishLogin(name, role, h);
   }
+  function submitPickLogin(msg){
+    var u = lgPickedUser();
+    if(!u){ msg.textContent = '이름을 고르세요.'; return; }
+    if(u.role === 'inspector'){ finishLogin(u.name, u.role, '', u.id); return; }
+    if(Date.now() < lgLockUntil){ msg.textContent = 'PIN을 여러 번 틀렸습니다. ' + Math.ceil((lgLockUntil - Date.now()) / 1000) + '초 뒤에 다시 시도하세요.'; return; }
+    var need = needHash(u);
+    if(!need){ msg.textContent = ROLE_LABEL[u.role] + ' PIN이 정해져 있지 않아 들어갈 수 없습니다. 마스터에게 요청하세요.'; return; }
+    var pin = byId('lgPin').value;
+    if(!pin){ msg.textContent = 'PIN을 입력하세요.'; byId('lgPin').focus(); return; }
+    var h = u.pinHash ? userPinHash(u.id, pin) : pinHash(u.role, pin);
+    if(h !== need){
+      lgFails++;
+      if(lgFails >= 5){ lgLockUntil = Date.now() + 30000; lgFails = 0; msg.textContent = 'PIN을 5번 틀렸습니다. 30초 뒤에 다시 시도하세요.'; }
+      else { msg.textContent = 'PIN이 맞지 않습니다. (' + lgFails + '/5)'; }
+      byId('lgPin').value = '';
+      return;
+    }
+    finishLogin(u.name, u.role, h, u.id);
+  }
+  byId('lgUser').addEventListener('change', function(){ byId('lgPin').value = ''; updateLoginForm(); });
   document.querySelectorAll('input[name="lgRole"]').forEach(function(el){ el.addEventListener('change', updateLoginForm); });
   byId('lgOk').addEventListener('click', submitLogin);
   byId('lgCancel').addEventListener('click', function(){ if(me) closeLogin(); });
@@ -1378,6 +1547,175 @@
   byId('loginModal').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ submitLogin(); } });
   byId('whoTag').addEventListener('click', function(){ openLogin(); });
   byId('btnSwitch').addEventListener('click', function(){ openLogin(); });
+
+  // ---- 사용자 관리 (마스터) ----
+  var uEditId = null;
+  function openUsers(){
+    if(!isMaster()) return;
+    closeUserForm();
+    byId('usersModal').classList.remove('hidden');
+    renderUsers();
+    loadLoginHistory();
+  }
+  function renderUsers(){
+    var box = byId('userList');
+    var list = sortUsers(users);
+    byId('uCount').textContent = list.length ? '등록 ' + list.length + '명 · 사용 중 ' + activeUsers().length + '명' : '아직 등록된 사용자가 없습니다.';
+    if(!list.length){
+      box.innerHTML = '<div class="placeholder" style="padding:12px;">사용자를 등록하면 로그인 창에서 이름을 고르는 방식으로 바뀝니다. 등록 전에는 지금처럼 이름을 직접 적고 공용 PIN으로 들어갑니다.</div>';
+      return;
+    }
+    var h = '<div class="urow head"><span>이름 · 권한</span><span>PIN</span><span>마지막 접속</span><span></span></div>';
+    list.forEach(function(u){
+      h += '<div class="urow' + (u.active ? '' : ' off') + '" data-uid="' + u.id + '">' +
+        '<span class="un">' + escapeHtml(u.name) + '<b class="ubadge ' + u.role + '">' + ROLE_LABEL[u.role] + '</b>' +
+        (u.active ? '' : '<span class="unote">정지됨</span>') + (u.note ? '<span class="unote">' + escapeHtml(u.note) + '</span>' : '') + '</span>' +
+        '<span class="umuted">' + (u.role === 'inspector' ? 'PIN 없음(점검자)' : (u.pinHash ? '개인 PIN 있음' : (settings[u.role + 'PinHash'] ? '공용 PIN 사용' : '없음 — 로그인 불가'))) + '</span>' +
+        '<span class="umuted">' + (u.lastLoginAt ? fmtTime(u.lastLoginAt) + ' · ' + (u.loginCount || 0) + '회' : '접속 기록 없음') + '</span>' +
+        '<span class="ua">' +
+        '<button data-uact="edit" data-id="' + u.id + '">수정</button>' +
+        '<button data-uact="toggle" data-id="' + u.id + '">' + (u.active ? '정지' : '사용') + '</button>' +
+        '<button class="danger" data-uact="del" data-id="' + u.id + '">삭제</button></span></div>';
+    });
+    box.innerHTML = h;
+  }
+  function loadLoginHistory(){
+    var box = byId('loginList');
+    var db = initFB();
+    if(!db){ box.innerHTML = '<div class="placeholder">Firebase 연결이 없습니다.</div>'; return; }
+    box.innerHTML = '<div class="placeholder">불러오는 중...</div>';
+    db.collection(AUDIT_COL).orderBy('at', 'desc').limit(500).get().then(function(snap){
+      var h = '', cnt = 0;
+      snap.forEach(function(doc){
+        var a = doc.data();
+        if(a.action !== '로그인' || cnt >= 100) return;
+        cnt++;
+        h += '<div class="audit-row"><span class="t">' + fmtTime(a.at) + '</span><span>' + escapeHtml(a.by || '') + ' (' + (ROLE_LABEL[a.role] || '') + ')</span>' +
+          '<span class="d">로그인' + (a.detail ? ' — ' + escapeHtml(a.detail) : '') + '</span></div>';
+      });
+      box.innerHTML = h || '<div class="placeholder">아직 접속 이력이 없습니다.</div>';
+    }).catch(function(e){ box.innerHTML = '<div class="placeholder">이력을 불러오지 못했습니다: ' + escapeHtml(e.message || e) + '</div>'; });
+  }
+  function openUserForm(u){
+    uEditId = u ? u.id : null;
+    byId('uFormTitle').textContent = u ? '사용자 수정' : '사용자 추가';
+    byId('uName').value = u ? u.name : '';
+    byId('uRole').value = u ? u.role : 'inspector';
+    byId('uNote').value = u ? u.note : '';
+    byId('uActive').checked = u ? u.active : true;
+    byId('uPin1').value = ''; byId('uPin2').value = '';
+    byId('uMsg').textContent = '';
+    byId('uForm').classList.remove('hidden');
+    updateUserForm();
+    setTimeout(function(){ byId('uName').focus(); }, 0);
+  }
+  function closeUserForm(){ uEditId = null; byId('uForm').classList.add('hidden'); }
+  function updateUserForm(){
+    var role = byId('uRole').value;
+    var u = uEditId ? findUser(uEditId) : null;
+    byId('uPinWrap').style.display = role === 'inspector' ? 'none' : '';
+    byId('uPinLabel').textContent = (u && u.pinHash) ? '새 PIN (4자 이상 · 바꿀 때만 입력)' : 'PIN (4자 이상)';
+  }
+  byId('uRole').addEventListener('change', updateUserForm);
+  byId('uAdd').addEventListener('click', function(){ openUserForm(null); });
+  byId('uCancel').addEventListener('click', closeUserForm);
+  byId('uClose').addEventListener('click', function(){ byId('usersModal').classList.add('hidden'); });
+  byId('btnUsers').addEventListener('click', openUsers);
+  byId('userList').addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('button[data-uact]') : null;
+    if(!b) return;
+    var u = findUser(b.dataset.id);
+    if(!u) return;
+    if(b.dataset.uact === 'edit'){ openUserForm(u); return; }
+    if(b.dataset.uact === 'toggle'){ toggleUser(u); return; }
+    if(b.dataset.uact === 'del'){ deleteUser(u); return; }
+  });
+  function lastMasterBlocked(u, nextRole, nextActive){
+    var others = activeMasters().filter(function(x){ return x.id !== u.id; });
+    var stillMaster = nextActive && nextRole === 'master';
+    return u.role === 'master' && u.active && !stillMaster && others.length === 0;
+  }
+  function saveUser(){
+    if(!isMaster()) return;
+    var msg = byId('uMsg');
+    var name = byId('uName').value.trim();
+    var role = byId('uRole').value;
+    var note = byId('uNote').value.trim();
+    var active = byId('uActive').checked;
+    var p1 = byId('uPin1').value, p2 = byId('uPin2').value;
+    var u = uEditId ? findUser(uEditId) : null;
+    if(!name){ msg.textContent = '이름을 입력하세요.'; return; }
+    var dup = users.filter(function(x){ return x.name === name && (!u || x.id !== u.id); });
+    if(dup.length){ msg.textContent = '같은 이름이 이미 있습니다. 구분되게 적어 주세요(예: 홍길동2).'; return; }
+    if(u && lastMasterBlocked(u, role, active)){ msg.textContent = '마스터가 한 명뿐입니다. 다른 마스터를 먼저 등록하세요.'; return; }
+    var pinHashNew = u ? u.pinHash : '';
+    if(role === 'inspector'){ pinHashNew = ''; }
+    else if(p1 || p2){
+      if(p1.length < 4){ msg.textContent = 'PIN은 4자 이상으로 정하세요.'; return; }
+      if(p1 !== p2){ msg.textContent = '두 PIN이 서로 다릅니다.'; return; }
+    }
+    var db = initFB();
+    if(!db){ msg.textContent = 'Firebase에 연결되지 않아 저장할 수 없습니다.'; return; }
+    var id = u ? u.id : uid('u');
+    if(role !== 'inspector' && (p1 || p2)){ pinHashNew = userPinHash(id, p1); }
+    var next = {id: id, name: name, role: role, pinHash: pinHashNew, active: active, note: note,
+      createdAt: u ? u.createdAt : Date.now(), createdBy: u ? u.createdBy : (me ? me.name : ''),
+      lastLoginAt: u ? u.lastLoginAt : 0, loginCount: u ? u.loginCount : 0};
+    byId('uSave').disabled = true;
+    db.collection(USERS_COL).doc(id).set(userToDoc(next)).then(function(){
+      byId('uSave').disabled = false;
+      if(u){ users[users.indexOf(u)] = next; } else { users.push(next); }
+      var det = ROLE_LABEL[role] + (active ? '' : ' · 정지') + (note ? ' · ' + note : '');
+      if(u){
+        var ch = [];
+        if(u.name !== name) ch.push('이름 ' + u.name + ' → ' + name);
+        if(u.role !== role) ch.push('권한 ' + ROLE_LABEL[u.role] + ' → ' + ROLE_LABEL[role]);
+        if(u.active !== active) ch.push(active ? '사용' : '정지');
+        if(pinHashNew !== u.pinHash) ch.push('PIN 재설정');
+        audit('사용자 수정', name, ch.length ? ch.join(' / ') : det);
+      } else {
+        audit('사용자 추가', name, det);
+      }
+      // 내 계정을 고쳤으면 지금 세션도 맞춰 준다
+      if(me && me.uid === id){
+        me = {name: name, role: role, uid: id};
+        writeSession({uid: id, name: name, role: role, h: needHash(next)});
+        applyRole();
+      }
+      closeUserForm();
+      renderUsers();
+      renderAll();
+      saveOk();
+    }, function(e){ byId('uSave').disabled = false; msg.textContent = '저장 실패: ' + (e.message || e); });
+  }
+  byId('uSave').addEventListener('click', saveUser);
+  function toggleUser(u){
+    if(!isMaster()) return;
+    if(lastMasterBlocked(u, u.role, !u.active)){ byId('uMsg').textContent = ''; alert('마스터가 한 명뿐이라 정지할 수 없습니다. 다른 마스터를 먼저 등록하세요.'); return; }
+    var db = initFB();
+    if(!db){ alert('Firebase에 연결되지 않아 저장할 수 없습니다.'); return; }
+    var next = !u.active;
+    db.collection(USERS_COL).doc(u.id).update({active: next, updatedAt: Date.now(), updatedBy: me.name}).then(function(){
+      u.active = next;
+      audit('사용자 수정', u.name, next ? '사용' : '정지');
+      renderUsers();
+      saveOk();
+    }, function(e){ alert('저장 실패: ' + (e.message || e)); });
+  }
+  function deleteUser(u){
+    if(!isMaster()) return;
+    if(lastMasterBlocked(u, u.role, false)){ alert('마스터가 한 명뿐이라 지울 수 없습니다. 다른 마스터를 먼저 등록하세요.'); return; }
+    if(!confirm('"' + u.name + '" 사용자를 지울까요?\n이 사람이 남긴 점검 기록과 변경 이력은 그대로 남습니다.')) return;
+    var db = initFB();
+    if(!db){ alert('Firebase에 연결되지 않아 저장할 수 없습니다.'); return; }
+    db.collection(USERS_COL).doc(u.id).delete().then(function(){
+      users = users.filter(function(x){ return x.id !== u.id; });
+      audit('사용자 삭제', u.name, ROLE_LABEL[u.role]);
+      if(me && me.uid === u.id){ me = null; writeSession(null); applyRole(); renderAll(); byId('usersModal').classList.add('hidden'); openLogin('', 'inspector'); return; }
+      renderUsers();
+      saveOk();
+    }, function(e){ alert('삭제 실패: ' + (e.message || e)); });
+  }
 
   // PIN 관리 (마스터)
   function openPins(){
@@ -3513,7 +3851,10 @@
     getMatFilter: function(){ return matFilter.slice(); },
     setMatFilter: function(list){ matFilter = list.slice(); selectedItemId = null; renderAll(); },
     parseMaterials: parseMaterials,
-    getMe: function(){ return me ? {name: me.name, role: me.role} : null; },
+    getMe: function(){ return me ? {name: me.name, role: me.role, uid: me.uid || ''} : null; },
+    getUsers: function(){ return users.map(function(u){ return Object.assign({}, u); }); },
+    openUsers: openUsers,
+    userPinHash: userPinHash,
     pinHash: pinHash,
     effectiveLast: function(id){ return effectiveLast(findNode(id)); },
     needsCheck: function(id){ return needsCheck(findNode(id)); },
