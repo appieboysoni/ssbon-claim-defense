@@ -186,6 +186,12 @@
   .mat-bar .hint{font-size:11px;color:#667085;flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .mat-bar.off .mchip{opacity:.45;cursor:default;}
   .mat-bar .jump{background:#1c2430;border-color:#1c2430;color:#fff;}
+  .mat-bar .mmanage{margin-left:auto;padding:2px 10px;font-size:12px;}
+  .mrow{display:grid;grid-template-columns:44px 1fr 90px 60px;gap:8px;align-items:center;margin-bottom:8px;}
+  .mrow input[type=color]{width:44px;height:34px;padding:2px;margin:0;cursor:pointer;}
+  .mrow input[type=text]{margin:0;}
+  .mrow .cnt{font-size:12px;color:#667085;}
+  .mrow button{padding:4px 6px;font-size:12px;}
   .mtag{display:inline-flex;align-items:center;gap:3px;font-size:10px;line-height:1.6;padding:0 6px;border-radius:9px;background:#f2f4f7;color:#344054;margin-left:4px;white-space:nowrap;}
   .mtag i{width:7px;height:7px;border-radius:50%;background:var(--mc,#98a2b3);display:inline-block;}
   .mtag.hit{background:#1c2430;color:#fff;}
@@ -417,7 +423,7 @@
     <div id="detailPanel" class="card"></div>
   </div>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.10 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.11 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -611,6 +617,21 @@
   </div>
 </div>
 
+<div class="modal hidden" id="matModal">
+  <div class="modal-box mid">
+    <div class="m-title">재질 관리</div>
+    <div class="muted">색상 칸을 눌러 색을 고르고, 이름을 적은 뒤 저장하세요. 순서는 위에서부터 화면에 나오는 순서입니다. 이름을 바꿔도 품목에 지정된 재질은 그대로 따라갑니다. 품목에 쓰이고 있는 재질은 지울 수 없습니다.</div>
+    <div class="mrow" style="font-size:11px;color:#667085;margin-bottom:4px;"><span>색상</span><span>재질 이름</span><span>쓰는 품목</span><span></span></div>
+    <div id="matRows"></div>
+    <button id="matAdd">+ 재질 추가</button>
+    <div class="modal-actions" style="margin-top:14px;">
+      <span id="matMsg" class="muted" style="margin:0 auto 0 0;color:#b42318;"></span>
+      <button id="matCancel">취소</button>
+      <button id="matSave" class="primary">저장</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal hidden" id="usersModal">
   <div class="modal-box wide">
     <div class="m-title">사용자 관리</div>
@@ -688,7 +709,8 @@
   var CAT_LABEL = {equip: '설비', tool: '공기구'};
   var UNIT_LABEL = {day: '일', week: '주', month: '개월'};
   // 재질 분류 (순서 = 화면 표시 순서)
-  var MATERIALS = [
+  // 기본 재질. 사이트의 [재질 관리]에서 바꾸면 Firestore(claimdefense_materials)의 내용이 우선한다.
+  var DEFAULT_MATERIALS = [
     {id: 'metal', name: '금속', color: '#64748b'},
     {id: 'glass', name: '유리·사기', color: '#0ea5e9'},
     {id: 'plastic', name: '플라스틱', color: '#eab308'},
@@ -696,19 +718,33 @@
     {id: 'silicone', name: '실리콘', color: '#a855f7'},
     {id: 'vinyl', name: '비닐', color: '#14b8a6'},
     {id: 'fiber', name: '섬유', color: '#b45309'},
+    {id: 'paper', name: '종이', color: '#f97316'},
     {id: 'stone', name: '돌', color: '#78716c'},
     {id: 'etc', name: '기타', color: '#9ca3af'}
   ];
+  var MATERIALS = DEFAULT_MATERIALS.map(function(m){ return Object.assign({}, m); });
   var MAT_BY_ID = {};
-  MATERIALS.forEach(function(m, i){ m.order = i; MAT_BY_ID[m.id] = m; });
-  var MAT_ALIAS = {
+  var MAT_ALIAS = {};
+  var BASE_ALIAS = {
     '금속': 'metal', '스텐': 'metal', '스테인리스': 'metal', '스테인레스': 'metal', 'sus': 'metal', '철': 'metal', '알루미늄': 'metal',
     '유리': 'glass', '사기': 'glass', '도자기': 'glass', '세라믹': 'glass', '유리·사기': 'glass',
     '플라스틱': 'plastic', 'pp': 'plastic', 'pe': 'plastic',
     '고무': 'rubber', '실리콘': 'silicone', '비닐': 'vinyl',
     '섬유': 'fiber', '천': 'fiber', '면': 'fiber',
-    '돌': 'stone', '석재': 'stone', '기타': 'etc'
+    '돌': 'stone', '석재': 'stone', '기타': 'etc',
+    '종이': 'paper', '박스': 'paper', '골판지': 'paper', '지류': 'paper'
   };
+  function aliasKey(s){ return String(s || '').replace(/\s/g, '').toLowerCase(); }
+  function rebuildMats(){
+    MAT_BY_ID = {};
+    MAT_ALIAS = {};
+    MATERIALS.forEach(function(m, i){ m.order = i; MAT_BY_ID[m.id] = m; });
+    // 기본 별칭은 그 재질이 아직 있을 때만 쓴다
+    Object.keys(BASE_ALIAS).forEach(function(k){ if(MAT_BY_ID[BASE_ALIAS[k]]){ MAT_ALIAS[k] = BASE_ALIAS[k]; } });
+    // 지금 등록된 이름은 항상 인식 (이름을 바꾸거나 새로 추가해도 엑셀에서 바로 쓸 수 있게)
+    MATERIALS.forEach(function(m){ MAT_ALIAS[aliasKey(m.name)] = m.id; });
+  }
+  rebuildMats();
   var matFilter = [];   // 선택한 재질 id들 ('none' = 재질 미지정)
   var XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
   var PHOTO_MAX_SIDE = 1280;
@@ -735,6 +771,7 @@
   var AUDIT_COL = 'claimdefense_audit';
   var SETTINGS_COL = 'claimdefense_settings';
   var USERS_COL = 'claimdefense_users';
+  var MATERIALS_COL = 'claimdefense_materials';
   function initFB(){
     try{
       if(FB_DB) return FB_DB;
@@ -797,12 +834,20 @@
       var d = (doc && doc.exists) ? doc.data() : {};
       settings = {managerPinHash: d.managerPinHash || '', masterPinHash: d.masterPinHash || ''};
     }, function(e){ console.warn('권한 설정 불러오기 실패', e); });
+    var matsP = db.collection(MATERIALS_COL).get().then(function(snap){
+      if(snap.empty) return;                      // 아직 저장한 적 없으면 기본 목록 사용
+      var list = [];
+      snap.forEach(function(doc){ var d = doc.data(); list.push({id: doc.id, name: d.name || '', color: d.color || '#9ca3af', order: d.order || 0}); });
+      list.sort(function(a, b){ return a.order - b.order; });
+      MATERIALS = list;
+      rebuildMats();
+    }, function(e){ console.warn('재질 목록 불러오기 실패', e); });
     var usersP = db.collection(USERS_COL).get().then(function(snap){
       var list = [];
       snap.forEach(function(doc){ list.push(userFromDoc(doc.id, doc.data())); });
       users = list;
     }, function(e){ console.warn('사용자 목록 불러오기 실패', e); });
-    Promise.all([db.collection(ZONES_COL).get(), db.collection(NODES_COL).get(), db.collection(TYPES_COL).get(), settingsP, usersP]).then(function(res){
+    Promise.all([db.collection(ZONES_COL).get(), db.collection(NODES_COL).get(), db.collection(TYPES_COL).get(), settingsP, usersP, matsP]).then(function(res){
       zones = [];
       res[0].forEach(function(doc){
         zones.push(normalizeZone(Object.assign({}, doc.data(), {id: doc.id})));
@@ -1028,6 +1073,7 @@
     }
     else { hint = '재질을 누르면 해당 품목이 있는 작업장과 목록이 나옵니다 (여러 개 선택 가능)'; }
     if(hint){ h += '<span class="hint" title="' + hint + '">' + hint + '</span>'; }
+    h += '<button type="button" class="mmanage need-manage" data-act="matmanage">재질 관리</button>';
     bar.innerHTML = h;
   }
   function toggleMat(id){
@@ -2768,6 +2814,7 @@
     if(act === 'mat'){ toggleMat(el.dataset.mat); return; }
     if(act === 'matclear'){ matFilter = []; renderAll(); return; }
     if(act === 'matjump'){ detailPanel.scrollIntoView({behavior: 'smooth', block: 'start'}); return; }
+    if(act === 'matmanage'){ openMatModal(); return; }
     if(act === 'newpoly'){ setDrawMode('poly', null); return; }
     if(act === 'addrect'){ setDrawMode('rect', id); return; }
     if(act === 'addpoly'){ setDrawMode('poly', id); return; }
@@ -3296,6 +3343,84 @@
     zoneTypes.forEach(function(t){ b.set(db.collection(TYPES_COL).doc(t.id), {name: t.name, color: t.color, order: t.order, updatedAt: Date.now()}); });
     removed.forEach(function(t){ b.delete(db.collection(TYPES_COL).doc(t.id)); });
     orphanZones.forEach(function(z){ b.set(db.collection(ZONES_COL).doc(z.id), zoneDoc(z)); });
+    b.commit().then(saveOk).catch(saveFail);
+  });
+
+  // ---- 재질 관리 (관리자 이상) ----
+  var matDraft = null;
+  function matUseCount(id){ return nodes.filter(function(n){ return nodeMats(n).indexOf(id) >= 0; }).length; }
+  function openMatModal(){
+    if(!canManage()) return;
+    matDraft = MATERIALS.map(function(m){ return {id: m.id, name: m.name, color: m.color}; });
+    byId('matMsg').textContent = '';
+    renderMatRows();
+    byId('matModal').classList.remove('hidden');
+  }
+  function renderMatRows(){
+    byId('matRows').innerHTML = matDraft.map(function(m, i){
+      var cnt = m.id ? matUseCount(m.id) : 0;
+      return '<div class="mrow" data-i="' + i + '">' +
+        '<input type="color" data-f="color" value="' + escapeHtml(m.color) + '">' +
+        '<input type="text" data-f="name" value="' + escapeHtml(m.name) + '" maxlength="12" placeholder="예: 종이">' +
+        '<span class="cnt">' + (m.id ? cnt + '개 품목' : '새 재질') + '</span>' +
+        '<button class="danger" data-act="mdel">삭제</button></div>';
+    }).join('') || '<div class="placeholder" style="margin-bottom:8px;">재질이 없습니다. 아래에서 추가하세요.</div>';
+  }
+  byId('matRows').addEventListener('input', function(e){
+    var row = e.target.closest('.mrow');
+    if(!row || !e.target.dataset.f) return;
+    matDraft[+row.dataset.i][e.target.dataset.f] = e.target.value;
+  });
+  byId('matRows').addEventListener('click', function(e){
+    var btn = e.target.closest('[data-act="mdel"]');
+    if(!btn) return;
+    var i = +btn.closest('.mrow').dataset.i;
+    var m = matDraft[i];
+    var cnt = m.id ? matUseCount(m.id) : 0;
+    if(cnt){ byId('matMsg').textContent = '"' + (m.name || '') + '"은(는) 품목 ' + cnt + '개에 쓰이고 있어 지울 수 없습니다. 그 품목들의 재질을 먼저 바꿔 주세요.'; return; }
+    byId('matMsg').textContent = '';
+    matDraft.splice(i, 1);
+    renderMatRows();
+  });
+  byId('matAdd').addEventListener('click', function(){
+    matDraft.push({id: '', name: '', color: '#0ea5e9'});
+    renderMatRows();
+    var inputs = byId('matRows').querySelectorAll('input[data-f="name"]');
+    if(inputs.length) inputs[inputs.length - 1].focus();
+  });
+  byId('matCancel').addEventListener('click', function(){ byId('matModal').classList.add('hidden'); matDraft = null; });
+  byId('matSave').addEventListener('click', function(){
+    if(!canManage()) return;
+    var msg = byId('matMsg');
+    if(!matDraft.length){ msg.textContent = '재질이 하나도 없습니다. 최소 1개는 있어야 합니다.'; return; }
+    var seen = {};
+    for(var i = 0; i < matDraft.length; i++){
+      var m = matDraft[i];
+      m.name = String(m.name || '').trim();
+      if(!m.name){ msg.textContent = (i + 1) + '번째 재질의 이름을 입력하세요.'; return; }
+      var key = aliasKey(m.name);
+      if(seen[key]){ msg.textContent = "'" + m.name + "' 이름이 중복됩니다."; return; }
+      if(!hexToRgb(m.color)){ msg.textContent = m.name + ' 색상이 올바르지 않습니다.'; return; }
+      seen[key] = true;
+    }
+    var keep = {};
+    matDraft.forEach(function(m, idx){ if(!m.id){ m.id = uid('m'); } m.order = idx; keep[m.id] = true; });
+    var removed = MATERIALS.filter(function(m){ return !keep[m.id]; });
+    var blocked = removed.filter(function(m){ return matUseCount(m.id) > 0; });
+    if(blocked.length){ msg.textContent = blocked.map(function(m){ return '"' + m.name + '"'; }).join(', ') + '은(는) 아직 품목에 쓰이고 있어 지울 수 없습니다.'; return; }
+    var before = MATERIALS.map(function(m){ return m.name; }).join(', ');
+    MATERIALS = matDraft.map(function(m){ return {id: m.id, name: m.name, color: String(m.color).toLowerCase(), order: m.order}; });
+    rebuildMats();
+    matFilter = matFilter.filter(function(f){ return f === 'none' || MAT_BY_ID[f]; });
+    audit('재질 관리 저장', '', '전: ' + before + ' / 후: ' + MATERIALS.map(function(m){ return m.name; }).join(', '));
+    byId('matModal').classList.add('hidden');
+    matDraft = null;
+    renderAll();
+    var db = initFB();
+    if(!db) return;
+    var b = db.batch();
+    MATERIALS.forEach(function(m){ b.set(db.collection(MATERIALS_COL).doc(m.id), {name: m.name, color: m.color, order: m.order, updatedAt: Date.now(), updatedBy: (me ? me.name : '')}); });
+    removed.forEach(function(m){ b.delete(db.collection(MATERIALS_COL).doc(m.id)); });
     b.commit().then(saveOk).catch(saveFail);
   });
 
@@ -3849,6 +3974,8 @@
     mergeZones: mergeZones,
     getStep: function(){ return mStep(); },
     getMatFilter: function(){ return matFilter.slice(); },
+    getMaterials: function(){ return MATERIALS.map(function(m){ return Object.assign({}, m); }); },
+    openMatModal: openMatModal,
     setMatFilter: function(list){ matFilter = list.slice(); selectedItemId = null; renderAll(); },
     parseMaterials: parseMaterials,
     getMe: function(){ return me ? {name: me.name, role: me.role, uid: me.uid || ''} : null; },
