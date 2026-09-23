@@ -423,7 +423,7 @@
     <div id="detailPanel" class="card"></div>
   </div>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.12 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.13 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -456,6 +456,7 @@
           <option value="day">일</option>
           <option value="week">주</option>
           <option value="month" selected>개월</option>
+          <option value="year">년</option>
         </select>
       </div>
       <label for="nodeLastDate">최근 점검(교체)일</label>
@@ -708,7 +709,7 @@
   var popping = false;
 
   var CAT_LABEL = {equip: '설비', tool: '공기구'};
-  var UNIT_LABEL = {day: '일', week: '주', month: '개월'};
+  var UNIT_LABEL = {day: '일', week: '주', month: '개월', year: '년'};
   // 재질 분류 (순서 = 화면 표시 순서)
   // 기본 재질. 사이트의 [재질 관리]에서 바꾸면 Firestore(claimdefense_materials)의 내용이 우선한다.
   var DEFAULT_MATERIALS = [
@@ -918,9 +919,10 @@
     if(unit === 'day'){ d.setDate(d.getDate() + val); }
     else if(unit === 'week'){ d.setDate(d.getDate() + val * 7); }
     else {
+      var months = (unit === 'year') ? val * 12 : val;   // 1년 = 12개월(2월 29일 같은 날짜는 그 달 마지막 날로)
       var day = d.getDate();
       d.setDate(1);
-      d.setMonth(d.getMonth() + val);
+      d.setMonth(d.getMonth() + months);
       var last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
       d.setDate(Math.min(day, last));
     }
@@ -2915,11 +2917,12 @@
     return {ok: true, value: s};
   }
   function normalizeUnit(v){
-    var s = cellStr(v).replace(/\s/g, '');
+    var s = cellStr(v).replace(/\s/g, '').toLowerCase();
     if(s === '') return '';
     if(s === '일' || s === 'day' || s === 'd') return 'day';
     if(s === '주' || s === 'week' || s === 'w') return 'week';
     if(s === '개월' || s === '월' || s === '달' || s === 'month' || s === 'm') return 'month';
+    if(s === '년' || s === '해' || s === '연' || s === '1년' || s === 'year' || s === 'y') return 'year';
     return null;
   }
   function normalizeCat(v){
@@ -2990,7 +2993,7 @@
         if(!(cyc > 0) || Math.floor(cyc) !== cyc){ info.errors.push('점검주기는 1 이상의 정수'); cyc = null; }
       }
       var unit = normalizeUnit(get(row, '주기단위'));
-      if(unit === null){ info.errors.push("주기단위는 '일', '주', '개월' 중 하나"); }
+      if(unit === null){ info.errors.push("주기단위는 '일', '주', '개월', '년' 중 하나"); }
       else if(cyc && !unit){ info.errors.push('점검주기가 있으면 주기단위도 필요'); }
       else if(!cyc && unit){ info.warnings.push('점검주기 없이 주기단위만 있음(무시)'); }
       var dt = normalizeDate(get(row, '최근점검일'));
@@ -3171,7 +3174,8 @@
         ['자숙실', '설비', '자숙탱크1', '배관', '오링', '', '', '', '실리콘', 3, '개월', '2026-09-01', '', ''],
         ['자숙실', '공기구', '청소도구', '스퀴즈', '', '', '', '청색', '플라스틱, 고무', 1, '주', '2026-09-14', 2, '스퀴즈_청색.jpg'],
         ['자숙실', '공기구', '청소도구', '바닥솔', '', '', '', '백색', '플라스틱, 섬유', 1, '주', '2026-09-14', 3, '바닥솔_1.jpg, 바닥솔_2.jpg'],
-        ['자숙실', '공기구', '수리도구', '십자드라이버', '', '', '', '', '금속, 플라스틱', 1, '개월', '', 1, '']];
+        ['자숙실', '공기구', '수리도구', '십자드라이버', '', '', '', '', '금속, 플라스틱', 1, '개월', '', 1, ''],
+        ['자숙실', '설비', '자숙탱크1', '안전밸브', '', '', '', '연 1회 점검', '금속', 1, '년', '2026-03-02', '', '']];
       var ws2 = X.utils.aoa_to_sheet(ex);
       ws2['!cols'] = ws1['!cols'];
       X.utils.book_append_sheet(wb, ws2, '작성예시');
@@ -3185,7 +3189,7 @@
         ["2. 구역: '구역목록' 시트의 이름과 똑같이 적습니다."],
         ["3. 구분: '설비' 또는 '공기구'."],
         ['4. 1단계~5단계: 위에서부터 차례로 적습니다. 예) 자숙탱크1 / 원심펌프 / 메카니칼씰. 중간 단계는 자동으로 만들어지며, 같은 이름·같은 경로는 하나로 합쳐집니다.'],
-        ['5. 점검주기·주기단위·최근점검일은 맨 아래 항목에만 적습니다. 주기단위는 일/주/개월, 날짜는 2026-09-01 형식.'],
+        ['5. 점검주기·주기단위·최근점검일은 맨 아래 항목에만 적습니다. 주기단위는 일/주/개월/년(연 1회는 주기 1, 단위 년), 날짜는 2026-09-01 형식.'],
         ['6. 기준수량은 공기구에만 적습니다.'],
         ['5-1. 사진은 파일로 골라도 되고, zip으로 압축해서 올려도 됩니다(폴더가 들어 있어도 됩니다). 암호가 걸린 zip과 7z·rar은 안 됩니다.'],
         ['6-1. 재질: ' + MATERIALS.map(function(m){ return m.name; }).join(' / ') + ' 중에서 적습니다. 여러 개는 쉼표로 구분(예: 플라스틱, 고무). 빈 칸이면 기존 재질을 그대로 둡니다.'],
@@ -4066,6 +4070,7 @@
     selectZone: selectZone,
     nodeStatus: nodeStatus,
     addCycle: addCycle,
+    normalizeUnit: normalizeUnit,
     planImport: planOnCopies,
     runImport: runImport,
     normalizeDate: normalizeDate,
