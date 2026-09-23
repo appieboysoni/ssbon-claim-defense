@@ -423,7 +423,7 @@
     <div id="detailPanel" class="card"></div>
   </div>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.11 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.12 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -499,10 +499,11 @@
       <div class="step-line"><b>2</b> 작성한 엑셀 파일 선택 <button id="bkPickXlsx">엑셀 선택</button><input type="file" id="bkXlsx" accept=".xlsx,.xls,.csv"><span id="bkXlsxName" class="muted" style="margin:0;"></span></div>
     </div>
     <div class="step">
-      <div class="step-line"><b>3</b> 사진 선택 (선택사항) <button id="bkPickPhotos">사진 파일 선택</button><button id="bkPickFolder">사진 폴더 선택</button><button id="bkClearPhotos">사진 선택 비우기</button>
-        <input type="file" id="bkPhotos" accept="image/*" multiple><input type="file" id="bkFolder" webkitdirectory multiple>
+      <div class="step-line"><b>3</b> 사진 선택 (선택사항) <button id="bkPickPhotos">사진 파일 선택</button><button id="bkPickFolder">사진 폴더 선택</button><button id="bkPickZip">압축파일(zip) 선택</button><button id="bkClearPhotos">사진 선택 비우기</button>
+        <input type="file" id="bkPhotos" accept="image/*,.zip" multiple><input type="file" id="bkFolder" webkitdirectory multiple><input type="file" id="bkZip" accept=".zip,application/zip" multiple>
         <span id="bkPhotoCount" class="muted" style="margin:0;">선택된 사진 0장</span></div>
       <div class="muted">엑셀의 '사진파일명' 칸에 적은 이름과 파일 이름이 같아야 연결됩니다(대소문자 무시, 여러 장은 쉼표로 구분).</div>
+      <div class="muted">압축파일(zip)로 올려도 됩니다. 안에 폴더가 있어도 사진 파일만 골라서 씁니다(암호가 걸린 zip, 7z·rar은 안 됩니다).</div>
     </div>
     <div class="step">
       <div class="step-line"><b>4</b> 미리보기 확인 후 등록 <button id="bkPreview" class="primary">미리보기</button></div>
@@ -3186,6 +3187,7 @@
         ['4. 1단계~5단계: 위에서부터 차례로 적습니다. 예) 자숙탱크1 / 원심펌프 / 메카니칼씰. 중간 단계는 자동으로 만들어지며, 같은 이름·같은 경로는 하나로 합쳐집니다.'],
         ['5. 점검주기·주기단위·최근점검일은 맨 아래 항목에만 적습니다. 주기단위는 일/주/개월, 날짜는 2026-09-01 형식.'],
         ['6. 기준수량은 공기구에만 적습니다.'],
+        ['5-1. 사진은 파일로 골라도 되고, zip으로 압축해서 올려도 됩니다(폴더가 들어 있어도 됩니다). 암호가 걸린 zip과 7z·rar은 안 됩니다.'],
         ['6-1. 재질: ' + MATERIALS.map(function(m){ return m.name; }).join(' / ') + ' 중에서 적습니다. 여러 개는 쉼표로 구분(예: 플라스틱, 고무). 빈 칸이면 기존 재질을 그대로 둡니다.'],
         ['7. 사진파일명: 올릴 사진의 파일 이름(확장자 포함). 여러 장은 쉼표로 구분. 설비 자체 사진은 그 설비만 적힌 줄(예: 1단계만 있는 줄)에 적습니다.'],
         ['8. 이미 등록된 항목과 경로가 같으면 새로 만들지 않고, 적은 값만 덮어씁니다(빈 칸은 기존 값 유지). 같은 사진 파일명은 다시 올리지 않습니다.'],
@@ -3204,6 +3206,112 @@
         var name = wb.SheetNames.indexOf('목록') >= 0 ? '목록' : wb.SheetNames[0];
         return X.utils.sheet_to_json(wb.Sheets[name], {header: 1, raw: true, defval: ''});
       });
+    });
+  }
+  // ---- zip 안의 사진 꺼내기 (브라우저에서 바로 품, 서버로 보내지 않음) ----
+  var IMG_RE = /\.(jpe?g|png|gif|bmp|webp|heic)$/i;
+  function zipName(bytes, utf8){
+    if(!utf8){
+      try{ return new TextDecoder('euc-kr').decode(bytes); }catch(e){}   // 윈도우 탐색기 압축(한글 CP949)
+    }
+    return new TextDecoder('utf-8').decode(bytes);
+  }
+  function inflateRaw(bytes){
+    if(typeof DecompressionStream === 'undefined'){ return Promise.reject(new Error('이 브라우저는 zip 풀기를 지원하지 않습니다. 사진을 폴더째 선택해 주세요.')); }
+    var ds = new DecompressionStream('deflate-raw');
+    var rs = new Response(bytes).body.pipeThrough(ds);
+    return new Response(rs).arrayBuffer().then(function(b){ return new Uint8Array(b); });
+  }
+  // zip 목록 읽기: 끝쪽 중앙 디렉터리(EOCD)부터 훑는다
+  function zipEntries(buf){
+    var v = new DataView(buf), u = new Uint8Array(buf);
+    var eocd = -1;
+    for(var i = u.length - 22; i >= 0 && i >= u.length - 66000; i--){
+      if(v.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+    }
+    if(eocd < 0) throw new Error('zip 파일 형식이 아니거나 파일이 손상되었습니다.');
+    var count = v.getUint16(eocd + 10, true);
+    var start = v.getUint32(eocd + 16, true);
+    if(start === 0xffffffff) throw new Error('너무 큰 zip(ZIP64)은 지원하지 않습니다. 나눠서 올려 주세요.');
+    var out = [], p = start;
+    for(var n = 0; n < count; n++){
+      if(v.getUint32(p, true) !== 0x02014b50) break;
+      var flags = v.getUint16(p + 8, true);
+      var method = v.getUint16(p + 10, true);
+      var csize = v.getUint32(p + 20, true);
+      var usize = v.getUint32(p + 24, true);
+      var nlen = v.getUint16(p + 28, true), elen = v.getUint16(p + 30, true), clen = v.getUint16(p + 32, true);
+      var off = v.getUint32(p + 42, true);
+      var nameBytes = u.subarray(p + 46, p + 46 + nlen);
+      out.push({name: zipName(nameBytes, !!(flags & 0x800)), flags: flags, method: method, csize: csize, usize: usize, offset: off});
+      p += 46 + nlen + elen + clen;
+    }
+    return out;
+  }
+  function zipFileData(buf, e){
+    var v = new DataView(buf), u = new Uint8Array(buf);
+    if(v.getUint32(e.offset, true) !== 0x04034b50) return Promise.reject(new Error('압축 내용이 손상되었습니다: ' + e.name));
+    var nlen = v.getUint16(e.offset + 26, true), elen = v.getUint16(e.offset + 28, true);
+    var s = e.offset + 30 + nlen + elen;
+    var raw = u.subarray(s, s + e.csize);
+    if(e.method === 0) return Promise.resolve(raw.slice());
+    if(e.method === 8) return inflateRaw(raw.slice());
+    return Promise.reject(new Error('지원하지 않는 압축 방식입니다: ' + e.name));
+  }
+  function mimeOf(name){
+    var ext = (name.split('.').pop() || '').toLowerCase();
+    return ({jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', bmp: 'image/bmp', webp: 'image/webp', heic: 'image/heic'})[ext] || 'application/octet-stream';
+  }
+  // zip 하나에서 사진 파일들을 File 객체로 꺼낸다
+  function readZipPhotos(file){
+    return file.arrayBuffer().then(function(buf){
+      var list = zipEntries(buf);
+      var imgs = list.filter(function(e){
+        var base = e.name.split('/').pop();
+        return base && !/\/$/.test(e.name) && e.name.indexOf('__MACOSX/') !== 0 && base.charAt(0) !== '.' && IMG_RE.test(base);
+      });
+      var locked = imgs.filter(function(e){ return e.flags & 0x0001; });
+      if(locked.length) throw new Error('암호가 걸린 zip은 풀 수 없습니다: ' + file.name);
+      var skipped = list.length - imgs.length - list.filter(function(e){ return /\/$/.test(e.name); }).length;
+      var files = [], seq = Promise.resolve();
+      imgs.forEach(function(e){
+        seq = seq.then(function(){
+          return zipFileData(buf, e).then(function(bytes){
+            var base = e.name.split('/').pop();
+            files.push(new File([bytes], base, {type: mimeOf(base)}));
+          });
+        });
+      });
+      return seq.then(function(){ return {files: files, skipped: Math.max(0, skipped), total: imgs.length}; });
+    });
+  }
+  function addZipFiles(fileList){
+    var zips = Array.prototype.filter.call(fileList || [], function(f){ return /\.zip$/i.test(f.name) || f.type === 'application/zip'; });
+    var others = Array.prototype.filter.call(fileList || [], function(f){ return !(/\.zip$/i.test(f.name) || f.type === 'application/zip'); });
+    var bad = others.filter(function(f){ return /\.(7z|rar|alz|egg|tar|gz)$/i.test(f.name); });
+    if(others.length) addBulkPhotos(others);
+    if(bad.length){ byId('bkPhotoCount').textContent = '7z·rar 등은 지원하지 않습니다. zip으로 압축해 주세요.'; }
+    if(!zips.length) return Promise.resolve();
+    var cnt = byId('bkPhotoCount');
+    cnt.textContent = '압축 푸는 중...';
+    var got = 0, skipped = 0, seq = Promise.resolve();
+    zips.forEach(function(z){
+      seq = seq.then(function(){
+        cnt.textContent = '압축 푸는 중... ' + z.name;
+        return readZipPhotos(z).then(function(r){
+          got += r.files.length; skipped += r.skipped;
+          addBulkPhotos(r.files);
+        });
+      });
+    });
+    return seq.then(function(){
+      updatePhotoCount();
+      if(!got){ cnt.textContent = '선택된 사진 ' + Object.keys(bulkPhotos).length + '장 · zip 안에 사진 파일이 없습니다'; }
+      else if(skipped){ cnt.textContent = '선택된 사진 ' + Object.keys(bulkPhotos).length + '장 · zip에서 ' + got + '장 꺼냄(사진이 아닌 파일 ' + skipped + '개는 건너뜀)'; }
+      else { cnt.textContent = '선택된 사진 ' + Object.keys(bulkPhotos).length + '장 · zip에서 ' + got + '장 꺼냄'; }
+    }).catch(function(e){
+      updatePhotoCount();
+      cnt.textContent = (e && e.message) ? e.message : 'zip을 푸는 데 실패했습니다.';
     });
   }
   function updatePhotoCount(){
@@ -3233,8 +3341,10 @@
   byId('bkPickPhotos').addEventListener('click', function(){ byId('bkPhotos').click(); });
   byId('bkPickFolder').addEventListener('click', function(){ byId('bkFolder').click(); });
   byId('bkClearPhotos').addEventListener('click', function(){ bulkPhotos = {}; updatePhotoCount(); invalidatePlan(); });
-  byId('bkPhotos').addEventListener('change', function(e){ addBulkPhotos(e.target.files); e.target.value = ''; });
-  byId('bkFolder').addEventListener('change', function(e){ addBulkPhotos(e.target.files); e.target.value = ''; });
+  byId('bkPickZip').addEventListener('click', function(){ byId('bkZip').click(); });
+  byId('bkPhotos').addEventListener('change', function(e){ addZipFiles(e.target.files); e.target.value = ''; });
+  byId('bkZip').addEventListener('change', function(e){ addZipFiles(e.target.files); e.target.value = ''; });
+  byId('bkFolder').addEventListener('change', function(e){ addZipFiles(e.target.files); e.target.value = ''; });
   byId('bkXlsx').addEventListener('change', function(e){
     var f = e.target.files && e.target.files[0];
     e.target.value = '';
@@ -3975,6 +4085,9 @@
     getStep: function(){ return mStep(); },
     getMatFilter: function(){ return matFilter.slice(); },
     getMaterials: function(){ return MATERIALS.map(function(m){ return Object.assign({}, m); }); },
+    readZipPhotos: readZipPhotos,
+    addZipFiles: addZipFiles,
+    getBulkPhotoNames: function(){ return Object.keys(bulkPhotos); },
     openMatModal: openMatModal,
     setMatFilter: function(list){ matFilter = list.slice(); selectedItemId = null; renderAll(); },
     parseMaterials: parseMaterials,
