@@ -423,7 +423,7 @@
     <div id="detailPanel" class="card"></div>
   </div>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.13 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.14 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -639,6 +639,7 @@
     <div class="m-title">사용자 관리</div>
     <div class="muted">여기 등록한 사람만 로그인 창 목록에 나옵니다. PIN은 되돌릴 수 없는 암호값으로만 저장되어 숫자는 볼 수 없고, 잊었으면 새로 정해 주면 됩니다.</div>
     <div class="u-actions"><button id="uAdd" class="primary">+ 사용자 추가</button><span class="muted" id="uCount"></span></div>
+    <div class="form-msg" id="uWarn" style="display:none;min-height:0;margin:0 0 10px;line-height:1.5;"></div>
     <div class="u-form hidden" id="uForm">
       <div class="m-title" id="uFormTitle">사용자 추가</div>
       <label for="uName">이름</label>
@@ -1455,7 +1456,8 @@
     if(!me){ openLogin(sv && sv.name ? sv.name : '', sv && sv.role ? sv.role : 'inspector'); }
   }
   function lgRole(){ var el = document.querySelector('input[name="lgRole"]:checked'); return el ? el.value : 'inspector'; }
-  function lgPickedUser(){ var el = byId('lgUser'); return el && el.value ? findUser(el.value) : null; }
+  function lgPickedUser(){ var el = byId('lgUser'); return (el && el.value && el.value !== '__direct__') ? findUser(el.value) : null; }
+  function lgDirect(){ var el = byId('lgUser'); return !!(el && el.value === '__direct__'); }
   function fillUserPicker(preferId, preferName){
     var sel = byId('lgUser');
     var list = sortUsers(activeUsers());
@@ -1463,19 +1465,25 @@
     list.forEach(function(u){
       h += '<option value="' + u.id + '">' + escapeHtml(u.name) + ' (' + ROLE_LABEL[u.role] + ')' + (u.note ? ' · ' + escapeHtml(u.note) : '') + '</option>';
     });
+    h += '<option value="__direct__">명단에 없음 — 관리자·마스터 공용 PIN으로 들어가기</option>';
     sel.innerHTML = h;
     var want = (preferId && findUser(preferId)) ? preferId : ((preferName && userByName(preferName)) ? userByName(preferName).id : '');
     sel.value = want || '';
   }
   function updateLoginForm(){
     var pick = pickMode();
+    var direct = pick && lgDirect();
     byId('lgPickWrap').style.display = pick ? '' : 'none';
-    byId('lgFreeWrap').style.display = pick ? 'none' : '';
-    byId('lgPickHint').style.display = pick ? '' : 'none';
+    byId('lgFreeWrap').style.display = (!pick || direct) ? '' : 'none';
+    byId('lgPickHint').style.display = (pick && !direct) ? '' : 'none';
     byId('lgHint').style.display = pick ? 'none' : '';
+    // 직접 입력은 관리자·마스터만(점검자는 명단에서 골라야 함)
+    var insLabel = byId('lgRoleI').parentNode;
+    insLabel.style.display = direct ? 'none' : '';
+    if(direct && lgRole() === 'inspector'){ byId('lgRoleM').checked = true; }
     var pw = byId('lgPinWrap'), p2 = byId('lgPin2Wrap');
     byId('lgMsg').textContent = '';
-    if(pick){
+    if(pick && !direct){
       var u = lgPickedUser();
       p2.style.display = 'none';
       if(!u || u.role === 'inspector'){ pw.style.display = 'none'; return; }
@@ -1487,6 +1495,7 @@
     }
     var role = lgRole();
     var pinWrap = pw, pin2 = p2;
+    if(direct){ byId('lgName').placeholder = '예: 손병현'; }
     if(role === 'inspector'){ pinWrap.style.display = 'none'; return; }
     pinWrap.style.display = '';
     var setup = role === 'master' && !settings.masterPinHash;
@@ -1531,10 +1540,12 @@
   }
   function submitLogin(){
     var msg = byId('lgMsg');
-    if(pickMode()){ submitPickLogin(msg); return; }
+    if(pickMode() && !lgDirect()){ submitPickLogin(msg); return; }
+    var direct = pickMode() && lgDirect();
     var name = byId('lgName').value.trim();
     var role = lgRole();
     if(!name){ msg.textContent = '이름을 입력하세요. 점검 기록에 점검자로 남습니다.'; byId('lgName').focus(); return; }
+    if(direct && role === 'inspector'){ msg.textContent = '점검자는 명단에서 이름을 고르세요.'; return; }
     if(role === 'inspector'){ finishLogin(name, role, ''); return; }
     var pin = byId('lgPin').value;
     if(Date.now() < lgLockUntil){ msg.textContent = 'PIN을 여러 번 틀렸습니다. ' + Math.ceil((lgLockUntil - Date.now()) / 1000) + '초 뒤에 다시 시도하세요.'; return; }
@@ -1602,6 +1613,10 @@
   function openUsers(){
     if(!isMaster()) return;
     closeUserForm();
+    // 명단 방식으로 넘어가기 전에, 지금 로그인한 마스터부터 등록하도록 이름을 채워 둔다
+    if(users.length && !activeMasters().length && me && !me.uid){
+      setTimeout(function(){ openUserForm(null); byId('uName').value = me.name; byId('uRole').value = 'master'; updateUserForm(); }, 0);
+    }
     byId('usersModal').classList.remove('hidden');
     renderUsers();
     loadLoginHistory();
@@ -1610,6 +1625,11 @@
     var box = byId('userList');
     var list = sortUsers(users);
     byId('uCount').textContent = list.length ? '등록 ' + list.length + '명 · 사용 중 ' + activeUsers().length + '명' : '아직 등록된 사용자가 없습니다.';
+    var warn = byId('uWarn');
+    if(list.length && !activeMasters().length){
+      warn.style.display = '';
+      warn.textContent = '⚠ 명단에 마스터가 없습니다. 마스터를 등록하지 않으면 로그인 목록에서 마스터로 들어갈 수 없습니다(그때는 "명단에 없음 — 공용 PIN" 으로 들어와야 합니다). 본인을 마스터로 등록해 두세요.';
+    } else { warn.style.display = 'none'; warn.textContent = ''; }
     if(!list.length){
       box.innerHTML = '<div class="placeholder" style="padding:12px;">사용자를 등록하면 로그인 창에서 이름을 고르는 방식으로 바뀝니다. 등록 전에는 지금처럼 이름을 직접 적고 공용 PIN으로 들어갑니다.</div>';
       return;
