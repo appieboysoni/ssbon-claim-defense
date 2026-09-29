@@ -281,6 +281,10 @@
   table.rep tr.sum td{background:#f7f8fa;font-weight:700;}
   table.rep td.zero{color:#c3c8d0;}
   table.rep tr.bad td{background:#fff5f4;}
+  table.rep td.ph{white-space:nowrap;}
+  .rep-th{display:inline-block;width:64px;height:48px;object-fit:cover;border:1px solid #e4e7ec;border-radius:4px;margin:1px 2px 1px 0;cursor:zoom-in;background:#f2f4f7;vertical-align:middle;}
+  .rep-th.more{width:auto;height:auto;padding:2px 6px;font-size:11px;color:#667085;cursor:default;}
+  .rep-nophoto{font-size:11px;color:#c3c8d0;}
   .rep-sec{font-size:13px;font-weight:700;margin:4px 0 6px;}
   .rep-note{font-size:11px;color:#667085;margin:-6px 0 10px;}
   #printArea{display:none;}
@@ -292,6 +296,8 @@
     #printArea .meta{font-size:9pt;color:#444;margin-bottom:3mm;}
     #printArea table{width:100%;border-collapse:collapse;font-size:8pt;margin-bottom:4mm;}
     #printArea th,#printArea td{border:1px solid #999;padding:2px 4px;text-align:left;}
+    #printArea .rep-th{width:22mm;height:16mm;object-fit:cover;border:1px solid #bbb;margin:0 1mm 0 0;}
+    #printArea .rep-nophoto{color:#999;}
     #printArea th{background:#eee;}
     #printArea .rep-sec{font-size:10pt;font-weight:700;margin:3mm 0 1mm;}
     #printArea .rep-tiles{display:flex;gap:4mm;margin-bottom:3mm;font-size:9pt;}
@@ -474,7 +480,7 @@
   </div>
 </div>
 <div id="printArea"></div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.15 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.16 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -685,6 +691,8 @@
       <select id="repMatZone"><option value="">전체</option></select>
       <div class="sp"></div>
       <label><input type="checkbox" id="repMatEmpty"> 재질 미지정 품목도 포함</label>
+      <div class="sp"></div>
+      <label><input type="checkbox" id="repMatPhoto" checked> 사진 같이 보기</label>
     </div>
     <div class="rep-filters hidden" id="repFiltersRec">
       <label for="repFrom">기간</label>
@@ -696,11 +704,13 @@
       <div class="sp"></div>
       <label for="repRecCat">구분</label>
       <select id="repRecCat"><option value="">전체</option><option value="equip">설비</option><option value="tool">공기구</option></select>
+      <label><input type="checkbox" id="repRecPhoto" checked> 사진 같이 보기</label>
       <button id="repRecRun" class="primary">조회</button>
     </div>
     <div class="rep-body" id="repBody"></div>
     <div class="modal-actions" style="margin-top:12px;">
       <span class="muted" id="repMsg" style="margin:0 auto 0 0;"></span>
+      <button id="repThumbFix" class="need-master">사진 미리보기 만들기</button>
       <button id="repXlsx">엑셀 받기</button>
       <button id="repPrint">인쇄</button>
       <button id="repClose">닫기</button>
@@ -841,6 +851,8 @@
   var XLSX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
   var PHOTO_MAX_SIDE = 1280;
   var PHOTO_MAX_BYTES = 700 * 1024;
+  var THUMB_MAX_SIDE = 280;          // 리포트·목록에서 빠르게 띄우는 작은 사진
+  var THUMB_MAX_BYTES = 60 * 1024;
 
   function byId(id){ return document.getElementById(id); }
   var planWrap = byId('planWrap');
@@ -864,6 +876,7 @@
   var SETTINGS_COL = 'claimdefense_settings';
   var USERS_COL = 'claimdefense_users';
   var MATERIALS_COL = 'claimdefense_materials';
+  var THUMBS_COL = 'claimdefense_thumbs';
   function initFB(){
     try{
       if(FB_DB) return FB_DB;
@@ -1317,9 +1330,60 @@
         if(q > 0.55){ q -= 0.1; } else { scale *= 0.8; }
       }
       if(data.length > PHOTO_MAX_BYTES){ throw new Error('사진 용량을 줄이지 못함: ' + file.name); }
-      return {data: data, width: canvas.width, height: canvas.height, bytes: data.length};
+      return {data: data, width: canvas.width, height: canvas.height, bytes: data.length, thumb: makeThumb(im, w, h)};
     });
   }
+  // 원본에서 작은 미리보기(썸네일)를 따로 만든다 — 리포트에서 수십 장을 띄우기 위함
+  function makeThumb(im, w, h){
+    var sc = Math.min(1, THUMB_MAX_SIDE / Math.max(w, h));
+    var c = document.createElement('canvas');
+    var q = 0.72, d = '';
+    for(var i = 0; i < 8; i++){
+      c.width = Math.max(1, Math.round(w * sc));
+      c.height = Math.max(1, Math.round(h * sc));
+      var ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(im, 0, 0, c.width, c.height);
+      d = c.toDataURL('image/jpeg', q);
+      if(d.length <= THUMB_MAX_BYTES) break;
+      if(q > 0.5){ q -= 0.1; } else { sc *= 0.8; }
+    }
+    return {data: d, width: c.width, height: c.height, bytes: d.length};
+  }
+  function thumbDoc(n, photoId, fileName, t, source){
+    return {photoId: photoId, nodeId: n.id, zoneId: n.zoneId, fileName: fileName || '',
+      data: t.data, width: t.width, height: t.height, bytes: t.bytes, source: source || '', createdAt: Date.now()};
+  }
+  var thumbCache = {};       // zoneId -> Promise([썸네일])
+  var thumbByNode = {};      // nodeId -> [썸네일]
+  function clearThumbCache(zoneId){
+    if(zoneId){ delete thumbCache[zoneId]; } else { thumbCache = {}; }
+    thumbByNode = {};
+  }
+  function getZoneThumbs(zoneId){
+    if(thumbCache[zoneId]) return thumbCache[zoneId];
+    var db = initFB();
+    if(!db) return Promise.resolve([]);
+    var p = db.collection(THUMBS_COL).where('zoneId', '==', zoneId).get().then(function(snap){
+      var list = [];
+      snap.forEach(function(doc){ var d = doc.data(); d.id = doc.id; list.push(d); });
+      list.sort(function(a, b){ return (a.createdAt || 0) - (b.createdAt || 0); });
+      return list;
+    }, function(e){ console.warn('썸네일 불러오기 실패', e); return []; });
+    thumbCache[zoneId] = p;
+    return p;
+  }
+  function ensureThumbs(zoneIds){
+    return Promise.all(zoneIds.map(getZoneThumbs)).then(function(lists){
+      thumbByNode = {};
+      lists.forEach(function(list){
+        list.forEach(function(t){ (thumbByNode[t.nodeId] = thumbByNode[t.nodeId] || []).push(t); });
+      });
+      return thumbByNode;
+    });
+  }
+  function nodeThumbs(nodeId){ return thumbByNode[nodeId] || []; }
   function getPhotos(nodeId, force){
     if(!force && photoCache[nodeId]) return photoCache[nodeId];
     var db = initFB();
@@ -1341,9 +1405,13 @@
       return db.collection(PHOTOS_COL).add({
         nodeId: n.id, zoneId: n.zoneId, fileName: file.name, data: c.data,
         width: c.width, height: c.height, bytes: c.bytes, source: source, createdAt: Date.now()
+      }).then(function(ref){
+        // 썸네일은 따로 저장(리포트에서 원본을 내려받지 않게)
+        return db.collection(THUMBS_COL).doc(ref.id).set(thumbDoc(n, ref.id, file.name, c.thumb, source)).catch(function(e){ console.warn('썸네일 저장 실패', e); });
       });
     }).then(function(){
       delete photoCache[n.id];
+      clearThumbCache(n.zoneId);
       n.photoNames = (n.photoNames || []).concat([file.name]);
       return saveNodeToFirestore(n);
     });
@@ -1416,7 +1484,9 @@
       if(!db || !n) return;
       var name = el.dataset.name;
       db.collection(PHOTOS_COL).doc(el.dataset.id).delete().then(function(){
+        db.collection(THUMBS_COL).doc(el.dataset.id).delete().catch(function(){});
         delete photoCache[n.id];
+        clearThumbCache(n.zoneId);
         var arr = (n.photoNames || []).slice();
         var i = arr.indexOf(name);
         if(i >= 0){ arr.splice(i, 1); } else if(arr.length){ arr.pop(); }
@@ -3609,6 +3679,41 @@
     if(tab === 'mat'){ renderMatReport(); } else { renderRecReport(); }
   }
   function repZoneName(id){ var z = findZone(id); return z ? z.name : '(없는 작업장)'; }
+  var REP_TH_MAX = 3;      // 한 줄에 보여줄 썸네일 수(나머지는 +n)
+  function repPhotoCell(nodeId, names){
+    var ts = nodeThumbs(nodeId);
+    if(!ts.length){
+      var cnt = (names || []).length;
+      return cnt ? '<span class="rep-nophoto">사진 ' + cnt + '장(미리보기 없음)</span>' : '<span class="rep-nophoto">-</span>';
+    }
+    var h = ts.slice(0, REP_TH_MAX).map(function(t){
+      return '<img class="rep-th" src="' + t.data + '" data-act="repzoom" data-pid="' + escapeHtml(t.photoId || t.id) + '" title="' + escapeHtml(t.fileName || '') + '" alt="">';
+    }).join('');
+    if(ts.length > REP_TH_MAX){ h += '<span class="rep-th more">+' + (ts.length - REP_TH_MAX) + '</span>'; }
+    return h;
+  }
+  function repPhotoNames(nodeId, names){
+    var ts = nodeThumbs(nodeId);
+    if(ts.length) return ts.map(function(t){ return t.fileName || ''; }).filter(Boolean).join(', ');
+    return (names || []).join(', ');
+  }
+  function repPhotoCount(nodeId, names){
+    var ts = nodeThumbs(nodeId);
+    return ts.length || (names || []).length;
+  }
+  // 썸네일을 누르면 원본을 그때 한 장만 불러와 크게 본다
+  byId('repBody').addEventListener('click', function(e){
+    var el = e.target.closest ? e.target.closest('[data-act="repzoom"]') : null;
+    if(!el) return;
+    var db = initFB();
+    var lb = byId('lightbox'), img = lb.querySelector('img');
+    img.src = el.src;                       // 우선 썸네일로 띄우고
+    lb.classList.remove('hidden');
+    if(!db || !el.dataset.pid) return;
+    db.collection(PHOTOS_COL).doc(el.dataset.pid).get().then(function(doc){   // 원본으로 교체
+      if(doc && doc.exists && doc.data().data && !lb.classList.contains('hidden')){ img.src = doc.data().data; }
+    }).catch(function(){});
+  });
   // ---- 1) 재질별 물질 리스트 ----
   function matReportData(){
     var mSel = byId('repMatSel').value;
@@ -3646,7 +3751,19 @@
     return {cols: cols, rows: rows, summary: summary, withEmpty: withEmpty, mSel: mSel, zSel: zSel};
   }
   function renderMatReport(){
+    var withPhoto = byId('repMatPhoto').checked;
     var d = matReportData();
+    if(!withPhoto){ drawMatReport(d, false); return; }
+    var zids = {};
+    d.rows.forEach(function(r){ zids[r.zone.id] = 1; });
+    var keys = Object.keys(zids);
+    if(!keys.length){ drawMatReport(d, true); return; }
+    if(!keys.every(function(z){ return !!thumbCache[z]; })){
+      byId('repBody').innerHTML = '<div class="placeholder">사진 미리보기 불러오는 중...</div>';
+    }
+    ensureThumbs(keys).then(function(){ drawMatReport(d, true); });
+  }
+  function drawMatReport(d, withPhoto){
     var h = '';
     var title = '재질별 물질 리스트 · ' + (d.mSel ? MAT_BY_ID[d.mSel].name : '전체 재질') + ' · ' + (d.zSel ? repZoneName(d.zSel) : '공장 전체');
     h += '<div class="rep-tiles">' +
@@ -3675,9 +3792,11 @@
       (d.withEmpty && !d.mSel ? '<td class="n">' + tNone + '</td>' : '') + '<td class="n">' + tAll + '</td></tr></tbody></table>';
     h += '<div class="rep-note">한 품목에 재질이 여러 개면 각 재질에 모두 셉니다. 합계는 품목 수(중복 없음)입니다.</div>';
     // 상세
-    h += '<div class="rep-sec">품목 상세</div><table class="rep"><thead><tr><th>작업장</th><th>구분</th><th>경로</th><th>비고</th><th>재질</th><th class="n">기준수량</th><th>점검주기</th><th>최근 점검</th></tr></thead><tbody>';
+    h += '<div class="rep-sec">품목 상세</div><table class="rep"><thead><tr>' + (withPhoto ? '<th>사진</th>' : '') +
+      '<th>작업장</th><th>구분</th><th>경로</th><th>비고</th><th>재질</th><th class="n">기준수량</th><th>점검주기</th><th>최근 점검</th></tr></thead><tbody>';
     d.rows.forEach(function(r){
-      h += '<tr><td>' + escapeHtml(r.zone.name) + '</td><td>' + CAT_LABEL[r.n.category] + '</td>' +
+      h += '<tr>' + (withPhoto ? '<td class="ph">' + repPhotoCell(r.n.id, r.n.photoNames) + '</td>' : '') +
+        '<td>' + escapeHtml(r.zone.name) + '</td><td>' + CAT_LABEL[r.n.category] + '</td>' +
         '<td>' + escapeHtml(pathNames(r.n).join(' › ')) + '</td><td>' + escapeHtml(r.n.note || '') + '</td>' +
         '<td>' + (r.mats.length ? escapeHtml(matNames(r.mats)) : '<span class="zero">미지정</span>') + '</td>' +
         '<td class="n">' + (r.n.stdQty === null || r.n.stdQty === undefined ? '' : r.n.stdQty) + '</td>' +
@@ -3685,18 +3804,20 @@
         '<td>' + (effectiveLast(r.n) || '') + '</td></tr>';
     });
     h += '</tbody></table>';
+    if(withPhoto){ h += '<div class="rep-note">사진을 누르면 원본이 크게 열립니다. 엑셀에는 사진이 들어가지 않고 장수·파일명만 들어갑니다(사진은 인쇄·PDF로 남기세요).</div>'; }
     byId('repBody').innerHTML = h;
     // 엑셀·인쇄용 데이터
     repRows = {kind: 'mat', title: title, html: h, sheets: [
       {name: '요약', aoa: [['작업장'].concat(d.cols.map(function(m){ return m.name; })).concat(d.withEmpty && !d.mSel ? ['재질 미지정'] : []).concat(['합계'])]
         .concat(d.summary.map(function(r){ return [r.zone.name].concat(r.cells).concat(d.withEmpty && !d.mSel ? [r.none] : []).concat([r.total]); }))
         .concat([['합계'].concat(totals).concat(d.withEmpty && !d.mSel ? [tNone] : []).concat([tAll])])},
-      {name: '상세', aoa: [['작업장', '구분', '경로', '비고', '재질', '기준수량', '점검주기', '최근 점검']]
+      {name: '상세', aoa: [['작업장', '구분', '경로', '비고', '재질', '기준수량', '점검주기', '최근 점검', '사진 수', '사진 파일명']]
         .concat(d.rows.map(function(r){
           return [r.zone.name, CAT_LABEL[r.n.category], pathNames(r.n).join(' > '), r.n.note || '',
             r.mats.length ? matNames(r.mats) : '미지정',
             (r.n.stdQty === null || r.n.stdQty === undefined) ? '' : r.n.stdQty,
-            r.n.cycleValue ? r.n.cycleValue + UNIT_LABEL[r.n.cycleUnit] : '', effectiveLast(r.n) || ''];
+            r.n.cycleValue ? r.n.cycleValue + UNIT_LABEL[r.n.cycleUnit] : '', effectiveLast(r.n) || '',
+            repPhotoCount(r.n.id, r.n.photoNames), repPhotoNames(r.n.id, r.n.photoNames)];
         }))}
     ]};
   }
@@ -3733,12 +3854,18 @@
         if(a.r.date !== b.r.date) return a.r.date < b.r.date ? 1 : -1;
         return (b.r.createdAt || 0) - (a.r.createdAt || 0);
       });
-      drawRecReport(list, from, to, zSel, cSel);
+      if(byId('repRecPhoto').checked){
+        var zids = {};
+        list.forEach(function(x){ if(x.zoneId) zids[x.zoneId] = 1; });
+        ensureThumbs(Object.keys(zids)).then(function(){ drawRecReport(list, from, to, zSel, cSel, true); });
+      } else {
+        drawRecReport(list, from, to, zSel, cSel, false);
+      }
     }).catch(function(e){
       body.innerHTML = '<div class="placeholder">기록을 불러오지 못했습니다: ' + escapeHtml(e.message || e) + '</div>';
     });
   }
-  function drawRecReport(list, from, to, zSel, cSel){
+  function drawRecReport(list, from, to, zSel, cSel, withPhoto){
     var title = '점검 기록 · ' + from + ' ~ ' + to + ' · ' + (zSel ? repZoneName(zSel) : '공장 전체') + ' · ' + (cSel ? CAT_LABEL[cSel] : '설비+공기구');
     var abn = list.filter(function(x){ return x.r.result === 'abnormal'; }).length;
     var rep2 = list.filter(function(x){ return x.r.replaced; }).length;
@@ -3762,15 +3889,17 @@
     h += '<div class="rep-sec">점검자별</div><table class="rep"><thead><tr><th>점검자</th><th class="n">기록 수</th></tr></thead><tbody>' +
       byWho.map(function(k){ return '<tr><td>' + escapeHtml(k) + '</td><td class="n">' + who[k] + '</td></tr>'; }).join('') +
       '</tbody></table>';
-    h += '<div class="rep-sec">기록 목록 (최근 순)</div><table class="rep"><thead><tr><th>점검일</th><th>작업장</th><th>구분</th><th>항목</th><th>결과</th><th>교체</th><th class="n">수량</th><th>비고</th><th>점검자</th><th>기록 시각</th></tr></thead><tbody>';
-    var aoa = [['점검일', '작업장', '구분', '항목', '결과', '교체', '수량', '기준수량', '비고', '점검자', '기록 시각']];
+    h += '<div class="rep-sec">기록 목록 (최근 순)</div><table class="rep"><thead><tr>' + (withPhoto ? '<th>사진</th>' : '') +
+      '<th>점검일</th><th>작업장</th><th>구분</th><th>항목</th><th>결과</th><th>교체</th><th class="n">수량</th><th>비고</th><th>점검자</th><th>기록 시각</th></tr></thead><tbody>';
+    var aoa = [['점검일', '작업장', '구분', '항목', '결과', '교체', '수량', '기준수량', '비고', '점검자', '기록 시각', '사진 수']];
     list.forEach(function(x){
       var path = x.n ? pathNames(x.n).join(' › ') : '(삭제된 항목)';
       var qty = (x.r.qty === null || x.r.qty === undefined) ? '' : x.r.qty;
       var std = (x.n && x.n.stdQty !== null && x.n.stdQty !== undefined) ? x.n.stdQty : '';
       var lowQty = std !== '' && qty !== '' && qty < std;
       var bad = x.r.result === 'abnormal' || lowQty;
-      h += '<tr' + (bad ? ' class="bad"' : '') + '><td>' + escapeHtml(x.r.date) + '</td><td>' + escapeHtml(repZoneName(x.zoneId)) + '</td>' +
+      h += '<tr' + (bad ? ' class="bad"' : '') + '>' + (withPhoto ? '<td class="ph">' + repPhotoCell(x.r.nodeId, x.n ? x.n.photoNames : []) + '</td>' : '') +
+        '<td>' + escapeHtml(x.r.date) + '</td><td>' + escapeHtml(repZoneName(x.zoneId)) + '</td>' +
         '<td>' + (CAT_LABEL[x.cat] || '') + '</td><td>' + escapeHtml(path) + '</td>' +
         '<td>' + (x.r.result === 'abnormal' ? '<b>이상</b>' : '정상') + '</td><td>' + (x.r.replaced ? '교체' : '') + '</td>' +
         '<td class="n">' + (qty === '' ? '' : qty + (std !== '' ? ' / ' + std : '')) + '</td>' +
@@ -3778,9 +3907,11 @@
         '<td>' + (x.r.createdAt ? fmtTime(x.r.createdAt) : '') + '</td></tr>';
       aoa.push([x.r.date, repZoneName(x.zoneId), CAT_LABEL[x.cat] || '', path,
         x.r.result === 'abnormal' ? '이상' : '정상', x.r.replaced ? '교체' : '', qty, std,
-        x.r.note || '', x.r.inspector || '', x.r.createdAt ? fmtTime(x.r.createdAt) : '']);
+        x.r.note || '', x.r.inspector || '', x.r.createdAt ? fmtTime(x.r.createdAt) : '',
+        repPhotoCount(x.r.nodeId, x.n ? x.n.photoNames : [])]);
     });
     h += '</tbody></table>';
+    if(withPhoto){ h += '<div class="rep-note">사진을 누르면 원본이 크게 열립니다. 엑셀에는 사진 장수만 들어갑니다.</div>'; }
     byId('repBody').innerHTML = h;
     repRows = {kind: 'rec', title: title, html: h, sheets: [
       {name: '점검기록', aoa: aoa},
@@ -3824,7 +3955,8 @@
   byId('repClose').addEventListener('click', function(){ byId('reportModal').classList.add('hidden'); });
   byId('repTabMat').addEventListener('click', function(){ setRepTab('mat'); });
   byId('repTabRec').addEventListener('click', function(){ setRepTab('rec'); });
-  ['repMatSel', 'repMatZone', 'repMatEmpty'].forEach(function(id){ byId(id).addEventListener('change', function(){ if(repTab === 'mat') renderMatReport(); }); });
+  ['repMatSel', 'repMatZone', 'repMatEmpty', 'repMatPhoto'].forEach(function(id){ byId(id).addEventListener('change', function(){ if(repTab === 'mat') renderMatReport(); }); });
+  byId('repRecPhoto').addEventListener('change', function(){ if(repTab === 'rec' && repRecLoaded) renderRecReport(true); });
   byId('repRecRun').addEventListener('click', function(){ repRecLoaded = true; renderRecReport(true); });
   byId('repFiltersRec').addEventListener('click', function(e){
     var b = e.target.closest ? e.target.closest('[data-quick]') : null;
@@ -3838,6 +3970,57 @@
     repRecLoaded = true;
     renderRecReport(true);
   });
+  // 이미 올라간 사진에 썸네일을 만들어 준다(작업장 단위로 나눠서 진행)
+  function buildMissingThumbs(){
+    if(!isMaster()) return;
+    var db = initFB();
+    if(!db){ byId('repMsg').textContent = 'Firebase 연결이 없습니다.'; return; }
+    var btn = byId('repThumbFix');
+    btn.disabled = true;
+    var made = 0, skipped = 0, failed = 0;
+    var chain = Promise.resolve();
+    zones.forEach(function(z, zi){
+      chain = chain.then(function(){
+        byId('repMsg').textContent = '사진 확인 중... ' + (zi + 1) + '/' + zones.length + ' (' + z.name + ') · 만든 미리보기 ' + made + '장';
+        return Promise.all([
+          db.collection(PHOTOS_COL).where('zoneId', '==', z.id).get(),
+          db.collection(THUMBS_COL).where('zoneId', '==', z.id).get()
+        ]).then(function(res){
+          var have = {};
+          res[1].forEach(function(doc){ have[doc.id] = 1; });
+          var todo = [];
+          res[0].forEach(function(doc){ if(!have[doc.id]) todo.push({id: doc.id, d: doc.data()}); });
+          skipped += res[0].size - todo.length;
+          var c2 = Promise.resolve();
+          todo.forEach(function(p, i){
+            c2 = c2.then(function(){
+              byId('repMsg').textContent = z.name + ' 미리보기 만드는 중 ' + (i + 1) + '/' + todo.length + ' · 누적 ' + made + '장';
+              return new Promise(function(resolve){
+                var im = new Image();
+                im.onload = function(){
+                  var t = makeThumb(im, im.naturalWidth, im.naturalHeight);
+                  var n = findNode(p.d.nodeId) || {id: p.d.nodeId, zoneId: p.d.zoneId || z.id};
+                  db.collection(THUMBS_COL).doc(p.id).set(thumbDoc(n, p.id, p.d.fileName, t, p.d.source))
+                    .then(function(){ made++; resolve(); }, function(){ failed++; resolve(); });
+                };
+                im.onerror = function(){ failed++; resolve(); };
+                im.src = p.d.data;
+              });
+            });
+          });
+          return c2;
+        }, function(){ failed++; });
+      });
+    });
+    chain.then(function(){
+      clearThumbCache();
+      btn.disabled = false;
+      byId('repMsg').textContent = '미리보기 ' + made + '장 생성 · 이미 있던 것 ' + skipped + '장' + (failed ? ' · 실패 ' + failed + '장' : '');
+      if(made){ audit('사진 미리보기 생성', '', made + '장'); }
+      if(repTab === 'mat'){ renderMatReport(); }
+    });
+  }
+  byId('repThumbFix').addEventListener('click', buildMissingThumbs);
   byId('repXlsx').addEventListener('click', repXlsx);
   byId('repPrint').addEventListener('click', repPrint);
 
@@ -4474,6 +4657,8 @@
     openReport: openReport,
     setRepTab: setRepTab,
     getRepData: function(){ return repRows; },
+    buildMissingThumbs: buildMissingThumbs,
+    getNodeThumbs: function(id){ return nodeThumbs(id).map(function(t){ return {id: t.id, photoId: t.photoId, fileName: t.fileName, bytes: t.bytes}; }); },
     readZipPhotos: readZipPhotos,
     addZipFiles: addZipFiles,
     getBulkPhotoNames: function(){ return Object.keys(bulkPhotos); },
