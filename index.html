@@ -254,6 +254,52 @@
   .pin-sec{border:1px solid #e4e7ec;border-radius:8px;padding:10px 12px 0;margin-bottom:12px;}
   .pin-sec .m-title{margin-bottom:4px;}
   .audit-list{max-height:62vh;overflow:auto;font-size:12px;border-top:1px solid #eef0f3;}
+  /* 리포트 */
+  .rep-tabs{display:flex;gap:6px;margin:2px 0 10px;}
+  .rep-tabs button{padding:7px 14px;font-size:13px;border-radius:8px 8px 0 0;}
+  .rep-tabs button.on{background:#1c2430;border-color:#1c2430;color:#fff;font-weight:600;}
+  .rep-filters{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;border:1px solid var(--border);border-radius:8px;padding:9px 11px;margin-bottom:10px;background:#f9fafb;}
+  .rep-filters label{font-size:12px;color:#475467;margin:0;}
+  .rep-filters.hidden{display:none;}
+  .rep-filters select,.rep-filters input[type=date]{width:auto;min-width:96px;max-width:200px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;font-size:13px;margin:0;background:#fff;}
+  .rep-filters label{display:inline-flex;align-items:center;gap:5px;}
+  .rep-filters label input[type=checkbox]{width:auto;min-width:0;margin:0;}
+  .rep-filters button{margin:0;}
+  .rep-filters .quick{display:flex;gap:4px;}
+  .rep-filters .quick button{padding:4px 9px;font-size:12px;}
+  .rep-filters .sp{width:1px;height:20px;background:#e4e7ec;}
+  .rep-body{border-top:1px solid #eef0f3;padding-top:10px;max-height:56vh;overflow:auto;}
+  .rep-tiles{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .rep-tile{border:1px solid var(--border);border-radius:8px;padding:7px 12px;min-width:104px;}
+  .rep-tile .k{font-size:11px;color:#667085;}
+  .rep-tile .v{font-size:19px;font-weight:700;}
+  .rep-tile.bad .v{color:var(--danger);}
+  table.rep{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px;}
+  table.rep th,table.rep td{border:1px solid #e4e7ec;padding:5px 7px;text-align:left;vertical-align:top;}
+  table.rep th{background:#f2f4f7;font-weight:700;white-space:nowrap;}
+  table.rep td.n,table.rep th.n{text-align:right;white-space:nowrap;}
+  table.rep tr.sum td{background:#f7f8fa;font-weight:700;}
+  table.rep td.zero{color:#c3c8d0;}
+  table.rep tr.bad td{background:#fff5f4;}
+  .rep-sec{font-size:13px;font-weight:700;margin:4px 0 6px;}
+  .rep-note{font-size:11px;color:#667085;margin:-6px 0 10px;}
+  #printArea{display:none;}
+  @media print{
+    body.printing > *{display:none !important;}
+    body.printing #printArea{display:block !important;}
+    #printArea{font-family:inherit;color:#000;padding:0 4mm;}
+    #printArea h1{font-size:15pt;margin:0 0 2mm;}
+    #printArea .meta{font-size:9pt;color:#444;margin-bottom:3mm;}
+    #printArea table{width:100%;border-collapse:collapse;font-size:8pt;margin-bottom:4mm;}
+    #printArea th,#printArea td{border:1px solid #999;padding:2px 4px;text-align:left;}
+    #printArea th{background:#eee;}
+    #printArea .rep-sec{font-size:10pt;font-weight:700;margin:3mm 0 1mm;}
+    #printArea .rep-tiles{display:flex;gap:4mm;margin-bottom:3mm;font-size:9pt;}
+    #printArea .rep-tile{border:1px solid #999;padding:1mm 2mm;}
+    #printArea .rep-tile .k{font-size:7pt;color:#444;}
+    #printArea .rep-tile .v{font-size:11pt;font-weight:700;}
+    @page{size:A4 landscape;margin:8mm;}
+  }
   .audit-list.short{max-height:30vh;}
   /* 사용자 관리 */
   .u-actions{display:flex;align-items:center;gap:10px;margin:6px 0 8px;}
@@ -365,6 +411,9 @@
     .audit-row{grid-template-columns:1fr;}
     .u-list{max-height:none;overflow:visible;}
     .audit-list.short{max-height:none;overflow:visible;}
+    .rep-body{max-height:none;}
+    .rep-filters{gap:6px;}
+    .rep-filters .sp{display:none;}
     .urow{grid-template-columns:1fr;}
     .urow.head{display:none;}
     .urow .ua{justify-content:flex-start;}
@@ -394,6 +443,7 @@
     <button id="btnEditMode" class="need-manage">구역 편집 모드 켜기</button>
     <button id="btnExport" class="need-manage">구역 내보내기</button>
     <button id="btnImportTrigger" class="need-manage">구역 가져오기</button>
+    <button id="btnReport">리포트</button>
     <button id="btnUsers" class="need-master">사용자 관리</button>
     <button id="btnPins" class="need-master">공용 PIN 관리</button>
     <button id="btnAudit" class="need-master">변경 이력</button>
@@ -423,7 +473,8 @@
     <div id="detailPanel" class="card"></div>
   </div>
 </div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.14 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<div id="printArea"></div>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.15 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -615,6 +666,44 @@
     <div class="modal-actions">
       <button id="pinClose">닫기</button>
       <button id="pinSave" class="primary">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="reportModal">
+  <div class="modal-box wide">
+    <div class="m-title">리포트</div>
+    <div class="rep-tabs">
+      <button id="repTabMat" class="on">재질별 물질 리스트</button>
+      <button id="repTabRec">점검 기록</button>
+    </div>
+    <div class="rep-filters" id="repFiltersMat">
+      <label for="repMatSel">재질</label>
+      <select id="repMatSel"><option value="">전체</option></select>
+      <div class="sp"></div>
+      <label for="repMatZone">작업장</label>
+      <select id="repMatZone"><option value="">전체</option></select>
+      <div class="sp"></div>
+      <label><input type="checkbox" id="repMatEmpty"> 재질 미지정 품목도 포함</label>
+    </div>
+    <div class="rep-filters hidden" id="repFiltersRec">
+      <label for="repFrom">기간</label>
+      <input type="date" id="repFrom"> ~ <input type="date" id="repTo">
+      <div class="quick"><button data-quick="thismonth">이번 달</button><button data-quick="lastmonth">지난달</button><button data-quick="3m">최근 3개월</button><button data-quick="year">올해</button></div>
+      <div class="sp"></div>
+      <label for="repRecZone">작업장</label>
+      <select id="repRecZone"><option value="">전체</option></select>
+      <div class="sp"></div>
+      <label for="repRecCat">구분</label>
+      <select id="repRecCat"><option value="">전체</option><option value="equip">설비</option><option value="tool">공기구</option></select>
+      <button id="repRecRun" class="primary">조회</button>
+    </div>
+    <div class="rep-body" id="repBody"></div>
+    <div class="modal-actions" style="margin-top:12px;">
+      <span class="muted" id="repMsg" style="margin:0 auto 0 0;"></span>
+      <button id="repXlsx">엑셀 받기</button>
+      <button id="repPrint">인쇄</button>
+      <button id="repClose">닫기</button>
     </div>
   </div>
 </div>
@@ -3480,6 +3569,278 @@
     b.commit().then(saveOk).catch(saveFail);
   });
 
+  // ================= 리포트 =================
+  var repTab = 'mat';
+  var repRows = null;        // 엑셀·인쇄용으로 마지막에 만든 표 데이터
+  function monthRange(back){
+    var t = new Date();
+    var from = new Date(t.getFullYear(), t.getMonth() - (back || 0), 1);
+    var to = new Date(t.getFullYear(), t.getMonth() - (back || 0) + 1, 0);
+    return [ymd(from), ymd(to)];
+  }
+  function fillRepZones(){
+    ['repMatZone', 'repRecZone'].forEach(function(id){
+      var sel = byId(id), cur = sel.value;
+      sel.innerHTML = '<option value="">전체</option>' + zones.map(function(z){
+        return '<option value="' + z.id + '">' + escapeHtml(z.name) + '</option>';
+      }).join('');
+      sel.value = cur;
+    });
+    var ms = byId('repMatSel'), cm = ms.value;
+    ms.innerHTML = '<option value="">전체</option>' + MATERIALS.map(function(m){
+      return '<option value="' + m.id + '">' + escapeHtml(m.name) + '</option>';
+    }).join('');
+    ms.value = cm;
+  }
+  function openReport(){
+    if(!me){ openLogin(); return; }
+    fillRepZones();
+    if(!byId('repFrom').value){ var r = monthRange(0); byId('repFrom').value = r[0]; byId('repTo').value = r[1]; }
+    byId('reportModal').classList.remove('hidden');
+    setRepTab(repTab);
+  }
+  function setRepTab(tab){
+    repTab = tab;
+    byId('repTabMat').classList.toggle('on', tab === 'mat');
+    byId('repTabRec').classList.toggle('on', tab === 'rec');
+    byId('repFiltersMat').classList.toggle('hidden', tab !== 'mat');
+    byId('repFiltersRec').classList.toggle('hidden', tab !== 'rec');
+    byId('repMsg').textContent = '';
+    if(tab === 'mat'){ renderMatReport(); } else { renderRecReport(); }
+  }
+  function repZoneName(id){ var z = findZone(id); return z ? z.name : '(없는 작업장)'; }
+  // ---- 1) 재질별 물질 리스트 ----
+  function matReportData(){
+    var mSel = byId('repMatSel').value;
+    var zSel = byId('repMatZone').value;
+    var withEmpty = byId('repMatEmpty').checked;
+    var cols = MATERIALS.filter(function(m){ return !mSel || m.id === mSel; });
+    var zoneList = zones.filter(function(z){ return !zSel || z.id === zSel; });
+    var rows = [];
+    zoneList.forEach(function(z){
+      nodes.filter(function(n){ return n.zoneId === z.id; }).forEach(function(n){
+        var ms = nodeMats(n);
+        var hit = mSel ? (ms.indexOf(mSel) >= 0) : (ms.length > 0);
+        var empty = !ms.length && !hasChildren(n.id);
+        if(!hit && !(withEmpty && empty && !mSel)) return;
+        if(!hit && mSel) return;
+        rows.push({zone: z, n: n, mats: ms});
+      });
+    });
+    rows.sort(function(a, b){
+      var zi = zones.indexOf(a.zone) - zones.indexOf(b.zone);
+      if(zi) return zi;
+      if(a.n.category !== b.n.category) return a.n.category === 'equip' ? -1 : 1;
+      var pa = pathNames(a.n).join('\u0001'), pb = pathNames(b.n).join('\u0001');
+      return pa < pb ? -1 : (pa > pb ? 1 : 0);
+    });
+    // 요약표: 행=작업장, 열=재질(+미지정)
+    var summary = zoneList.map(function(z){
+      var cells = cols.map(function(m){
+        return rows.filter(function(r){ return r.zone.id === z.id && r.mats.indexOf(m.id) >= 0; }).length;
+      });
+      var none = rows.filter(function(r){ return r.zone.id === z.id && !r.mats.length; }).length;
+      var total = rows.filter(function(r){ return r.zone.id === z.id; }).length;
+      return {zone: z, cells: cells, none: none, total: total};
+    }).filter(function(row){ return row.total > 0; });
+    return {cols: cols, rows: rows, summary: summary, withEmpty: withEmpty, mSel: mSel, zSel: zSel};
+  }
+  function renderMatReport(){
+    var d = matReportData();
+    var h = '';
+    var title = '재질별 물질 리스트 · ' + (d.mSel ? MAT_BY_ID[d.mSel].name : '전체 재질') + ' · ' + (d.zSel ? repZoneName(d.zSel) : '공장 전체');
+    h += '<div class="rep-tiles">' +
+      '<div class="rep-tile"><div class="k">품목</div><div class="v">' + d.rows.length + '</div></div>' +
+      '<div class="rep-tile"><div class="k">작업장</div><div class="v">' + d.summary.length + '</div></div>' +
+      '<div class="rep-tile"><div class="k">재질 종류</div><div class="v">' + d.cols.length + '</div></div>' +
+      '</div>';
+    if(!d.rows.length){
+      byId('repBody').innerHTML = h + '<div class="placeholder">조건에 맞는 품목이 없습니다.</div>';
+      repRows = {kind: 'mat', title: title, sheets: []};
+      return;
+    }
+    // 요약표
+    h += '<div class="rep-sec">작업장별 재질 개수</div><table class="rep"><thead><tr><th>작업장</th>' +
+      d.cols.map(function(m){ return '<th class="n">' + escapeHtml(m.name) + '</th>'; }).join('') +
+      (d.withEmpty && !d.mSel ? '<th class="n">재질 미지정</th>' : '') + '<th class="n">합계</th></tr></thead><tbody>';
+    var totals = d.cols.map(function(){ return 0; }), tNone = 0, tAll = 0;
+    d.summary.forEach(function(r){
+      h += '<tr><td>' + escapeHtml(r.zone.name) + '</td>' +
+        r.cells.map(function(v, i){ totals[i] += v; return '<td class="n' + (v ? '' : ' zero') + '">' + v + '</td>'; }).join('') +
+        (d.withEmpty && !d.mSel ? '<td class="n' + (r.none ? '' : ' zero') + '">' + r.none + '</td>' : '') +
+        '<td class="n">' + r.total + '</td></tr>';
+      tNone += r.none; tAll += r.total;
+    });
+    h += '<tr class="sum"><td>합계</td>' + totals.map(function(v){ return '<td class="n">' + v + '</td>'; }).join('') +
+      (d.withEmpty && !d.mSel ? '<td class="n">' + tNone + '</td>' : '') + '<td class="n">' + tAll + '</td></tr></tbody></table>';
+    h += '<div class="rep-note">한 품목에 재질이 여러 개면 각 재질에 모두 셉니다. 합계는 품목 수(중복 없음)입니다.</div>';
+    // 상세
+    h += '<div class="rep-sec">품목 상세</div><table class="rep"><thead><tr><th>작업장</th><th>구분</th><th>경로</th><th>비고</th><th>재질</th><th class="n">기준수량</th><th>점검주기</th><th>최근 점검</th></tr></thead><tbody>';
+    d.rows.forEach(function(r){
+      h += '<tr><td>' + escapeHtml(r.zone.name) + '</td><td>' + CAT_LABEL[r.n.category] + '</td>' +
+        '<td>' + escapeHtml(pathNames(r.n).join(' › ')) + '</td><td>' + escapeHtml(r.n.note || '') + '</td>' +
+        '<td>' + (r.mats.length ? escapeHtml(matNames(r.mats)) : '<span class="zero">미지정</span>') + '</td>' +
+        '<td class="n">' + (r.n.stdQty === null || r.n.stdQty === undefined ? '' : r.n.stdQty) + '</td>' +
+        '<td>' + (r.n.cycleValue ? r.n.cycleValue + UNIT_LABEL[r.n.cycleUnit] : '') + '</td>' +
+        '<td>' + (effectiveLast(r.n) || '') + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    byId('repBody').innerHTML = h;
+    // 엑셀·인쇄용 데이터
+    repRows = {kind: 'mat', title: title, html: h, sheets: [
+      {name: '요약', aoa: [['작업장'].concat(d.cols.map(function(m){ return m.name; })).concat(d.withEmpty && !d.mSel ? ['재질 미지정'] : []).concat(['합계'])]
+        .concat(d.summary.map(function(r){ return [r.zone.name].concat(r.cells).concat(d.withEmpty && !d.mSel ? [r.none] : []).concat([r.total]); }))
+        .concat([['합계'].concat(totals).concat(d.withEmpty && !d.mSel ? [tNone] : []).concat([tAll])])},
+      {name: '상세', aoa: [['작업장', '구분', '경로', '비고', '재질', '기준수량', '점검주기', '최근 점검']]
+        .concat(d.rows.map(function(r){
+          return [r.zone.name, CAT_LABEL[r.n.category], pathNames(r.n).join(' > '), r.n.note || '',
+            r.mats.length ? matNames(r.mats) : '미지정',
+            (r.n.stdQty === null || r.n.stdQty === undefined) ? '' : r.n.stdQty,
+            r.n.cycleValue ? r.n.cycleValue + UNIT_LABEL[r.n.cycleUnit] : '', effectiveLast(r.n) || ''];
+        }))}
+    ]};
+  }
+  // ---- 2) 점검 기록 ----
+  function renderRecReport(force){
+    var body = byId('repBody');
+    if(!force && repTab === 'rec' && !repRecLoaded){
+      body.innerHTML = '<div class="placeholder">기간과 조건을 고른 뒤 <b>조회</b>를 누르세요.</div>';
+      repRows = null;
+      return;
+    }
+    var from = byId('repFrom').value, to = byId('repTo').value;
+    var zSel = byId('repRecZone').value, cSel = byId('repRecCat').value;
+    if(!from || !to){ byId('repMsg').textContent = '기간을 정하세요.'; return; }
+    if(from > to){ byId('repMsg').textContent = '시작일이 종료일보다 뒤입니다.'; return; }
+    var db = initFB();
+    if(!db){ body.innerHTML = '<div class="placeholder">Firebase 연결이 없어 점검 기록을 불러올 수 없습니다.</div>'; return; }
+    byId('repMsg').textContent = '';
+    body.innerHTML = '<div class="placeholder">불러오는 중...</div>';
+    db.collection(RECORDS_COL).where('date', '>=', from).where('date', '<=', to).orderBy('date', 'desc').get().then(function(snap){
+      var list = [];
+      snap.forEach(function(doc){
+        var r = doc.data(); r.id = doc.id;
+        if(r.deleted) return;                                  // 삭제된 기록 제외
+        if(!r.date || r.date < from || r.date > to) return;     // 목록 방식이 달라도 한 번 더 거른다
+        var n = findNode(r.nodeId);
+        var zoneId = (n && n.zoneId) || r.zoneId;
+        if(zSel && zoneId !== zSel) return;
+        var cat = n ? n.category : '';
+        if(cSel && cat !== cSel) return;
+        list.push({r: r, n: n, zoneId: zoneId, cat: cat});
+      });
+      list.sort(function(a, b){
+        if(a.r.date !== b.r.date) return a.r.date < b.r.date ? 1 : -1;
+        return (b.r.createdAt || 0) - (a.r.createdAt || 0);
+      });
+      drawRecReport(list, from, to, zSel, cSel);
+    }).catch(function(e){
+      body.innerHTML = '<div class="placeholder">기록을 불러오지 못했습니다: ' + escapeHtml(e.message || e) + '</div>';
+    });
+  }
+  function drawRecReport(list, from, to, zSel, cSel){
+    var title = '점검 기록 · ' + from + ' ~ ' + to + ' · ' + (zSel ? repZoneName(zSel) : '공장 전체') + ' · ' + (cSel ? CAT_LABEL[cSel] : '설비+공기구');
+    var abn = list.filter(function(x){ return x.r.result === 'abnormal'; }).length;
+    var rep2 = list.filter(function(x){ return x.r.replaced; }).length;
+    var short = list.filter(function(x){ return x.n && x.n.category === 'tool' && x.n.stdQty !== null && x.n.stdQty !== undefined && x.r.qty !== null && x.r.qty !== undefined && x.r.qty < x.n.stdQty; }).length;
+    var items = {}, who = {};
+    list.forEach(function(x){ items[x.r.nodeId] = 1; if(x.r.inspector) who[x.r.inspector] = (who[x.r.inspector] || 0) + 1; });
+    var h = '<div class="rep-tiles">' +
+      '<div class="rep-tile"><div class="k">점검 기록</div><div class="v">' + list.length + '</div></div>' +
+      '<div class="rep-tile"><div class="k">점검한 항목</div><div class="v">' + Object.keys(items).length + '</div></div>' +
+      '<div class="rep-tile' + (abn ? ' bad' : '') + '"><div class="k">이상</div><div class="v">' + abn + '</div></div>' +
+      '<div class="rep-tile"><div class="k">교체</div><div class="v">' + rep2 + '</div></div>' +
+      '<div class="rep-tile' + (short ? ' bad' : '') + '"><div class="k">수량 부족</div><div class="v">' + short + '</div></div>' +
+      '<div class="rep-tile"><div class="k">점검자</div><div class="v">' + Object.keys(who).length + '</div></div>' +
+      '</div>';
+    if(!list.length){
+      byId('repBody').innerHTML = h + '<div class="placeholder">이 기간에 남긴 점검 기록이 없습니다.</div>';
+      repRows = {kind: 'rec', title: title, html: h, sheets: [{name: '점검기록', aoa: [['점검일', '작업장', '구분', '항목', '결과', '교체', '수량', '기준수량', '비고', '점검자', '기록 시각']]}]};
+      return;
+    }
+    var byWho = Object.keys(who).sort(function(a, b){ return who[b] - who[a]; });
+    h += '<div class="rep-sec">점검자별</div><table class="rep"><thead><tr><th>점검자</th><th class="n">기록 수</th></tr></thead><tbody>' +
+      byWho.map(function(k){ return '<tr><td>' + escapeHtml(k) + '</td><td class="n">' + who[k] + '</td></tr>'; }).join('') +
+      '</tbody></table>';
+    h += '<div class="rep-sec">기록 목록 (최근 순)</div><table class="rep"><thead><tr><th>점검일</th><th>작업장</th><th>구분</th><th>항목</th><th>결과</th><th>교체</th><th class="n">수량</th><th>비고</th><th>점검자</th><th>기록 시각</th></tr></thead><tbody>';
+    var aoa = [['점검일', '작업장', '구분', '항목', '결과', '교체', '수량', '기준수량', '비고', '점검자', '기록 시각']];
+    list.forEach(function(x){
+      var path = x.n ? pathNames(x.n).join(' › ') : '(삭제된 항목)';
+      var qty = (x.r.qty === null || x.r.qty === undefined) ? '' : x.r.qty;
+      var std = (x.n && x.n.stdQty !== null && x.n.stdQty !== undefined) ? x.n.stdQty : '';
+      var lowQty = std !== '' && qty !== '' && qty < std;
+      var bad = x.r.result === 'abnormal' || lowQty;
+      h += '<tr' + (bad ? ' class="bad"' : '') + '><td>' + escapeHtml(x.r.date) + '</td><td>' + escapeHtml(repZoneName(x.zoneId)) + '</td>' +
+        '<td>' + (CAT_LABEL[x.cat] || '') + '</td><td>' + escapeHtml(path) + '</td>' +
+        '<td>' + (x.r.result === 'abnormal' ? '<b>이상</b>' : '정상') + '</td><td>' + (x.r.replaced ? '교체' : '') + '</td>' +
+        '<td class="n">' + (qty === '' ? '' : qty + (std !== '' ? ' / ' + std : '')) + '</td>' +
+        '<td>' + escapeHtml(x.r.note || '') + '</td><td>' + escapeHtml(x.r.inspector || '') + '</td>' +
+        '<td>' + (x.r.createdAt ? fmtTime(x.r.createdAt) : '') + '</td></tr>';
+      aoa.push([x.r.date, repZoneName(x.zoneId), CAT_LABEL[x.cat] || '', path,
+        x.r.result === 'abnormal' ? '이상' : '정상', x.r.replaced ? '교체' : '', qty, std,
+        x.r.note || '', x.r.inspector || '', x.r.createdAt ? fmtTime(x.r.createdAt) : '']);
+    });
+    h += '</tbody></table>';
+    byId('repBody').innerHTML = h;
+    repRows = {kind: 'rec', title: title, html: h, sheets: [
+      {name: '점검기록', aoa: aoa},
+      {name: '요약', aoa: [['항목', '값'], ['기간', from + ' ~ ' + to], ['작업장', zSel ? repZoneName(zSel) : '전체'], ['구분', cSel ? CAT_LABEL[cSel] : '전체'],
+        ['점검 기록', list.length], ['점검한 항목', Object.keys(items).length], ['이상', abn], ['교체', rep2], ['수량 부족', short], ['점검자 수', byWho.length]]
+        .concat(byWho.map(function(k){ return ['점검자 · ' + k, who[k]]; }))}
+    ]};
+  }
+  var repRecLoaded = false;
+  // ---- 엑셀 / 인쇄 ----
+  function repFileName(){
+    var t = todayStr().replace(/-/g, '');
+    if(repTab === 'mat') return '이물관리_재질목록_' + t + '.xlsx';
+    return '이물관리_점검기록_' + (byId('repFrom').value || '').replace(/-/g, '') + '-' + (byId('repTo').value || '').replace(/-/g, '') + '.xlsx';
+  }
+  function repXlsx(){
+    if(!repRows || !repRows.sheets || !repRows.sheets.length){ byId('repMsg').textContent = '먼저 리포트를 조회하세요.'; return; }
+    byId('repMsg').textContent = '엑셀 만드는 중...';
+    loadXlsx().then(function(X){
+      var wb = X.utils.book_new();
+      repRows.sheets.forEach(function(sh){
+        var ws = X.utils.aoa_to_sheet(sh.aoa);
+        ws['!cols'] = (sh.aoa[0] || []).map(function(h){ return {wch: String(h).length > 6 ? 18 : 11}; });
+        X.utils.book_append_sheet(wb, ws, sh.name);
+      });
+      X.writeFile(wb, repFileName());
+      byId('repMsg').textContent = '엑셀로 저장했습니다.';
+      audit('리포트 내보내기', repTab === 'mat' ? '재질별 물질 리스트' : '점검 기록', repRows.title);
+    }).catch(function(e){ byId('repMsg').textContent = '엑셀 만들기 실패: ' + (e.message || e); });
+  }
+  function repPrint(){
+    if(!repRows || !repRows.html){ byId('repMsg').textContent = '먼저 리포트를 조회하세요.'; return; }
+    byId('printArea').innerHTML = '<h1>' + escapeHtml(repRows.title) + '</h1>' +
+      '<div class="meta">순수본 2공장 이물관리 · 출력 ' + fmtTime(Date.now()) + ' · ' + escapeHtml(me ? me.name : '') + '</div>' + repRows.html;
+    document.body.classList.add('printing');
+    var done = function(){ document.body.classList.remove('printing'); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    setTimeout(function(){ window.print(); setTimeout(done, 1000); }, 30);
+  }
+  byId('btnReport').addEventListener('click', openReport);
+  byId('repClose').addEventListener('click', function(){ byId('reportModal').classList.add('hidden'); });
+  byId('repTabMat').addEventListener('click', function(){ setRepTab('mat'); });
+  byId('repTabRec').addEventListener('click', function(){ setRepTab('rec'); });
+  ['repMatSel', 'repMatZone', 'repMatEmpty'].forEach(function(id){ byId(id).addEventListener('change', function(){ if(repTab === 'mat') renderMatReport(); }); });
+  byId('repRecRun').addEventListener('click', function(){ repRecLoaded = true; renderRecReport(true); });
+  byId('repFiltersRec').addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('[data-quick]') : null;
+    if(!b) return;
+    var q = b.dataset.quick, r;
+    if(q === 'thismonth'){ r = monthRange(0); }
+    else if(q === 'lastmonth'){ r = monthRange(1); }
+    else if(q === '3m'){ r = [monthRange(2)[0], monthRange(0)[1]]; }
+    else { var yr = new Date().getFullYear(); r = [yr + '-01-01', yr + '-12-31']; }
+    byId('repFrom').value = r[0]; byId('repTo').value = r[1];
+    repRecLoaded = true;
+    renderRecReport(true);
+  });
+  byId('repXlsx').addEventListener('click', repXlsx);
+  byId('repPrint').addEventListener('click', repPrint);
+
   // ---- 재질 관리 (관리자 이상) ----
   var matDraft = null;
   function matUseCount(id){ return nodes.filter(function(n){ return nodeMats(n).indexOf(id) >= 0; }).length; }
@@ -4110,6 +4471,9 @@
     getStep: function(){ return mStep(); },
     getMatFilter: function(){ return matFilter.slice(); },
     getMaterials: function(){ return MATERIALS.map(function(m){ return Object.assign({}, m); }); },
+    openReport: openReport,
+    setRepTab: setRepTab,
+    getRepData: function(){ return repRows; },
     readZipPhotos: readZipPhotos,
     addZipFiles: addZipFiles,
     getBulkPhotoNames: function(){ return Object.keys(bulkPhotos); },
