@@ -255,6 +255,46 @@
   .pin-sec .m-title{margin-bottom:4px;}
   .audit-list{max-height:62vh;overflow:auto;font-size:12px;border-top:1px solid #eef0f3;}
   /* 리포트 */
+  /* 작업장 점검(체크리스트) */
+  .ck-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;border:1px solid var(--border);border-radius:8px;padding:9px 11px;margin-bottom:10px;background:#f9fafb;}
+  .ck-top label{font-size:12px;color:#475467;margin:0;display:inline-flex;align-items:center;gap:5px;}
+  .ck-top input[type=date]{width:auto;padding:5px 7px;border:1px solid var(--border);border-radius:6px;font-size:13px;margin:0;background:#fff;}
+  .ck-top .scope{display:flex;gap:4px;}
+  .ck-top .scope button{padding:4px 10px;font-size:12px;margin:0;}
+  .ck-top .scope button.on{background:#1c2430;border-color:#1c2430;color:#fff;font-weight:600;}
+  .ck-top .who{font-size:12px;color:#475467;margin-left:auto;}
+  .ck-list{border:1px solid var(--border);border-radius:8px;max-height:52vh;overflow:auto;}
+  .ck-row{border-bottom:1px solid #eef0f3;padding:8px 10px;}
+  .ck-row:last-child{border-bottom:none;}
+  .ck-row.on{background:#f0f7ff;}
+  .ck-row.abn{background:#fff5f4;}
+  .ck-row.done{opacity:.6;}
+  .ck-main{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+  .ck-main input[type=checkbox]{width:20px;height:20px;margin:0;flex-shrink:0;}
+  .ck-name{font-size:13px;font-weight:600;flex:1 1 220px;min-width:0;}
+  .ck-name .sub{display:block;font-size:11px;color:#667085;font-weight:400;}
+  .ck-qty{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#475467;}
+  .ck-qty input{width:58px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:13px;margin:0;text-align:right;}
+  .ck-qty.low input{border-color:var(--danger);color:var(--danger);font-weight:700;}
+  .ck-row .abn-btn{padding:3px 10px;font-size:12px;margin:0;}
+  .ck-row .abn-btn.on{background:var(--danger);border-color:var(--danger);color:#fff;}
+  .ck-detail{margin:8px 0 2px 29px;padding:8px 10px;border:1px solid #f1c6c2;border-radius:6px;background:#fff;}
+  .ck-detail.hidden{display:none;}
+  .ck-detail label{font-size:11px;color:#475467;display:block;margin:0 0 3px;}
+  .ck-detail input[type=text]{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;margin:0 0 6px;}
+  .ck-detail .row2{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px;}
+  .ck-th{width:34px;height:26px;object-fit:cover;border:1px solid #e4e7ec;border-radius:4px;cursor:zoom-in;}
+  .ck-sum{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:#475467;margin:10px 0 0;}
+  .ck-sum b{font-size:15px;}
+  .ck-badge{font-size:10px;padding:1px 6px;border-radius:9px;background:#f2f4f7;color:#475467;}
+  .ck-badge.bad{background:#fde7e5;color:#b42318;}
+  .ck-badge.warn{background:#fdf0d5;color:#a15c00;}
+  .ck-badge.done{background:#e6f4ea;color:#15803d;}
+  @media (max-width: 820px){
+    .ck-list{max-height:none;}
+    .ck-main input[type=checkbox]{width:24px;height:24px;}
+    .ck-name{flex:1 1 100%;}
+  }
   .rep-tabs{display:flex;gap:6px;margin:2px 0 10px;}
   .rep-tabs button{padding:7px 14px;font-size:13px;border-radius:8px 8px 0 0;}
   .rep-tabs button.on{background:#1c2430;border-color:#1c2430;color:#fff;font-weight:600;}
@@ -480,7 +520,7 @@
   </div>
 </div>
 <div id="printArea"></div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.16 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.17 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -672,6 +712,32 @@
     <div class="modal-actions">
       <button id="pinClose">닫기</button>
       <button id="pinSave" class="primary">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="checkModal">
+  <div class="modal-box wide">
+    <div class="m-title" id="ckTitle">작업장 점검</div>
+    <div class="ck-top">
+      <label for="ckDate">점검일</label>
+      <input type="date" id="ckDate">
+      <div class="sp"></div>
+      <div class="scope">
+        <button data-ckscope="cycle" class="on">주기 있는 항목</button>
+        <button data-ckscope="due">오늘 대상</button>
+        <button data-ckscope="all">전체</button>
+      </div>
+      <button id="ckAll">전체 정상 체크</button>
+      <button id="ckNone">모두 해제</button>
+      <span class="who" id="ckWho"></span>
+    </div>
+    <div class="ck-list" id="ckList"></div>
+    <div class="ck-sum" id="ckSum"></div>
+    <div class="form-msg" id="ckMsg"></div>
+    <div class="modal-actions">
+      <button id="ckClose">닫기</button>
+      <button id="ckSave" class="primary">점검 기록 저장</button>
     </div>
   </div>
 </div>
@@ -2054,6 +2120,7 @@
       var short = n.stdQty !== null && n.stdQty !== undefined && +r.qty < +n.stdQty;
       h += '<span class="badge ' + (short ? 'b-bad' : 'b-gray') + '">수량 ' + r.qty + (n.stdQty !== null && n.stdQty !== undefined ? ' / 기준 ' + n.stdQty : '') + (short ? ' 부족' : '') + '</span>';
     }
+    if(r.via === 'zone'){ h += '<span class="badge b-gray">' + (r.bulk ? '작업장 점검 · 일괄 체크' : '작업장 점검') + '</span>'; }
     if(r.deleted) h += '<span class="badge b-bad">삭제됨</span>';
     h += '</div><div class="rec-sub">점검자 ' + escapeHtml(r.inspector || '') + ' · 입력 ' + fmtTime(r.createdAt) + (hist.length ? ' · 변경 ' + hist.length + '회' : '') + '</div>';
     if(r.note) h += '<div class="rec-note">' + escapeHtml(r.note) + '</div>';
@@ -2773,7 +2840,8 @@
     var h = '<div class="zi-head"><span class="zname">' + escapeHtml(z.name) + '</span>' + typeBadge(zoneType(z)) +
       '<span class="zsum">설비 ' + childrenOf(z.id, 'equip', null).length + ' · 공기구 ' + childrenOf(z.id, 'tool', null).length +
       ' · 점검 대상 ' + zs.total + (zs.bad ? ' · <b style="color:#b42318;">지연 ' + zs.bad + '</b>' : '') + (zs.warn ? ' · <span style="color:#a15c00;">임박 ' + zs.warn + '</span>' : '') +
-      (zs.alert ? ' · <b style="color:#b42318;">확인 필요 ' + zs.alert + '</b>' : '') + '</span></div>';
+      (zs.alert ? ' · <b style="color:#b42318;">확인 필요 ' + zs.alert + '</b>' : '') + '</span>' +
+      '<button class="primary" data-act="zcheck" data-id="' + z.id + '" style="padding:3px 12px;font-size:12px;margin-left:auto;">점검하기</button></div>';
     h += '<div class="zi-cols">';
     ['equip', 'tool'].forEach(function(cat){
       h += '<div><div class="zi-col-title">■ ' + CAT_LABEL[cat] + '</div><div class="icards">';
@@ -2914,7 +2982,7 @@
     var leaves = scope.filter(function(n){ return !hasChildren(n.id); });
     var s = countStatus(leaves);
     var h = '<div class="d-head"><div><div class="d-crumb">' + (z ? '작업장' : '공장 전체') + '</div><div class="d-title">' + (z ? escapeHtml(z.name) + ' ' : '') + '점검 현황</div></div>' +
-      (z ? '<div class="d-acts"><button data-act="allzones">전체 현황 보기</button></div>' : '') + '</div>';
+      (z ? '<div class="d-acts"><button class="primary" data-act="zcheck" data-id="' + z.id + '">점검하기</button><button data-act="allzones">전체 현황 보기</button></div>' : '') + '</div>';
     h += '<div class="stats">' +
       '<div class="stat"><div class="l">점검 대상</div><div class="v">' + s.total + '</div></div>' +
       '<div class="stat bad"><div class="l">지연</div><div class="v">' + s.bad + '</div></div>' +
@@ -2997,6 +3065,7 @@
     if(act === 'matclear'){ matFilter = []; renderAll(); return; }
     if(act === 'matjump'){ detailPanel.scrollIntoView({behavior: 'smooth', block: 'start'}); return; }
     if(act === 'matmanage'){ openMatModal(); return; }
+    if(act === 'zcheck'){ openCheck(el.dataset.id || selectedZoneId); return; }
     if(act === 'newpoly'){ setDrawMode('poly', null); return; }
     if(act === 'addrect'){ setDrawMode('rect', id); return; }
     if(act === 'addpoly'){ setDrawMode('poly', id); return; }
@@ -3639,6 +3708,233 @@
     b.commit().then(saveOk).catch(saveFail);
   });
 
+  // ================= 작업장 점검(체크리스트) =================
+  var ckZoneId = null, ckScope = 'cycle', ckState = {};   // nodeId -> {on, abn, note, replaced, qty, bulk}
+  function ckLeaves(zoneId){
+    return nodes.filter(function(n){ return n.zoneId === zoneId && !hasChildren(n.id); })
+      .sort(function(a, b){
+        if(a.category !== b.category) return a.category === 'equip' ? -1 : 1;
+        var pa = pathNames(a).join('\u0001'), pb = pathNames(b).join('\u0001');
+        return pa < pb ? -1 : (pa > pb ? 1 : 0);
+      });
+  }
+  function ckTargets(){
+    var list = ckLeaves(ckZoneId);
+    if(ckScope === 'all') return list;
+    if(ckScope === 'cycle') return list.filter(function(n){ return !!n.cycleValue; });
+    return list.filter(function(n){ var st = nodeStatus(n); return !!n.cycleValue && st.level >= 1; });   // 오늘 대상 = 지연·임박·미입력
+  }
+  function openCheck(zoneId){
+    if(!me){ openLogin(); return; }
+    var z = findZone(zoneId);
+    if(!z) return;
+    ckZoneId = zoneId;
+    ckState = {};
+    byId('ckTitle').textContent = z.name + ' 점검';
+    byId('ckWho').textContent = '점검자 ' + me.name;
+    byId('ckMsg').textContent = '';
+    if(!byId('ckDate').value){ byId('ckDate').value = todayStr(); }
+    byId('checkModal').classList.remove('hidden');
+    // 사진 미리보기도 같이(있으면)
+    ensureThumbs([zoneId]).then(renderCheckList, renderCheckList);
+  }
+  function ckStateOf(id){
+    if(!ckState[id]) ckState[id] = {on: false, abn: false, note: '', replaced: false, qty: null, bulk: false};
+    return ckState[id];
+  }
+  function ckDoneToday(n){
+    var dt = byId('ckDate').value || todayStr();
+    return (n.lastRecDate || '') === dt;
+  }
+  function renderCheckList(){
+    var box = byId('ckList');
+    var list = ckTargets();
+    if(!list.length){
+      box.innerHTML = '<div class="placeholder" style="padding:14px;">' +
+        (ckScope === 'due' ? '오늘 점검할 대상이 없습니다. 위에서 <b>주기 있는 항목</b>이나 <b>전체</b>로 바꿔 보세요.' :
+         ckScope === 'cycle' ? '점검주기가 설정된 항목이 없습니다. <b>전체</b>로 바꾸면 모든 항목이 나옵니다.' : '이 작업장에는 점검할 항목이 없습니다.') + '</div>';
+      renderCkSum();
+      return;
+    }
+    var h = '';
+    list.forEach(function(n){
+      var s = ckStateOf(n.id);
+      var st = nodeStatus(n);
+      var ts = nodeThumbs(n.id);
+      var done = ckDoneToday(n);
+      var isTool = n.category === 'tool';
+      var qtyVal = (s.qty !== null && s.qty !== undefined) ? s.qty : ((n.stdQty === null || n.stdQty === undefined) ? '' : n.stdQty);
+      var low = isTool && n.stdQty !== null && n.stdQty !== undefined && qtyVal !== '' && Number(qtyVal) < n.stdQty;
+      h += '<div class="ck-row' + (s.abn ? ' abn' : (s.on ? ' on' : '')) + (done && !s.on ? ' done' : '') + '" data-id="' + n.id + '">' +
+        '<div class="ck-main">' +
+        '<input type="checkbox" data-ck="on"' + (s.on ? ' checked' : '') + ' aria-label="점검함">' +
+        (ts.length ? '<img class="ck-th" src="' + ts[0].data + '" data-ck="zoom" data-pid="' + escapeHtml(ts[0].photoId || ts[0].id) + '" alt="">' : '') +
+        '<span class="ck-name">' + escapeHtml(pathNames(n).join(' › ')) + (n.note ? ' <span style="color:#667085;font-weight:400;">(' + escapeHtml(n.note) + ')</span>' : '') +
+        '<span class="sub">' + CAT_LABEL[n.category] + (n.cycleValue ? ' · 주기 ' + n.cycleValue + UNIT_LABEL[n.cycleUnit] : ' · 주기 미설정') +
+        (effectiveLast(n) ? ' · 최근 ' + effectiveLast(n) : '') + (nodeMats(n).length ? ' · ' + escapeHtml(matNames(nodeMats(n))) : '') + '</span></span>' +
+        '<span class="ck-badge ' + (st.level === 2 ? 'bad' : (st.level === 1 ? 'warn' : '')) + '">' + escapeHtml(st.text) + '</span>' +
+        (done ? '<span class="ck-badge done">오늘 기록됨</span>' : '') +
+        (isTool ? '<span class="ck-qty' + (low ? ' low' : '') + '">수량 <input type="number" min="0" step="1" data-ck="qty" value="' + qtyVal + '">' +
+          (n.stdQty === null || n.stdQty === undefined ? '' : '<span>/ ' + n.stdQty + '</span>') + '</span>' : '') +
+        '<button class="abn-btn' + (s.abn ? ' on' : '') + '" data-ck="abn">이상</button>' +
+        '</div>' +
+        '<div class="ck-detail' + (s.abn ? '' : ' hidden') + '">' +
+        '<label>무엇이 이상한지 적어 주세요 (필수)</label>' +
+        '<input type="text" data-ck="note" maxlength="100" value="' + escapeHtml(s.note || '') + '" placeholder="예: 모서리 깨짐, 조각 일부 유실">' +
+        '<div class="row2"><label style="display:inline-flex;align-items:center;gap:5px;margin:0;"><input type="checkbox" data-ck="replaced"' + (s.replaced ? ' checked' : '') + ' style="width:auto;"> 교체함</label>' +
+        '<span class="placeholder" style="font-size:11px;">이상으로 저장하면 그 항목은 목록에서 "확인 필요"로 표시됩니다.</span></div>' +
+        '</div></div>';
+    });
+    box.innerHTML = h;
+    renderCkSum();
+  }
+  function renderCkSum(){
+    var list = ckTargets();
+    var on = 0, abn = 0, low = 0;
+    list.forEach(function(n){
+      var s = ckState[n.id];
+      if(!s || !s.on) return;
+      on++;
+      if(s.abn) abn++;
+      var q = (s.qty !== null && s.qty !== undefined) ? s.qty : n.stdQty;
+      if(n.category === 'tool' && n.stdQty !== null && n.stdQty !== undefined && q !== null && q !== undefined && q !== '' && Number(q) < n.stdQty) low++;
+    });
+    byId('ckSum').innerHTML = '대상 <b>' + list.length + '</b>건 · 체크 <b>' + on + '</b>건' +
+      (abn ? ' · <b style="color:#b42318;">이상 ' + abn + '</b>' : '') + (low ? ' · <b style="color:#b42318;">수량 부족 ' + low + '</b>' : '') +
+      ' <span class="placeholder" style="font-size:11px;">체크한 것만 기록으로 저장됩니다.</span>';
+    byId('ckSave').disabled = !on;
+  }
+  byId('ckList').addEventListener('input', function(e){
+    var row = e.target.closest ? e.target.closest('.ck-row') : null;
+    if(!row || !e.target.dataset.ck) return;
+    var s = ckStateOf(row.dataset.id);
+    var k = e.target.dataset.ck;
+    if(k === 'qty'){
+      s.qty = e.target.value === '' ? '' : Number(e.target.value);
+      if(!s.on){ s.on = true; row.querySelector('[data-ck="on"]').checked = true; row.classList.add('on'); }
+      s.bulk = false;
+      var nn = findNode(row.dataset.id);
+      var low = nn && nn.stdQty !== null && nn.stdQty !== undefined && s.qty !== '' && Number(s.qty) < nn.stdQty;
+      var wrap = e.target.closest('.ck-qty');
+      if(wrap) wrap.classList.toggle('low', !!low);
+    }
+    else if(k === 'note'){ s.note = e.target.value; }
+    renderCkSum();
+  });
+  byId('ckList').addEventListener('change', function(e){
+    var row = e.target.closest ? e.target.closest('.ck-row') : null;
+    if(!row || !e.target.dataset.ck) return;
+    var s = ckStateOf(row.dataset.id);
+    var k = e.target.dataset.ck;
+    if(k === 'on'){ s.on = e.target.checked; s.bulk = false; row.classList.toggle('on', s.on && !s.abn); if(!s.on){ row.classList.remove('abn'); } }
+    else if(k === 'replaced'){ s.replaced = e.target.checked; s.bulk = false; }
+    renderCkSum();
+  });
+  byId('ckList').addEventListener('click', function(e){
+    var row = e.target.closest ? e.target.closest('.ck-row') : null;
+    if(!row) return;
+    var el = e.target.closest('[data-ck]');
+    if(!el) return;
+    var s = ckStateOf(row.dataset.id);
+    if(el.dataset.ck === 'abn'){
+      s.abn = !s.abn;
+      s.bulk = false;
+      if(s.abn){ s.on = true; row.querySelector('[data-ck="on"]').checked = true; }
+      el.classList.toggle('on', s.abn);
+      row.querySelector('.ck-detail').classList.toggle('hidden', !s.abn);
+      row.classList.toggle('abn', s.abn);
+      row.classList.toggle('on', s.on && !s.abn);
+      if(s.abn){ setTimeout(function(){ var i = row.querySelector('[data-ck="note"]'); if(i) i.focus(); }, 0); }
+      renderCkSum();
+      return;
+    }
+    if(el.dataset.ck === 'zoom'){
+      var db = initFB();
+      var lb = byId('lightbox'), img = lb.querySelector('img');
+      img.src = el.src;
+      lb.classList.remove('hidden');
+      if(db && el.dataset.pid){
+        db.collection(PHOTOS_COL).doc(el.dataset.pid).get().then(function(doc){
+          if(doc && doc.exists && doc.data().data && !lb.classList.contains('hidden')){ img.src = doc.data().data; }
+        }).catch(function(){});
+      }
+    }
+  });
+  byId('checkModal').addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('[data-ckscope]') : null;
+    if(!b) return;
+    ckScope = b.dataset.ckscope;
+    [].forEach.call(byId('checkModal').querySelectorAll('[data-ckscope]'), function(x){ x.classList.toggle('on', x.dataset.ckscope === ckScope); });
+    renderCheckList();
+  });
+  byId('ckAll').addEventListener('click', function(){
+    ckTargets().forEach(function(n){
+      var s = ckStateOf(n.id);
+      if(s.abn) return;                       // 이상으로 표시한 건 그대로 둔다
+      if(!s.on){ s.on = true; s.bulk = true; }
+    });
+    renderCheckList();
+  });
+  byId('ckNone').addEventListener('click', function(){ ckState = {}; renderCheckList(); });
+  byId('ckDate').addEventListener('change', renderCheckList);
+  byId('ckClose').addEventListener('click', function(){ byId('checkModal').classList.add('hidden'); });
+  byId('ckSave').addEventListener('click', saveCheckList);
+  function saveCheckList(){
+    if(!me){ openLogin(); return; }
+    var msg = byId('ckMsg');
+    var date = byId('ckDate').value || todayStr();
+    if(date > todayStr()){ msg.textContent = '점검일이 미래 날짜입니다.'; return; }
+    var picked = ckTargets().filter(function(n){ var s = ckState[n.id]; return s && s.on; });
+    if(!picked.length){ msg.textContent = '체크한 항목이 없습니다.'; return; }
+    var bad = picked.filter(function(n){ var s = ckState[n.id]; return s.abn && !String(s.note || '').trim(); });
+    if(bad.length){ msg.textContent = '이상으로 표시한 항목은 내용을 적어야 합니다: ' + pathNames(bad[0]).join(' › '); return; }
+    var db = initFB();
+    if(!db){ msg.textContent = 'Firebase에 연결되지 않아 저장할 수 없습니다.'; return; }
+    byId('ckSave').disabled = true;
+    msg.textContent = '저장 중...';
+    var b = db.batch();
+    var abnCnt = 0, bulkCnt = 0, lowCnt = 0;
+    picked.forEach(function(n){
+      var s = ckState[n.id];
+      var qty = null;
+      if(n.category === 'tool'){
+        var q = (s.qty !== null && s.qty !== undefined && s.qty !== '') ? Number(s.qty) : ((n.stdQty === null || n.stdQty === undefined) ? null : n.stdQty);
+        qty = (q === null || isNaN(q)) ? null : Math.max(0, Math.round(q));
+      }
+      if(s.abn) abnCnt++;
+      if(s.bulk) bulkCnt++;
+      if(qty !== null && n.stdQty !== null && n.stdQty !== undefined && qty < n.stdQty) lowCnt++;
+      var doc = {
+        nodeId: n.id, zoneId: n.zoneId, date: date,
+        result: s.abn ? 'abnormal' : 'ok',
+        replaced: !!s.replaced, qty: qty, note: String(s.note || '').trim(),
+        inspector: me.name, inspectorRole: me.role, createdAt: Date.now(), deleted: false, history: [],
+        via: 'zone',                    // 작업장 점검(체크리스트)로 남긴 기록
+        bulk: !!s.bulk                  // [전체 정상 체크] 버튼으로 한 번에 찍은 건
+      };
+      b.set(db.collection(RECORDS_COL).doc(), doc);
+      n.lastRecDate = (date > (n.lastRecDate || '')) ? date : n.lastRecDate;
+      if(date >= (n.lastRecDate || '')){ n.lastRecQty = qty; n.lastRecResult = doc.result; }
+      b.set(db.collection(NODES_COL).doc(n.id), nodeToDoc(n));
+      delete recCache[n.id];
+    });
+    b.commit().then(function(){
+      var z = findZone(ckZoneId);
+      audit('작업장 점검', z ? z.name : '', date + ' · 기록 ' + picked.length + '건' + (abnCnt ? ' · 이상 ' + abnCnt : '') +
+        (lowCnt ? ' · 수량 부족 ' + lowCnt : '') + (bulkCnt ? ' · 전체 정상 버튼 ' + bulkCnt + '건' : ''));
+      byId('ckSave').disabled = false;
+      msg.textContent = '';
+      byId('checkModal').classList.add('hidden');
+      ckState = {};
+      renderAll();
+      saveOk();
+      setStatus('점검 기록 ' + picked.length + '건 저장' + (abnCnt ? ' (이상 ' + abnCnt + '건)' : ''), true);
+    }).catch(function(e){
+      byId('ckSave').disabled = false;
+      msg.textContent = '저장 실패: ' + (e.message || e);
+    });
+  }
+
   // ================= 리포트 =================
   var repTab = 'mat';
   var repRows = null;        // 엑셀·인쇄용으로 마지막에 만든 표 데이터
@@ -3882,7 +4178,7 @@
       '</div>';
     if(!list.length){
       byId('repBody').innerHTML = h + '<div class="placeholder">이 기간에 남긴 점검 기록이 없습니다.</div>';
-      repRows = {kind: 'rec', title: title, html: h, sheets: [{name: '점검기록', aoa: [['점검일', '작업장', '구분', '항목', '결과', '교체', '수량', '기준수량', '비고', '점검자', '기록 시각']]}]};
+      repRows = {kind: 'rec', title: title, html: h, sheets: [{name: '점검기록', aoa: [['점검일', '작업장', '구분', '항목', '결과', '교체', '수량', '기준수량', '비고', '점검자', '입력 방식', '기록 시각', '사진 수']]}]};
       return;
     }
     var byWho = Object.keys(who).sort(function(a, b){ return who[b] - who[a]; });
@@ -3890,24 +4186,26 @@
       byWho.map(function(k){ return '<tr><td>' + escapeHtml(k) + '</td><td class="n">' + who[k] + '</td></tr>'; }).join('') +
       '</tbody></table>';
     h += '<div class="rep-sec">기록 목록 (최근 순)</div><table class="rep"><thead><tr>' + (withPhoto ? '<th>사진</th>' : '') +
-      '<th>점검일</th><th>작업장</th><th>구분</th><th>항목</th><th>결과</th><th>교체</th><th class="n">수량</th><th>비고</th><th>점검자</th><th>기록 시각</th></tr></thead><tbody>';
-    var aoa = [['점검일', '작업장', '구분', '항목', '결과', '교체', '수량', '기준수량', '비고', '점검자', '기록 시각', '사진 수']];
+      '<th>점검일</th><th>작업장</th><th>구분</th><th>항목</th><th>결과</th><th>교체</th><th class="n">수량</th><th>비고</th><th>점검자</th><th>입력 방식</th><th>기록 시각</th></tr></thead><tbody>';
+    var aoa = [['점검일', '작업장', '구분', '항목', '결과', '교체', '수량', '기준수량', '비고', '점검자', '입력 방식', '기록 시각', '사진 수']];
     list.forEach(function(x){
       var path = x.n ? pathNames(x.n).join(' › ') : '(삭제된 항목)';
       var qty = (x.r.qty === null || x.r.qty === undefined) ? '' : x.r.qty;
       var std = (x.n && x.n.stdQty !== null && x.n.stdQty !== undefined) ? x.n.stdQty : '';
       var lowQty = std !== '' && qty !== '' && qty < std;
       var bad = x.r.result === 'abnormal' || lowQty;
+      var wayTxt = x.r.via === 'zone' ? (x.r.bulk ? '작업장 점검(일괄)' : '작업장 점검') : '개별';
       h += '<tr' + (bad ? ' class="bad"' : '') + '>' + (withPhoto ? '<td class="ph">' + repPhotoCell(x.r.nodeId, x.n ? x.n.photoNames : []) + '</td>' : '') +
         '<td>' + escapeHtml(x.r.date) + '</td><td>' + escapeHtml(repZoneName(x.zoneId)) + '</td>' +
         '<td>' + (CAT_LABEL[x.cat] || '') + '</td><td>' + escapeHtml(path) + '</td>' +
         '<td>' + (x.r.result === 'abnormal' ? '<b>이상</b>' : '정상') + '</td><td>' + (x.r.replaced ? '교체' : '') + '</td>' +
         '<td class="n">' + (qty === '' ? '' : qty + (std !== '' ? ' / ' + std : '')) + '</td>' +
         '<td>' + escapeHtml(x.r.note || '') + '</td><td>' + escapeHtml(x.r.inspector || '') + '</td>' +
+        '<td>' + escapeHtml(wayTxt) + '</td>' +
         '<td>' + (x.r.createdAt ? fmtTime(x.r.createdAt) : '') + '</td></tr>';
       aoa.push([x.r.date, repZoneName(x.zoneId), CAT_LABEL[x.cat] || '', path,
         x.r.result === 'abnormal' ? '이상' : '정상', x.r.replaced ? '교체' : '', qty, std,
-        x.r.note || '', x.r.inspector || '', x.r.createdAt ? fmtTime(x.r.createdAt) : '',
+        x.r.note || '', x.r.inspector || '', wayTxt, x.r.createdAt ? fmtTime(x.r.createdAt) : '',
         repPhotoCount(x.r.nodeId, x.n ? x.n.photoNames : [])]);
     });
     h += '</tbody></table>';
@@ -3916,7 +4214,9 @@
     repRows = {kind: 'rec', title: title, html: h, sheets: [
       {name: '점검기록', aoa: aoa},
       {name: '요약', aoa: [['항목', '값'], ['기간', from + ' ~ ' + to], ['작업장', zSel ? repZoneName(zSel) : '전체'], ['구분', cSel ? CAT_LABEL[cSel] : '전체'],
-        ['점검 기록', list.length], ['점검한 항목', Object.keys(items).length], ['이상', abn], ['교체', rep2], ['수량 부족', short], ['점검자 수', byWho.length]]
+        ['점검 기록', list.length], ['점검한 항목', Object.keys(items).length], ['이상', abn], ['교체', rep2], ['수량 부족', short], ['점검자 수', byWho.length],
+        ['작업장 점검으로 남긴 기록', list.filter(function(x){ return x.r.via === 'zone'; }).length],
+        ['그중 전체 정상 버튼', list.filter(function(x){ return x.r.bulk; }).length]]
         .concat(byWho.map(function(k){ return ['점검자 · ' + k, who[k]]; }))}
     ]};
   }
@@ -4654,6 +4954,9 @@
     getStep: function(){ return mStep(); },
     getMatFilter: function(){ return matFilter.slice(); },
     getMaterials: function(){ return MATERIALS.map(function(m){ return Object.assign({}, m); }); },
+    openCheck: openCheck,
+    setCkScope: function(v){ ckScope = v; renderCheckList(); },
+    getCkState: function(){ return JSON.parse(JSON.stringify(ckState)); },
     openReport: openReport,
     setRepTab: setRepTab,
     getRepData: function(){ return repRows; },
