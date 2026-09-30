@@ -4,16 +4,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>이물관리 - 순수본 2공장</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%231c2430'/%3E%3Cg%20fill='none'%20stroke='%235b8ff9'%20stroke-width='2.4'%20stroke-linejoin='round'%3E%3Cpath%20d='M6%206h20v20H6z'/%3E%3Cpath%20d='M6%2014.5h8.5M14.5%206v8.5'/%3E%3C/g%3E%3Ccircle%20cx='19.6'%20cy='19.6'%20r='6.4'%20fill='%2322304a'%20stroke='%23fff'%20stroke-width='3'/%3E%3Cpath%20d='M24.2%2024.2l3.4%203.4'%20stroke='%23fff'%20stroke-width='3.4'%20stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%231c2430'/%3E%3Cg%20fill='none'%20stroke='%235b8ff9'%20stroke-width='2.4'%20stroke-linejoin='round'%3E%3Cpath%20d='M6%206h20v20H6z'/%3E%3Cpath%20d='M6%2014.5h8.5M14.5%206v8.5'/%3E%3C/g%3E%3Ccircle%20cx='19.6'%20cy='19.6'%20r='6.4'%20fill='%2322304a'%20stroke='%23fff'%20stroke-width='3'/%3E%3Cpath%20d='M24.2%2024.2l3.4%203.4'%20stroke='%23fff'%20stroke-width='3.4'%20stroke-linecap='round'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#1c2430">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
   :root{--border:#d0d5dd;--accent:#2f6fed;--accent-fill:rgba(47,111,237,0.18);--danger:#e0473f;--sel:#ff8a00;--bg:#f5f6f8;--planW:640px;--panelH:auto;}
   *{box-sizing:border-box;}
   body{margin:0;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;background:var(--bg);color:#1c2430;}
-  header{background:#1c2430;color:#fff;padding:9px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+  header{position:relative;z-index:50;background:#1c2430;color:#fff;padding:9px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
   header h1{font-size:15px;margin:0;font-weight:600;}
   header .status{font-size:11px;color:#aab3c2;margin-top:2px;}
-  .toolbar{display:flex;gap:6px;flex-wrap:wrap;}
+  .toolbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  /* 상단 묶음 메뉴 (리포트 / 데이터 / 설정) */
+  .mgroup{position:relative;}
+  .mgroup.empty{display:none;}
+  .mgroup > .mtop{display:inline-flex;align-items:center;gap:5px;}
+  .mgroup > .mtop .car{font-size:9px;line-height:1;opacity:.75;transition:transform .15s;}
+  .mgroup.open > .mtop .car{transform:rotate(180deg);}
+  .mgroup > .mlist{display:none;position:absolute;right:0;top:calc(100% + 5px);z-index:45;min-width:196px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:5px;flex-direction:column;gap:2px;box-shadow:0 10px 24px rgba(0,0,0,.18);}
+  .mgroup.open > .mlist{display:flex;}
+  .mgroup > .mlist button{width:100%;text-align:left;border:0;background:none;border-radius:6px;padding:8px 10px;font-size:13px;white-space:nowrap;}
+  .mgroup > .mlist button:hover{background:#f2f4f7;}
+  .mgroup > .mlist button.active{background:#123a99;color:#fff;}
+  .mgroup > .mlist .menu-note{display:block;font-size:11px;color:#8a94a6;line-height:1.5;padding:2px 10px 6px;white-space:normal;}
+  .mgroup > .mlist .menu-note + button{border-top:1px solid #eef0f3;padding-top:9px;margin-top:2px;}
   button{font-family:inherit;font-size:13px;padding:7px 12px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;color:#1c2430;}
   header button{padding:5px 10px;font-size:12px;}
   button:disabled{opacity:.45;cursor:default;}
@@ -72,6 +88,35 @@
   .plan-inner{position:absolute;left:var(--cL,0);top:var(--cT,0);width:var(--cW,100%);height:var(--cH,100%);transition:left .35s ease, top .35s ease, width .35s ease, height .35s ease;}
   .plan-inner.no-anim{transition:none;}
   #floorplanImg{display:block;width:100%;height:100%;pointer-events:none;}
+  .plan-missing{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:20px;background:#eef1f5;color:#667085;font-size:13px;line-height:1.7;z-index:5;}
+  .plan-missing.hidden{display:none;}
+  .plan-missing b{font-size:15px;color:#344054;}
+  .plan-missing code{background:#fff;border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:12px;}
+  /* ---- 공장 고르기 화면 ---- */
+  #facScreen{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;
+    background:radial-gradient(120% 90% at 50% 0%, #ffffff 0%, #f8efec 55%, #ecdcd8 100%);color:#4a3130;}
+  #facScreen.hidden{display:none;}
+  .fac-head{text-align:center;line-height:1.6;}
+  .fac-head h2{margin:0;font-size:21px;font-weight:700;letter-spacing:.5px;color:#5e2a2c;}
+  .fac-head p{margin:6px 0 0;font-size:13px;color:#8a6f6d;}
+  .fac-row{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;}
+  .fac-pick{background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:12px;color:inherit;font:inherit;}
+  .fac-card{width:244px;height:142px;border-radius:14px;overflow:hidden;display:block;
+    border:1px solid rgba(94,42,44,.16);box-shadow:0 5px 16px rgba(74,49,48,.14);
+    transition:transform .18s ease, box-shadow .25s ease;}
+  .fac-card img{display:block;width:100%;height:100%;object-fit:contain;}
+  .fac-pick:hover .fac-card,.fac-pick:focus-visible .fac-card{transform:translateY(-4px);
+    box-shadow:0 0 0 3px rgba(94,42,44,.5), 0 14px 30px rgba(74,49,48,.26);}
+  .fac-pick:focus-visible{outline:none;}
+  .fac-name{font-size:16px;font-weight:700;letter-spacing:1px;color:#5e2a2c;}
+  .fac-foot{font-size:12px;color:#9c8280;letter-spacing:.5px;}
+  #facTag{font:inherit;font-size:11px;font-weight:700;padding:1px 9px;border-radius:10px;border:1px solid #3b4658;background:#38445a;color:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  #facTag:hover{background:#4a586f;}
+  @media (max-width: 820px){
+    #facScreen{gap:22px;padding:16px;}
+    .fac-row{gap:18px;}
+    .fac-card{width:min(300px, 78vw);height:calc(min(300px, 78vw) * 0.58);}
+  }
   #overlay{position:absolute;inset:0;}
   #zoneSvg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;display:block;}
   .zg{cursor:pointer;transition:opacity .25s;}
@@ -368,10 +413,18 @@
   .u-form input[type="text"],.u-form input[type="password"],.u-form select{width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:6px;font-size:14px;}
   .u-form .chk{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:13px;color:#344054;}
   .u-form .chk input{width:auto;}
+  .u-facs{display:flex;flex-direction:column;gap:6px;margin-top:3px;}
+  .u-facrow{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:6px;padding:6px 9px;}
+  .u-facrow input[type=checkbox]{width:auto;margin:0;flex-shrink:0;}
+  .u-facrow .fl{font-size:13px;font-weight:700;width:52px;flex-shrink:0;}
+  .u-facrow select{margin:0;padding:5px 7px;font-size:13px;}
+  .u-facrow.off{opacity:.5;}
+  .urow .ufac{font-size:10px;font-weight:700;padding:1px 6px;border-radius:9px;background:#eef2ff;color:#1c2430;}
+  .urow .ufac.other{background:#f2f4f7;color:#8a94a6;font-weight:400;}
   .audit-row{display:grid;grid-template-columns:118px 120px 1fr;gap:2px 10px;padding:6px 2px;border-bottom:1px solid #eef0f3;}
   .audit-row .t{color:#667085;font-variant-numeric:tabular-nums;}
   .audit-row .d{overflow-wrap:anywhere;}
-  .show-m,.menu-btn,.menu-note,#mBar{display:none;}
+  .show-m,.menu-btn,#mBar{display:none;}
   @media (pointer: coarse){ .plan-crop{touch-action:none;} }
 
   /* ---- 휴대폰 (폭 820px 이하): 단계형 화면 plan → list → detail ---- */
@@ -383,10 +436,17 @@
     header > div:first-child{min-width:0;}
     header .status{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .menu-btn{display:inline-block;font-size:20px;line-height:1;padding:6px 12px;background:#2b3545;border-color:#3b4658;color:#fff;}
-    header .toolbar{display:none;position:absolute;left:0;right:0;top:100%;z-index:40;background:#1c2430;padding:8px 12px 12px;flex-direction:column;gap:8px;box-shadow:0 8px 16px rgba(0,0,0,.25);}
+    header .toolbar{display:none;position:absolute;left:0;right:0;top:100%;z-index:40;background:#1c2430;padding:8px 12px 12px;flex-direction:column;align-items:stretch;gap:8px;box-shadow:0 8px 16px rgba(0,0,0,.25);}
     header.menu-open .toolbar{display:flex;}
     header .toolbar button{font-size:15px;padding:11px 12px;text-align:left;}
-    .menu-note{display:block;font-size:12px;color:#aab3c2;margin-top:-2px;}
+    /* 묶음 메뉴는 ☰ 안에서 접었다 펴지는 형태로 */
+    .mgroup{width:100%;}
+    .mgroup > .mtop{width:100%;justify-content:space-between;}
+    .mgroup > .mlist{position:static;min-width:0;background:transparent;border:0;border-radius:0;box-shadow:none;padding:4px 0 4px 12px;gap:6px;}
+    .mgroup > .mlist button{background:#2b3545;border:1px solid #3b4658;color:#fff;font-size:15px;padding:11px 12px;border-radius:6px;white-space:normal;}
+    .mgroup > .mlist button:hover{background:#3b4658;}
+    .mgroup > .mlist .menu-note{color:#aab3c2;font-size:12px;padding:0 2px 2px;}
+    .mgroup > .mlist .menu-note + button{border-top:1px solid #3b4658;margin-top:0;}
     .page{padding:10px 10px 6px;}
     #mBar{position:sticky;top:0;z-index:30;align-items:center;gap:8px;background:var(--bg);padding:6px 0 8px;margin-bottom:4px;}
     body[data-mstep="list"] #mBar,body[data-mstep="detail"] #mBar{display:flex;}
@@ -478,23 +538,41 @@
 </style>
 </head>
 <body>
+<div id="facScreen" class="hidden">
+  <div class="fac-head">
+    <h2>순수본 이물관리</h2>
+    <p>관리할 공장을 고르세요</p>
+  </div>
+  <div class="fac-row" id="facRow"></div>
+  <div class="fac-foot" id="facFoot">설비 · 공기구 점검 관리</div>
+</div>
 <header>
   <div>
-    <h1>이물관리<span class="hide-m"> · 순수본 2공장 1층 설비/공기구 점검 관리 (프로토타입)</span><span class="show-m"> · 2공장 1층</span></h1>
-    <div class="status-row"><button class="who" id="whoTag" type="button" title="사용자 전환">로그인</button><div class="status" id="statusLine">연결 확인 중...</div></div>
+    <h1>이물관리<span class="hide-m"> · 순수본 <span class="facn">2공장</span> 1층 설비/공기구 점검 관리</span><span class="show-m"> · <span class="facn">2공장</span> 1층</span></h1>
+    <div class="status-row"><button id="facTag" type="button" title="공장 바꾸기">2공장</button><button class="who" id="whoTag" type="button" title="사용자 전환">로그인</button><div class="status" id="statusLine">연결 확인 중...</div></div>
   </div>
   <button id="btnMenu" class="menu-btn" aria-label="메뉴" aria-expanded="false">☰</button>
   <div class="toolbar" id="toolbar">
-    <button id="btnBulk" class="need-manage">일괄 등록 (엑셀+사진)</button>
-    <button id="btnEditMode" class="need-manage">구역 편집 모드 켜기</button>
-    <button id="btnExport" class="need-manage">구역 내보내기</button>
-    <button id="btnImportTrigger" class="need-manage">구역 가져오기</button>
     <button id="btnReport">리포트</button>
-    <button id="btnUsers" class="need-master">사용자 관리</button>
-    <button id="btnPins" class="need-master">공용 PIN 관리</button>
-    <button id="btnAudit" class="need-master">변경 이력</button>
+    <div class="mgroup" id="grpData">
+      <button type="button" class="mtop" data-mgroup="data" aria-expanded="false" aria-haspopup="true">데이터<span class="car">▾</span></button>
+      <div class="mlist">
+        <button id="btnBulk" class="need-manage">일괄 등록 (엑셀+사진)</button>
+        <button id="btnExport" class="need-manage">구역 내보내기</button>
+        <button id="btnImportTrigger" class="need-manage">구역 가져오기</button>
+      </div>
+    </div>
+    <div class="mgroup" id="grpSet">
+      <button type="button" class="mtop" data-mgroup="set" aria-expanded="false" aria-haspopup="true">설정<span class="car">▾</span></button>
+      <div class="mlist">
+        <button id="btnEditMode" class="need-manage">구역 편집 모드 켜기</button>
+        <div class="menu-note need-manage">구역 편집(모양 그리기·꼭짓점 이동)은 PC 권장</div>
+        <button id="btnUsers" class="need-master">사용자 관리</button>
+        <button id="btnPins" class="need-master">공용 PIN 관리</button>
+        <button id="btnAudit" class="need-master">변경 이력</button>
+      </div>
+    </div>
     <button id="btnSwitch" class="show-m">사용자 전환</button>
-    <div class="menu-note need-manage">구역 편집(모양 그리기·꼭짓점 이동)은 PC에서 하는 것을 권장합니다.</div>
     <input type="file" id="importFile" accept="application/json" style="display:none;">
   </div>
 </header>
@@ -512,6 +590,7 @@
           <img id="floorplanImg" src="floorplan.png" alt="2공장 1층 평면도">
           <div id="overlay"></div>
         </div>
+        <div class="plan-missing hidden" id="planMissing"></div>
         <div class="zoom-ctl hidden" id="zoomCtl"><button id="btnZoom">전체 도면 보기</button></div>
         <div class="draw-hint hidden" id="drawHint"></div>
       </div>
@@ -520,7 +599,7 @@
   </div>
 </div>
 <div id="printArea"></div>
-<footer>본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · 프로토타입 v0.17 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer id="facFootLine">본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · v0.20 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -802,15 +881,15 @@
 <div class="modal hidden" id="usersModal">
   <div class="modal-box wide">
     <div class="m-title">사용자 관리</div>
-    <div class="muted">여기 등록한 사람만 로그인 창 목록에 나옵니다. PIN은 되돌릴 수 없는 암호값으로만 저장되어 숫자는 볼 수 없고, 잊었으면 새로 정해 주면 됩니다.</div>
+    <div class="muted">명단은 두 공장이 같이 씁니다. 사람마다 공장별 권한을 정하고, 체크한 공장에서만 로그인 목록에 나옵니다. PIN은 되돌릴 수 없는 암호값으로만 저장되어 숫자는 볼 수 없고, 잊었으면 새로 정해 주면 됩니다.</div>
     <div class="u-actions"><button id="uAdd" class="primary">+ 사용자 추가</button><span class="muted" id="uCount"></span></div>
     <div class="form-msg" id="uWarn" style="display:none;min-height:0;margin:0 0 10px;line-height:1.5;"></div>
     <div class="u-form hidden" id="uForm">
       <div class="m-title" id="uFormTitle">사용자 추가</div>
       <label for="uName">이름</label>
       <input id="uName" type="text" maxlength="20" placeholder="예: 홍길동">
-      <label for="uRole">권한</label>
-      <select id="uRole"><option value="inspector">점검자 (점검 기록만)</option><option value="manager">관리자 (설비·공기구·구역 편집)</option><option value="master">마스터 (기록 수정·삭제, 사용자 관리)</option></select>
+      <label>공장별 권한 <span class="umuted">(체크한 공장에서만 로그인됩니다)</span></label>
+      <div class="u-facs" id="uFacs"></div>
       <label for="uNote">비고 (선택)</label>
       <input id="uNote" type="text" maxlength="40" placeholder="예: 품질팀">
       <div id="uPinWrap">
@@ -933,16 +1012,82 @@
 
   // ---- Firebase (프로젝트 ssbon-64b4f, 이물관리 전용 컬렉션) ----
   var FB_DB = null;
-  var ZONES_COL = 'claimdefense_zones';
-  var NODES_COL = 'claimdefense_nodes';
-  var PHOTOS_COL = 'claimdefense_photos';
-  var TYPES_COL = 'claimdefense_zonetypes';
-  var RECORDS_COL = 'claimdefense_records';
-  var AUDIT_COL = 'claimdefense_audit';
+  // ---- 공장 ----
+  // 2공장은 기존 저장소를 그대로 쓰고(접두어 없음), 1공장만 새 저장소를 쓴다 → 기존 데이터는 건드리지 않음
+  var LOGO_F1 = 'data:image/png;base64,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';
+  var LOGO_F2 = 'data:image/png;base64,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';
+  var FACTORIES = [
+    {id: 'f1', name: '1공장', pfx: 'f1_', img: 'floorplan1.png', imgW: 941, imgH: 698,
+     crop: {left: 0, top: 0, right: 100, bottom: 100}, planNote: '1공장 1층 평면도',
+     logo: LOGO_F1, logoBg: '#ffffff', brand: '베이비본죽'},
+    {id: 'f2', name: '2공장', pfx: '', img: 'floorplan.png', imgW: 2339, imgH: 3309,
+     crop: {left: 2.5, top: 16.5, right: 75, bottom: 80.5}, planNote: '2025-08-18 2공장 1층 평면도',
+     logo: LOGO_F2, logoBg: '#5e2a2c', brand: '본죽'}
+  ];
+  var FAC_DEFAULT = 'f2';                  // 기존 데이터·기존 사용자의 소속
+  var FAC_KEY = 'claimdefense_factory';
+  function findFactory(id){ for(var i = 0; i < FACTORIES.length; i++){ if(FACTORIES[i].id === id) return FACTORIES[i]; } return null; }
+  var factory = findFactory(FAC_DEFAULT);
+  // 공장마다 따로 쓰는 저장소 (setFactory 에서 다시 정해짐)
+  var ZONES_COL, NODES_COL, PHOTOS_COL, TYPES_COL, RECORDS_COL, AUDIT_COL, THUMBS_COL;
+  // 두 공장이 같이 쓰는 저장소
   var SETTINGS_COL = 'claimdefense_settings';
   var USERS_COL = 'claimdefense_users';
   var MATERIALS_COL = 'claimdefense_materials';
-  var THUMBS_COL = 'claimdefense_thumbs';
+  function applyFactoryCols(){
+    var p = 'claimdefense_' + factory.pfx;
+    ZONES_COL = p + 'zones'; NODES_COL = p + 'nodes'; PHOTOS_COL = p + 'photos'; TYPES_COL = p + 'zonetypes';
+    RECORDS_COL = p + 'records'; AUDIT_COL = p + 'audit'; THUMBS_COL = p + 'thumbs';
+  }
+  applyFactoryCols();
+  function savedFactory(){
+    var v = null;
+    try{ v = localStorage.getItem(FAC_KEY); }catch(e){}
+    return findFactory(v) ? v : '';
+  }
+  function renderFacScreen(){
+    var h = '';
+    FACTORIES.forEach(function(f){
+      h += '<button type="button" class="fac-pick" data-fac="' + f.id + '">' +
+             '<span class="fac-card" style="background:' + f.logoBg + '">' +
+               '<img src="' + f.logo + '" alt="' + escapeHtml(f.brand) + '">' +
+             '</span>' +
+             '<span class="fac-name">' + escapeHtml(f.name) + '</span>' +
+           '</button>';
+    });
+    byId('facRow').innerHTML = h;
+    byId('facFoot').textContent = savedFactory() ? '마지막에 본 곳: ' + (findFactory(savedFactory()) || {}).name : '설비 · 공기구 점검 관리';
+  }
+  var booted = false;
+  function openFacScreen(){ renderFacScreen(); byId('facScreen').classList.remove('hidden'); }
+  function closeFacScreen(){ byId('facScreen').classList.add('hidden'); }
+  // 공장을 바꾸면 화면에 올라와 있던 그 공장 자료를 모두 버리고 새로 불러온다
+  function setFactory(id, force){
+    var f = findFactory(id);
+    if(!f) return;
+    if(!force && factory.id === f.id){ closeFacScreen(); return; }
+    factory = f;
+    try{ localStorage.setItem(FAC_KEY, factory.id); }catch(e){}
+    applyFactoryCols();
+    zones = []; nodes = [];
+    zoneTypes = DEFAULT_TYPES.map(function(t){ return Object.assign({}, t); });
+    selectedZoneId = null; selectedItemId = null; matFilter = [];
+    thumbCache = {}; recCache = {};
+    if(editMode) setEditMode(false);
+    applyFactoryName();
+    applyFactoryPlan();
+    closeFacScreen();
+    booted = true;
+    loadAll();
+  }
+  function applyFactoryName(){
+    var ns = document.querySelectorAll('.facn');
+    for(var i = 0; i < ns.length; i++) ns[i].textContent = factory.name;
+    byId('facTag').textContent = factory.name;
+    byId('facTag').title = '공장 바꾸기 (지금 ' + factory.name + ')';
+    document.title = '이물관리 - 순수본 ' + factory.name;
+    byId('facFootLine').textContent = '본죽 순수본 ' + factory.name + ' · 이물 클레임 대응 관리 도구 · v0.20 (도면: ' + factory.planNote + ')';
+  }
   function initFB(){
     try{
       if(FB_DB) return FB_DB;
@@ -1621,30 +1766,52 @@
   }
   function pinHash(role, pin){ return sha256hex('claimdefense:' + role + ':' + pin); }
   function userPinHash(id, pin){ return sha256hex('claimdefense:user:' + id + ':' + pin); }
+  // 명단은 하나. 사람마다 '어느 공장에서 어떤 권한인지'를 fr 에 담는다. 예: {f2:'master', f1:'manager'}
+  // fr 이 없는 기존 사용자는 2공장 소속으로 본다.
+  function normFr(v, legacyRole){
+    var out = {}, any = false;
+    if(v && typeof v === 'object'){
+      FACTORIES.forEach(function(f){ if(ROLE_LEVEL[v[f.id]]){ out[f.id] = v[f.id]; any = true; } });
+    }
+    if(!any) out[FAC_DEFAULT] = ROLE_LEVEL[legacyRole] ? legacyRole : 'inspector';
+    return out;
+  }
+  function facsOf(u){ return FACTORIES.filter(function(f){ return !!u.fr[f.id]; }).map(function(f){ return f.id; }); }
+  function topRole(u){                                  // 여러 공장 중 가장 높은 권한 (정렬·표시용)
+    var best = '';
+    FACTORIES.forEach(function(f){ if(u.fr[f.id] && (ROLE_LEVEL[u.fr[f.id]] || 0) > (ROLE_LEVEL[best] || 0)) best = u.fr[f.id]; });
+    return best;
+  }
   function userFromDoc(id, d){
-    return {id: id, name: d.name || '', role: ROLE_LEVEL[d.role] ? d.role : 'inspector', pinHash: d.pinHash || '',
+    var fr = normFr(d.fr, d.role);
+    return {id: id, fr: fr, role: fr[factory.id] || '', pinHash: d.pinHash || '', name: d.name || '',
       active: d.active !== false, note: d.note || '', createdAt: d.createdAt || 0, createdBy: d.createdBy || '',
       updatedAt: d.updatedAt || 0, updatedBy: d.updatedBy || '', lastLoginAt: d.lastLoginAt || 0, loginCount: d.loginCount || 0};
   }
   function userToDoc(u){
-    return {name: u.name, role: u.role, pinHash: u.pinHash || '', active: u.active !== false, note: u.note || '',
+    var fr = normFr(u.fr, u.role);
+    return {name: u.name, fr: fr, role: topRole({fr: fr}), pinHash: u.pinHash || '', active: u.active !== false, note: u.note || '',
       createdAt: u.createdAt || Date.now(), createdBy: u.createdBy || '', updatedAt: Date.now(), updatedBy: (me ? me.name : ''),
       lastLoginAt: u.lastLoginAt || 0, loginCount: u.loginCount || 0};
   }
+  // 공장을 바꾸면 각 사람의 '이 공장에서의 권한'을 다시 계산한다
+  function refreshUserRoles(){ users.forEach(function(u){ u.role = u.fr[factory.id] || ''; }); }
   function sortUsers(list){
     return list.slice().sort(function(a, b){
       if(a.active !== b.active) return a.active ? -1 : 1;
-      if(ROLE_LEVEL[b.role] !== ROLE_LEVEL[a.role]) return ROLE_LEVEL[b.role] - ROLE_LEVEL[a.role];
+      var la = ROLE_LEVEL[a.role] || ROLE_LEVEL[topRole(a)] || 0, lb = ROLE_LEVEL[b.role] || ROLE_LEVEL[topRole(b)] || 0;
+      if(la !== lb) return lb - la;
       return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0);
     });
   }
   function findUser(id){ for(var i = 0; i < users.length; i++){ if(users[i].id === id) return users[i]; } return null; }
   function userByName(name){
     var hit = null;
-    users.forEach(function(u){ if(u.active && u.name === name && !hit) hit = u; });
+    users.forEach(function(u){ if(u.active && u.role && u.name === name && !hit) hit = u; });
     return hit;
   }
-  function activeUsers(){ return users.filter(function(u){ return u.active; }); }
+  // 로그인·점검 화면에서 쓰는 '이 공장 사람들'. 사용자 관리 화면만 users 전체를 본다.
+  function activeUsers(){ return users.filter(function(u){ return u.active && !!u.role; }); }
   function pickMode(){ return activeUsers().length > 0; }       // 명단이 있으면 목록에서 고르는 방식
   function needHash(u){ return u.role === 'inspector' ? '' : (u.pinHash || settings[u.role + 'PinHash'] || ''); }
   function activeMasters(){ return users.filter(function(u){ return u.active && u.role === 'master'; }); }
@@ -1656,21 +1823,39 @@
     document.body.classList.toggle('signed-in', !!me);
     byId('whoTag').innerHTML = me ? escapeHtml(me.name) + '<span class="r">' + ROLE_LABEL[me.role] + '</span>' : '로그인';
     if(editMode && !canManage()){ setEditMode(false); }
+    syncMenuGroups();
+  }
+  // 묶음 메뉴: 권한 때문에 안이 전부 숨겨지면 묶음 버튼 자체를 감춘다
+  function syncMenuGroups(){
+    var gs = document.querySelectorAll('#toolbar .mgroup');
+    for(var i = 0; i < gs.length; i++){
+      var bs = gs[i].querySelectorAll('.mlist button'), vis = 0;
+      for(var j = 0; j < bs.length; j++){
+        if(bs[j].classList.contains('need-master') && !isMaster()) continue;
+        if(bs[j].classList.contains('need-manage') && !canManage()) continue;
+        vis++;
+      }
+      gs[i].classList.toggle('empty', vis === 0);
+      if(vis === 0) closeMGroup(gs[i]);
+    }
   }
   // offline: Firebase가 없으면 저장 자체가 불가능하므로 기기에 기억된 권한을 그대로 씀
   function validateSession(offline){
+    refreshUserRoles();
     var sv = readSession();
     me = null;
+    var svFac = (sv && sv.factory) ? sv.factory : FAC_DEFAULT;     // 예전 세션은 2공장으로 본다
     if(sv && sv.name && ROLE_LEVEL[sv.role]){
-      if(offline){ me = {name: sv.name, role: sv.role, uid: sv.uid || ''}; }
+      if(offline){ if(svFac === factory.id) me = {name: sv.name, role: sv.role, uid: sv.uid || ''}; }
       else {
         var u = (sv.uid ? findUser(sv.uid) : null) || userByName(sv.name);
-        if(u){
-          // 명단에 있는 사람: 지금 등록된 권한·PIN 기준으로 다시 확인 (마스터가 바꿨으면 다시 로그인)
+        if(u && u.role){
+          // 명단에 있는 사람: 지금 이 공장에서의 권한·PIN 기준으로 다시 확인 (권한이 바뀌었으면 다시 로그인)
           var nd = needHash(u);
           if(u.active && (!nd || sv.h === nd)){ me = {name: u.name, role: u.role, uid: u.id}; }
-        } else if(sv.role === 'inspector'){ me = {name: sv.name, role: sv.role, uid: ''}; }
-        else {
+        } else if(u){ me = null; }                                  // 이 공장 소속이 아님 → 다시 로그인
+        else if(sv.role === 'inspector' && svFac === factory.id){ me = {name: sv.name, role: sv.role, uid: ''}; }
+        else if(svFac === factory.id){
           var need = settings[sv.role + 'PinHash'];
           if(need && sv.h === need){ me = {name: sv.name, role: sv.role, uid: ''}; }
         }
@@ -1746,7 +1931,7 @@
   function closeLogin(){ byId('loginModal').classList.add('hidden'); }
   function finishLogin(name, role, h, uid){
     me = {name: name, role: role, uid: uid || ''};
-    writeSession({uid: uid || '', name: name, role: role, h: h || ''});
+    writeSession({uid: uid || '', name: name, role: role, h: h || '', factory: factory.id});
     lgFails = 0;
     closeLogin();
     applyRole();
@@ -1840,7 +2025,15 @@
     closeUserForm();
     // 명단 방식으로 넘어가기 전에, 지금 로그인한 마스터부터 등록하도록 이름을 채워 둔다
     if(users.length && !activeMasters().length && me && !me.uid){
-      setTimeout(function(){ openUserForm(null); byId('uName').value = me.name; byId('uRole').value = 'master'; updateUserForm(); }, 0);
+      setTimeout(function(){
+        openUserForm(null);
+        byId('uName').value = me.name;
+        var on = byId('uFacs').querySelector('[data-facon="' + factory.id + '"]');
+        var sel = byId('uFacs').querySelector('[data-facrole="' + factory.id + '"]');
+        if(on) on.checked = true;
+        if(sel) sel.value = 'master';
+        updateUserForm();
+      }, 0);
     }
     byId('usersModal').classList.remove('hidden');
     renderUsers();
@@ -1853,18 +2046,22 @@
     var warn = byId('uWarn');
     if(list.length && !activeMasters().length){
       warn.style.display = '';
-      warn.textContent = '⚠ 명단에 마스터가 없습니다. 마스터를 등록하지 않으면 로그인 목록에서 마스터로 들어갈 수 없습니다(그때는 "명단에 없음 — 공용 PIN" 으로 들어와야 합니다). 본인을 마스터로 등록해 두세요.';
+      warn.textContent = '⚠ ' + factory.name + ' 마스터가 없습니다. 마스터를 등록하지 않으면 로그인 목록에서 마스터로 들어갈 수 없습니다(그때는 "명단에 없음 — 공용 PIN" 으로 들어와야 합니다). 본인을 마스터로 등록해 두세요.';
     } else { warn.style.display = 'none'; warn.textContent = ''; }
     if(!list.length){
       box.innerHTML = '<div class="placeholder" style="padding:12px;">사용자를 등록하면 로그인 창에서 이름을 고르는 방식으로 바뀝니다. 등록 전에는 지금처럼 이름을 직접 적고 공용 PIN으로 들어갑니다.</div>';
       return;
     }
-    var h = '<div class="urow head"><span>이름 · 권한</span><span>PIN</span><span>마지막 접속</span><span></span></div>';
+    var h = '<div class="urow head"><span>이름 · 공장별 권한</span><span>PIN</span><span>마지막 접속</span><span></span></div>';
     list.forEach(function(u){
+      var tags = FACTORIES.filter(function(f){ return u.fr[f.id]; }).map(function(f){
+        return '<b class="ufac' + (f.id === factory.id ? '' : ' other') + '">' + escapeHtml(f.name) + ' ' + ROLE_LABEL[u.fr[f.id]] + '</b>';
+      }).join('');
+      var pinRole = u.role || topRole(u);
       h += '<div class="urow' + (u.active ? '' : ' off') + '" data-uid="' + u.id + '">' +
-        '<span class="un">' + escapeHtml(u.name) + '<b class="ubadge ' + u.role + '">' + ROLE_LABEL[u.role] + '</b>' +
+        '<span class="un">' + escapeHtml(u.name) + tags +
         (u.active ? '' : '<span class="unote">정지됨</span>') + (u.note ? '<span class="unote">' + escapeHtml(u.note) + '</span>' : '') + '</span>' +
-        '<span class="umuted">' + (u.role === 'inspector' ? 'PIN 없음(점검자)' : (u.pinHash ? '개인 PIN 있음' : (settings[u.role + 'PinHash'] ? '공용 PIN 사용' : '없음 — 로그인 불가'))) + '</span>' +
+        '<span class="umuted">' + (pinRole === 'inspector' ? 'PIN 없음(점검자)' : (u.pinHash ? '개인 PIN 있음' : (settings[pinRole + 'PinHash'] ? '공용 PIN 사용' : '없음 — 로그인 불가'))) + '</span>' +
         '<span class="umuted">' + (u.lastLoginAt ? fmtTime(u.lastLoginAt) + ' · ' + (u.loginCount || 0) + '회' : '접속 기록 없음') + '</span>' +
         '<span class="ua">' +
         '<button data-uact="edit" data-id="' + u.id + '">수정</button>' +
@@ -1894,7 +2091,7 @@
     uEditId = u ? u.id : null;
     byId('uFormTitle').textContent = u ? '사용자 수정' : '사용자 추가';
     byId('uName').value = u ? u.name : '';
-    byId('uRole').value = u ? u.role : 'inspector';
+    renderUserFacs(u);
     byId('uNote').value = u ? u.note : '';
     byId('uActive').checked = u ? u.active : true;
     byId('uPin1').value = ''; byId('uPin2').value = '';
@@ -1904,13 +2101,45 @@
     setTimeout(function(){ byId('uName').focus(); }, 0);
   }
   function closeUserForm(){ uEditId = null; byId('uForm').classList.add('hidden'); }
+  // 공장별 권한 칸: 새로 추가할 때는 지금 보고 있는 공장만 켜 둔다
+  function renderUserFacs(u){
+    var h = '';
+    FACTORIES.forEach(function(f){
+      var r = u ? (u.fr[f.id] || '') : (f.id === factory.id ? 'inspector' : '');
+      var on = !!r;
+      h += '<label class="u-facrow' + (on ? '' : ' off') + '" data-facrow="' + f.id + '">' +
+        '<input type="checkbox" data-facon="' + f.id + '"' + (on ? ' checked' : '') + '>' +
+        '<span class="fl">' + escapeHtml(f.name) + '</span>' +
+        '<select data-facrole="' + f.id + '"' + (on ? '' : ' disabled') + '>' +
+          '<option value="inspector"' + (r === 'inspector' ? ' selected' : '') + '>점검자 (점검 기록만)</option>' +
+          '<option value="manager"' + (r === 'manager' ? ' selected' : '') + '>관리자 (설비·공기구·구역 편집)</option>' +
+          '<option value="master"' + (r === 'master' ? ' selected' : '') + '>마스터 (기록 수정·삭제, 사용자 관리)</option>' +
+        '</select></label>';
+    });
+    byId('uFacs').innerHTML = h;
+  }
+  function formFr(){                              // 폼에서 고른 공장별 권한
+    var fr = {};
+    FACTORIES.forEach(function(f){
+      var on = byId('uFacs').querySelector('[data-facon="' + f.id + '"]');
+      var sel = byId('uFacs').querySelector('[data-facrole="' + f.id + '"]');
+      if(on && on.checked && sel) fr[f.id] = sel.value;
+    });
+    return fr;
+  }
   function updateUserForm(){
-    var role = byId('uRole').value;
-    var u = uEditId ? findUser(uEditId) : null;
-    byId('uPinWrap').style.display = role === 'inspector' ? 'none' : '';
+    var fr = formFr(), u = uEditId ? findUser(uEditId) : null;
+    var needsPin = FACTORIES.some(function(f){ return fr[f.id] && fr[f.id] !== 'inspector'; });
+    FACTORIES.forEach(function(f){
+      var row = byId('uFacs').querySelector('[data-facrow="' + f.id + '"]');
+      var sel = byId('uFacs').querySelector('[data-facrole="' + f.id + '"]');
+      if(row) row.classList.toggle('off', !fr[f.id]);
+      if(sel) sel.disabled = !fr[f.id];
+    });
+    byId('uPinWrap').style.display = needsPin ? '' : 'none';
     byId('uPinLabel').textContent = (u && u.pinHash) ? '새 PIN (4자 이상 · 바꿀 때만 입력)' : 'PIN (4자 이상)';
   }
-  byId('uRole').addEventListener('change', updateUserForm);
+  byId('uFacs').addEventListener('change', updateUserForm);
   byId('uAdd').addEventListener('click', function(){ openUserForm(null); });
   byId('uCancel').addEventListener('click', closeUserForm);
   byId('uClose').addEventListener('click', function(){ byId('usersModal').classList.add('hidden'); });
@@ -1924,26 +2153,34 @@
     if(b.dataset.uact === 'toggle'){ toggleUser(u); return; }
     if(b.dataset.uact === 'del'){ deleteUser(u); return; }
   });
+  // 이 공장의 마지막 마스터인지 (마스터는 공장마다 따로 본다)
   function lastMasterBlocked(u, nextRole, nextActive){
     var others = activeMasters().filter(function(x){ return x.id !== u.id; });
     var stillMaster = nextActive && nextRole === 'master';
     return u.role === 'master' && u.active && !stillMaster && others.length === 0;
   }
+  function frText(fr){
+    return FACTORIES.filter(function(f){ return fr[f.id]; })
+      .map(function(f){ return f.name + ' ' + ROLE_LABEL[fr[f.id]]; }).join(' · ') || '소속 없음';
+  }
   function saveUser(){
     if(!isMaster()) return;
     var msg = byId('uMsg');
     var name = byId('uName').value.trim();
-    var role = byId('uRole').value;
+    var fr = formFr();
+    var role = fr[factory.id] || '';                 // 지금 보고 있는 공장에서의 권한
     var note = byId('uNote').value.trim();
     var active = byId('uActive').checked;
     var p1 = byId('uPin1').value, p2 = byId('uPin2').value;
     var u = uEditId ? findUser(uEditId) : null;
+    var needsPin = FACTORIES.some(function(f){ return fr[f.id] && fr[f.id] !== 'inspector'; });
     if(!name){ msg.textContent = '이름을 입력하세요.'; return; }
+    if(!Object.keys(fr).length){ msg.textContent = '공장을 최소 한 곳은 골라야 합니다.'; return; }
     var dup = users.filter(function(x){ return x.name === name && (!u || x.id !== u.id); });
     if(dup.length){ msg.textContent = '같은 이름이 이미 있습니다. 구분되게 적어 주세요(예: 홍길동2).'; return; }
-    if(u && lastMasterBlocked(u, role, active)){ msg.textContent = '마스터가 한 명뿐입니다. 다른 마스터를 먼저 등록하세요.'; return; }
+    if(u && lastMasterBlocked(u, role, active)){ msg.textContent = factory.name + ' 마스터가 한 명뿐입니다. 다른 마스터를 먼저 등록하세요.'; return; }
     var pinHashNew = u ? u.pinHash : '';
-    if(role === 'inspector'){ pinHashNew = ''; }
+    if(!needsPin){ pinHashNew = ''; }
     else if(p1 || p2){
       if(p1.length < 4){ msg.textContent = 'PIN은 4자 이상으로 정하세요.'; return; }
       if(p1 !== p2){ msg.textContent = '두 PIN이 서로 다릅니다.'; return; }
@@ -1951,19 +2188,19 @@
     var db = initFB();
     if(!db){ msg.textContent = 'Firebase에 연결되지 않아 저장할 수 없습니다.'; return; }
     var id = u ? u.id : uid('u');
-    if(role !== 'inspector' && (p1 || p2)){ pinHashNew = userPinHash(id, p1); }
-    var next = {id: id, name: name, role: role, pinHash: pinHashNew, active: active, note: note,
+    if(needsPin && (p1 || p2)){ pinHashNew = userPinHash(id, p1); }
+    var next = {id: id, name: name, fr: fr, role: role, pinHash: pinHashNew, active: active, note: note,
       createdAt: u ? u.createdAt : Date.now(), createdBy: u ? u.createdBy : (me ? me.name : ''),
       lastLoginAt: u ? u.lastLoginAt : 0, loginCount: u ? u.loginCount : 0};
     byId('uSave').disabled = true;
     db.collection(USERS_COL).doc(id).set(userToDoc(next)).then(function(){
       byId('uSave').disabled = false;
       if(u){ users[users.indexOf(u)] = next; } else { users.push(next); }
-      var det = ROLE_LABEL[role] + (active ? '' : ' · 정지') + (note ? ' · ' + note : '');
+      var det = frText(fr) + (active ? '' : ' · 정지') + (note ? ' · ' + note : '');
       if(u){
         var ch = [];
         if(u.name !== name) ch.push('이름 ' + u.name + ' → ' + name);
-        if(u.role !== role) ch.push('권한 ' + ROLE_LABEL[u.role] + ' → ' + ROLE_LABEL[role]);
+        if(frText(u.fr) !== frText(fr)) ch.push('권한 ' + frText(u.fr) + ' → ' + frText(fr));
         if(u.active !== active) ch.push(active ? '사용' : '정지');
         if(pinHashNew !== u.pinHash) ch.push('PIN 재설정');
         audit('사용자 수정', name, ch.length ? ch.join(' / ') : det);
@@ -1972,8 +2209,9 @@
       }
       // 내 계정을 고쳤으면 지금 세션도 맞춰 준다
       if(me && me.uid === id){
+        if(!role){ me = null; writeSession(null); applyRole(); renderAll(); closeUserForm(); byId('usersModal').classList.add('hidden'); openLogin('', 'inspector'); saveOk(); return; }
         me = {name: name, role: role, uid: id};
-        writeSession({uid: id, name: name, role: role, h: needHash(next)});
+        writeSession({uid: id, name: name, role: role, h: needHash(next), factory: factory.id});
         applyRole();
       }
       closeUserForm();
@@ -2298,6 +2536,12 @@
     planWrap.classList.toggle('edit-mode', on);
     btnEditMode.textContent = on ? '구역 편집 모드 끄기 (보기 모드로)' : '구역 편집 모드 켜기';
     btnEditMode.classList.toggle('active', on);
+    // 편집 모드는 설정 안에 숨어 있으므로, 켜져 있으면 설정 버튼에 표시해 둔다
+    var setTop = document.querySelector('#grpSet .mtop');
+    if(setTop){
+      setTop.classList.toggle('active', on);
+      setTop.firstChild.nodeValue = on ? '설정 · 편집 중' : '설정';
+    }
     cancelDrawing();
     vDrag = null;
     drawMode = {kind: 'rect', target: null};
@@ -4224,8 +4468,8 @@
   // ---- 엑셀 / 인쇄 ----
   function repFileName(){
     var t = todayStr().replace(/-/g, '');
-    if(repTab === 'mat') return '이물관리_재질목록_' + t + '.xlsx';
-    return '이물관리_점검기록_' + (byId('repFrom').value || '').replace(/-/g, '') + '-' + (byId('repTo').value || '').replace(/-/g, '') + '.xlsx';
+    if(repTab === 'mat') return factory.name + '_이물관리_재질목록_' + t + '.xlsx';
+    return factory.name + '_이물관리_점검기록_' + (byId('repFrom').value || '').replace(/-/g, '') + '-' + (byId('repTo').value || '').replace(/-/g, '') + '.xlsx';
   }
   function repXlsx(){
     if(!repRows || !repRows.sheets || !repRows.sheets.length){ byId('repMsg').textContent = '먼저 리포트를 조회하세요.'; return; }
@@ -4625,9 +4869,43 @@
 
   // ---- 도면 여백 잘라내기 + 화면 높이에 맞춘 크기 ----
   // 원본 이미지(2339x3309) 기준 % 좌표. 구역 좌표는 원본 기준 그대로 저장되므로 잘라내도 데이터는 바뀌지 않음.
+  // CROP 은 공장마다 다르다. 바깥에서 참조를 잡고 있으므로 통째로 바꾸지 않고 안의 값만 고친다.
   var CROP = {left: 2.5, top: 16.5, right: 75, bottom: 80.5};
   var IMG_W = 2339, IMG_H = 3309;
   var CROP_AR = ((CROP.right - CROP.left) * IMG_W) / ((CROP.bottom - CROP.top) * IMG_H);
+  function applyFactoryPlan(){
+    CROP.left = factory.crop.left; CROP.top = factory.crop.top;
+    CROP.right = factory.crop.right; CROP.bottom = factory.crop.bottom;
+    IMG_W = factory.imgW; IMG_H = factory.imgH;
+    CROP_AR = ((CROP.right - CROP.left) * IMG_W) / ((CROP.bottom - CROP.top) * IMG_H);
+    var im = byId('floorplanImg');
+    im.alt = factory.name + ' 1층 평면도';
+    byId('planMissing').classList.add('hidden');
+    if(im.getAttribute('src') !== factory.img) im.setAttribute('src', factory.img);
+    planWrap.style.setProperty('--cropAR', String(CROP_AR));
+    applyView(CROP);
+    if(im.complete) syncPlanSize();          // 이미 받아 둔 그림이면 바로
+  }
+  // 그림이 실제로 뜨면 그 그림의 진짜 크기로 비율을 다시 맞춘다.
+  // (구역 좌표는 % 라서 크기가 달라져도 위치는 그대로다)
+  function syncPlanSize(){
+    var im = byId('floorplanImg');
+    var w = im.naturalWidth, h = im.naturalHeight;
+    if(!w || !h) return;
+    if(w === IMG_W && h === IMG_H) return;
+    IMG_W = w; IMG_H = h;
+    CROP_AR = ((CROP.right - CROP.left) * IMG_W) / ((CROP.bottom - CROP.top) * IMG_H);
+    planWrap.style.setProperty('--cropAR', String(CROP_AR));
+    layoutPlan();
+    applyView(currentView());
+  }
+  // 도면 그림이 아직 없어도 구역·항목·점검은 그대로 쓸 수 있게 안내만 띄운다
+  function planImgFailed(){
+    byId('planMissing').innerHTML = '<b>' + escapeHtml(factory.name) + ' 도면 그림이 아직 없습니다</b>' +
+      '<span>저장소에 <code>' + escapeHtml(factory.img) + '</code> 파일을 올리면 여기에 나타납니다.<br>' +
+      '그림이 없어도 구역·항목 등록과 점검은 그대로 됩니다.</span>';
+    byId('planMissing').classList.remove('hidden');
+  }
   // 보이는 범위(v: 원본 기준 %)에 맞춰 도면 안쪽 판을 확대·이동
   function applyView(v){
     var cw = (v.right - v.left) / 100, ch = (v.bottom - v.top) / 100;
@@ -4811,10 +5089,28 @@
     var open = !headerEl.classList.contains('menu-open');
     headerEl.classList.toggle('menu-open', open);
     byId('btnMenu').setAttribute('aria-expanded', open ? 'true' : 'false');
+    if(!open) closeMGroups();
   });
-  function closeMenu(){ headerEl.classList.remove('menu-open'); byId('btnMenu').setAttribute('aria-expanded', 'false'); }
-  byId('toolbar').addEventListener('click', function(e){ if(e.target.closest('button')) closeMenu(); });
-  document.addEventListener('click', function(e){ if(headerEl.classList.contains('menu-open') && !headerEl.contains(e.target)) closeMenu(); });
+  function closeMenu(){ headerEl.classList.remove('menu-open'); byId('btnMenu').setAttribute('aria-expanded', 'false'); closeMGroups(); }
+  // 묶음 메뉴 열고 닫기 (PC는 드롭다운, 휴대폰은 ☰ 안에서 접힘/펼침)
+  function closeMGroup(g){ g.classList.remove('open'); var t = g.querySelector('.mtop'); if(t) t.setAttribute('aria-expanded', 'false'); }
+  function closeMGroups(){ var gs = document.querySelectorAll('#toolbar .mgroup'); for(var i = 0; i < gs.length; i++) closeMGroup(gs[i]); }
+  byId('toolbar').addEventListener('click', function(e){
+    var top = e.target.closest('.mtop');
+    if(top){                                  // 묶음 버튼: 그 묶음만 토글, ☰ 메뉴는 열어 둔다
+      e.stopPropagation();
+      var g = top.parentNode, was = g.classList.contains('open');
+      closeMGroups();
+      if(!was){ g.classList.add('open'); top.setAttribute('aria-expanded', 'true'); }
+      return;
+    }
+    if(e.target.closest('button')) closeMenu();  // 실제 기능 버튼: 전부 닫기
+  });
+  document.addEventListener('click', function(e){
+    if(headerEl.contains(e.target)) return;
+    if(headerEl.classList.contains('menu-open')) closeMenu(); else closeMGroups();
+  });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closeMGroups(); } });
   var lastLayoutKey = '';
   function layoutPlan(){
     var root = document.documentElement;
@@ -4849,7 +5145,7 @@
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = 'zones.json';
+    a.download = factory.name + '_zones.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -4917,7 +5213,27 @@
   window.addEventListener('mousemove', onOverlayMouseMove);
   window.addEventListener('mouseup', onOverlayMouseUp);
 
-  loadAll();
+  // ---- 공장 고르기 ----
+  byId('facRow').addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('[data-fac]') : null;
+    if(b) setFactory(b.dataset.fac, true);
+  });
+  byId('facTag').addEventListener('click', openFacScreen);
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape' || byId('facScreen').classList.contains('hidden')) return;
+    if(booted) closeFacScreen();          // 아직 한 번도 안 골랐으면 못 닫는다
+  });
+  byId('floorplanImg').addEventListener('error', planImgFailed);
+  byId('floorplanImg').addEventListener('load', function(){ byId('planMissing').classList.add('hidden'); syncPlanSize(); });
+
+  // 들어오면 먼저 공장을 고른다. 전에 고른 적이 있으면 그대로 들어가고, 상단 배지로 언제든 바꾼다.
+  (function boot(){
+    var saved = savedFactory();
+    if(saved){ setFactory(saved, true); return; }
+    applyFactoryName();
+    applyFactoryPlan();
+    openFacScreen();
+  })();
 
   // 자동 검증용 (Node/jsdom · Playwright)
   window.__zoneApp = {
@@ -4954,6 +5270,10 @@
     getStep: function(){ return mStep(); },
     getMatFilter: function(){ return matFilter.slice(); },
     getMaterials: function(){ return MATERIALS.map(function(m){ return Object.assign({}, m); }); },
+    getFactory: function(){ return {id: factory.id, name: factory.name, img: factory.img, cols: {zones: ZONES_COL, nodes: NODES_COL, records: RECORDS_COL, audit: AUDIT_COL, photos: PHOTOS_COL, thumbs: THUMBS_COL, types: TYPES_COL}}; },
+    setFactory: setFactory,
+    openFacScreen: openFacScreen,
+    getFactories: function(){ return FACTORIES.map(function(f){ return {id: f.id, name: f.name}; }); },
     openCheck: openCheck,
     setCkScope: function(v){ ckScope = v; renderCheckList(); },
     getCkState: function(){ return JSON.parse(JSON.stringify(ckState)); },
