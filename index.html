@@ -306,6 +306,7 @@
   .modal-box textarea{width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;margin-bottom:14px;font-family:inherit;min-height:64px;resize:vertical;}
   .modal-box input[readonly]{background:#f2f4f7;color:#475467;}
   .form-msg{font-size:12px;color:#b42318;min-height:16px;margin:-4px 0 10px;}
+  .form-msg.info{color:#475467;}   /* 오류가 아니라 안내일 때 */
   .pin-sec{border:1px solid #e4e7ec;border-radius:8px;padding:10px 12px 0;margin-bottom:12px;}
   .pin-sec .m-title{margin-bottom:4px;}
   .audit-list{max-height:62vh;overflow:auto;font-size:12px;border-top:1px solid #eef0f3;}
@@ -609,7 +610,7 @@
   </div>
 </div>
 <div id="printArea"></div>
-<footer id="facFootLine">본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · v0.21 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer id="facFootLine">본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · v0.22 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -891,7 +892,7 @@
 <div class="modal hidden" id="usersModal">
   <div class="modal-box wide">
     <div class="m-title">사용자 관리</div>
-    <div class="muted">명단은 두 공장이 같이 씁니다. 사람마다 공장별 권한을 정하고, 체크한 공장에서만 로그인 목록에 나옵니다. PIN은 되돌릴 수 없는 암호값으로만 저장되어 숫자는 볼 수 없고, 잊었으면 새로 정해 주면 됩니다.</div>
+    <div class="muted">명단은 두 공장이 같이 씁니다. 사람마다 공장별 권한을 정하고, 체크한 공장에서만 로그인 목록에 나옵니다. 점검자도 PIN이 있어야 들어옵니다 — 비워 두면 그 사람이 첫 로그인 때 직접 정합니다. PIN은 되돌릴 수 없는 암호값으로만 저장되어 숫자는 볼 수 없고, 잊었으면 새로 정해 주거나 [PIN 지우기]로 다시 정하게 하면 됩니다.</div>
     <div class="u-actions"><button id="uAdd" class="primary">+ 사용자 추가</button><span class="muted" id="uCount"></span></div>
     <div class="form-msg" id="uWarn" style="display:none;min-height:0;margin:0 0 10px;line-height:1.5;"></div>
     <div class="u-form hidden" id="uForm">
@@ -907,6 +908,7 @@
         <input id="uPin1" type="password" autocomplete="new-password">
         <label for="uPin2">PIN 한 번 더</label>
         <input id="uPin2" type="password" autocomplete="new-password">
+        <label class="chk"><input type="checkbox" id="uPinReset"> PIN 지우기 (다음 로그인 때 본인이 다시 정함)</label>
       </div>
       <label class="chk"><input type="checkbox" id="uActive" checked> 사용 중 (끄면 로그인 목록에서 빠집니다)</label>
       <div class="form-msg" id="uMsg"></div>
@@ -1130,7 +1132,7 @@
     byId('facTag').textContent = factory.name;
     byId('facTag').title = '공장 바꾸기 (지금 ' + factory.name + ')';
     document.title = '이물관리 - 순수본 ' + factory.name;
-    byId('facFootLine').textContent = '본죽 순수본 ' + factory.name + ' · 이물 클레임 대응 관리 도구 · v0.21 (도면: ' + factory.planNote + ')';
+    byId('facFootLine').textContent = '본죽 순수본 ' + factory.name + ' · 이물 클레임 대응 관리 도구 · v0.22 (도면: ' + factory.planNote + ')';
   }
   function initFB(){
     try{
@@ -1857,7 +1859,10 @@
   // 로그인·점검 화면에서 쓰는 '이 공장 사람들'. 사용자 관리 화면만 users 전체를 본다.
   function activeUsers(){ return users.filter(function(u){ return u.active && !!u.role; }); }
   function pickMode(){ return activeUsers().length > 0; }       // 명단이 있으면 목록에서 고르는 방식
-  function needHash(u){ return u.role === 'inspector' ? '' : (u.pinHash || settings[u.role + 'PinHash'] || ''); }
+  // 점검자는 개인 PIN만 쓴다(공용 PIN 없음). 관리자·마스터는 개인 PIN이 없으면 공용 PIN.
+  function needHash(u){ return u.role === 'inspector' ? (u.pinHash || '') : (u.pinHash || settings[u.role + 'PinHash'] || ''); }
+  // PIN이 아직 없는 점검자 → 첫 로그인 때 본인이 정한다
+  function mustSetPin(u){ return !!u && u.role === 'inspector' && !u.pinHash; }
   function activeMasters(){ return users.filter(function(u){ return u.active && u.role === 'master'; }); }
   function readSession(){ try{ return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }catch(e){ return null; } }
   function writeSession(v){ try{ if(v){ localStorage.setItem(SESSION_KEY, JSON.stringify(v)); } else { localStorage.removeItem(SESSION_KEY); } }catch(e){} }
@@ -1896,9 +1901,9 @@
         if(u && u.role){
           // 명단에 있는 사람: 지금 이 공장에서의 권한·PIN 기준으로 다시 확인 (권한이 바뀌었으면 다시 로그인)
           var nd = needHash(u);
-          if(u.active && (!nd || sv.h === nd)){ me = {name: u.name, role: u.role, uid: u.id}; }
+          if(u.active && !mustSetPin(u) && (!nd || sv.h === nd)){ me = {name: u.name, role: u.role, uid: u.id}; }   // PIN을 아직 안 정한 점검자는 세션으로도 못 들어옴
         } else if(u){ me = null; }                                  // 이 공장 소속이 아님 → 다시 로그인
-        else if(sv.role === 'inspector' && svFac === factory.id){ me = {name: sv.name, role: sv.role, uid: ''}; }
+        else if(sv.role === 'inspector' && svFac === factory.id && !pickMode()){ me = {name: sv.name, role: sv.role, uid: ''}; }   // 명단이 있으면 목록 밖 점검자는 못 들어옴
         else if(svFac === factory.id){
           var need = settings[sv.role + 'PinHash'];
           if(need && sv.h === need){ me = {name: sv.name, role: sv.role, uid: ''}; }
@@ -1936,15 +1941,21 @@
     insLabel.style.display = direct ? 'none' : '';
     if(direct && lgRole() === 'inspector'){ byId('lgRoleM').checked = true; }
     var pw = byId('lgPinWrap'), p2 = byId('lgPin2Wrap');
-    byId('lgMsg').textContent = '';
+    byId('lgMsg').textContent = ''; byId('lgMsg').classList.remove('info');
     if(pick && !direct){
       var u = lgPickedUser();
       p2.style.display = 'none';
-      if(!u || u.role === 'inspector'){ pw.style.display = 'none'; return; }
+      if(!u){ pw.style.display = 'none'; return; }
       pw.style.display = '';
+      if(mustSetPin(u)){                       // PIN이 없는 점검자 → 지금 정한다
+        p2.style.display = '';
+        byId('lgPinLabel').textContent = 'PIN 처음 정하기 (4자 이상)';
+        lgInfo('아직 PIN이 없습니다. 쓸 PIN을 정하면 다음부터 이 PIN으로 들어옵니다.');
+        return;
+      }
       byId('lgPinLabel').textContent = ROLE_LABEL[u.role] + ' PIN';
-      if(!needHash(u)){ byId('lgMsg').textContent = ROLE_LABEL[u.role] + ' PIN이 아직 없습니다. 마스터가 [사용자 관리]에서 정해야 합니다.'; }
-      else if(!u.pinHash){ byId('lgMsg').textContent = '개인 PIN이 없어 ' + ROLE_LABEL[u.role] + ' 공용 PIN으로 들어갑니다.'; }
+      if(!needHash(u)){ lgInfo(ROLE_LABEL[u.role] + ' PIN이 아직 없습니다. 마스터가 [사용자 관리]에서 정해야 합니다.'); }
+      else if(!u.pinHash){ lgInfo('개인 PIN이 없어 ' + ROLE_LABEL[u.role] + ' 공용 PIN으로 들어갑니다.'); }
       return;
     }
     var role = lgRole();
@@ -1956,7 +1967,7 @@
     pin2.style.display = setup ? '' : 'none';
     byId('lgPinLabel').textContent = setup ? '마스터 PIN 처음 정하기 (4자 이상)' : ROLE_LABEL[role] + ' PIN';
     if(role === 'manager' && !settings.managerPinHash){
-      byId('lgMsg').textContent = '관리자 PIN이 아직 없습니다. 마스터가 [권한·PIN 관리]에서 먼저 정해야 합니다.';
+        lgInfo('관리자 PIN이 아직 없습니다. 마스터가 [권한·PIN 관리]에서 먼저 정해야 합니다.');
     }
   }
   function openLogin(name, role){
@@ -1992,8 +2003,10 @@
     if(!db) return;
     db.collection(USERS_COL).doc(u.id).update({lastLoginAt: u.lastLoginAt, loginCount: u.loginCount}).catch(function(e){ console.warn('접속 기록 저장 실패', e); });
   }
+  function lgInfo(text){ var m = byId('lgMsg'); m.textContent = text; m.classList.add('info'); }
   function submitLogin(){
     var msg = byId('lgMsg');
+    msg.classList.remove('info');            // 여기부터 쓰는 말은 오류 안내
     if(pickMode() && !lgDirect()){ submitPickLogin(msg); return; }
     var direct = pickMode() && lgDirect();
     var name = byId('lgName').value.trim();
@@ -2035,7 +2048,7 @@
   function submitPickLogin(msg){
     var u = lgPickedUser();
     if(!u){ msg.textContent = '이름을 고르세요.'; return; }
-    if(u.role === 'inspector'){ finishLogin(u.name, u.role, '', u.id); return; }
+    if(mustSetPin(u)){ setOwnPin(u, msg); return; }
     if(Date.now() < lgLockUntil){ msg.textContent = 'PIN을 여러 번 틀렸습니다. ' + Math.ceil((lgLockUntil - Date.now()) / 1000) + '초 뒤에 다시 시도하세요.'; return; }
     var need = needHash(u);
     if(!need){ msg.textContent = ROLE_LABEL[u.role] + ' PIN이 정해져 있지 않아 들어갈 수 없습니다. 마스터에게 요청하세요.'; return; }
@@ -2051,7 +2064,23 @@
     }
     finishLogin(u.name, u.role, h, u.id);
   }
-  byId('lgUser').addEventListener('change', function(){ byId('lgPin').value = ''; updateLoginForm(); });
+  // PIN이 없는 점검자가 첫 로그인 때 스스로 정한다
+  function setOwnPin(u, msg){
+    var p1 = byId('lgPin').value, p2 = byId('lgPin2').value;
+    if(p1.length < 4){ msg.textContent = 'PIN은 4자 이상으로 정하세요.'; byId('lgPin').focus(); return; }
+    if(p1 !== p2){ msg.textContent = '두 PIN이 서로 다릅니다.'; byId('lgPin2').focus(); return; }
+    var db = initFB();
+    if(!db){ msg.textContent = 'Firebase에 연결되지 않아 PIN을 저장할 수 없습니다.'; return; }
+    var h = userPinHash(u.id, p1);
+    byId('lgOk').disabled = true;
+    db.collection(USERS_COL).doc(u.id).update({pinHash: h, updatedAt: Date.now(), updatedBy: u.name}).then(function(){
+      byId('lgOk').disabled = false;
+      u.pinHash = h;
+      finishLogin(u.name, u.role, h, u.id);
+      audit('첫 PIN 설정', u.name, ROLE_LABEL[u.role] + ' 본인이 정함');
+    }, function(e){ byId('lgOk').disabled = false; msg.textContent = 'PIN 저장 실패: ' + (e.message || e); });
+  }
+  byId('lgUser').addEventListener('change', function(){ byId('lgPin').value = ''; byId('lgPin2').value = ''; updateLoginForm(); });
   document.querySelectorAll('input[name="lgRole"]').forEach(function(el){ el.addEventListener('change', updateLoginForm); });
   byId('lgOk').addEventListener('click', submitLogin);
   byId('lgCancel').addEventListener('click', function(){ if(me) closeLogin(); });
@@ -2105,7 +2134,7 @@
       h += '<div class="urow' + (u.active ? '' : ' off') + '" data-uid="' + u.id + '">' +
         '<span class="un">' + escapeHtml(u.name) + tags +
         (u.active ? '' : '<span class="unote">정지됨</span>') + (u.note ? '<span class="unote">' + escapeHtml(u.note) + '</span>' : '') + '</span>' +
-        '<span class="umuted">' + (pinRole === 'inspector' ? 'PIN 없음(점검자)' : (u.pinHash ? '개인 PIN 있음' : (settings[pinRole + 'PinHash'] ? '공용 PIN 사용' : '없음 — 로그인 불가'))) + '</span>' +
+        '<span class="umuted">' + (u.pinHash ? '개인 PIN 있음' : (pinRole === 'inspector' ? '아직 없음 — 첫 로그인 때 본인이 정함' : (settings[pinRole + 'PinHash'] ? '공용 PIN 사용' : '없음 — 로그인 불가'))) + '</span>' +
         '<span class="umuted">' + (u.lastLoginAt ? fmtTime(u.lastLoginAt) + ' · ' + (u.loginCount || 0) + '회' : '접속 기록 없음') + '</span>' +
         '<span class="ua">' +
         '<button data-uact="edit" data-id="' + u.id + '">수정</button>' +
@@ -2138,7 +2167,7 @@
     renderUserFacs(u);
     byId('uNote').value = u ? u.note : '';
     byId('uActive').checked = u ? u.active : true;
-    byId('uPin1').value = ''; byId('uPin2').value = '';
+    byId('uPin1').value = ''; byId('uPin2').value = ''; byId('uPinReset').checked = false;
     byId('uMsg').textContent = '';
     byId('uForm').classList.remove('hidden');
     updateUserForm();
@@ -2173,17 +2202,21 @@
   }
   function updateUserForm(){
     var fr = formFr(), u = uEditId ? findUser(uEditId) : null;
-    var needsPin = FACTORIES.some(function(f){ return fr[f.id] && fr[f.id] !== 'inspector'; });
     FACTORIES.forEach(function(f){
       var row = byId('uFacs').querySelector('[data-facrow="' + f.id + '"]');
       var sel = byId('uFacs').querySelector('[data-facrole="' + f.id + '"]');
       if(row) row.classList.toggle('off', !fr[f.id]);
       if(sel) sel.disabled = !fr[f.id];
     });
-    byId('uPinWrap').style.display = needsPin ? '' : 'none';
-    byId('uPinLabel').textContent = (u && u.pinHash) ? '새 PIN (4자 이상 · 바꿀 때만 입력)' : 'PIN (4자 이상)';
+    // 점검자도 PIN이 있어야 들어오므로 PIN 칸은 항상 보여 준다
+    byId('uPinWrap').style.display = '';
+    var reset = byId('uPinReset').checked;
+    byId('uPinLabel').textContent = (u && u.pinHash) ? '새 PIN (4자 이상 · 바꿀 때만 입력)' : 'PIN (4자 이상 · 비우면 첫 로그인 때 본인이 정함)';
+    byId('uPin1').disabled = reset; byId('uPin2').disabled = reset;
+    byId('uPinReset').parentNode.style.display = (u && u.pinHash) ? '' : 'none';
   }
   byId('uFacs').addEventListener('change', updateUserForm);
+  byId('uPinReset').addEventListener('change', updateUserForm);
   byId('uAdd').addEventListener('click', function(){ openUserForm(null); });
   byId('uCancel').addEventListener('click', closeUserForm);
   byId('uClose').addEventListener('click', function(){ byId('usersModal').classList.add('hidden'); });
@@ -2217,14 +2250,14 @@
     var active = byId('uActive').checked;
     var p1 = byId('uPin1').value, p2 = byId('uPin2').value;
     var u = uEditId ? findUser(uEditId) : null;
-    var needsPin = FACTORIES.some(function(f){ return fr[f.id] && fr[f.id] !== 'inspector'; });
+    var pinReset = byId('uPinReset').checked && !!(u && u.pinHash);
     if(!name){ msg.textContent = '이름을 입력하세요.'; return; }
     if(!Object.keys(fr).length){ msg.textContent = '공장을 최소 한 곳은 골라야 합니다.'; return; }
     var dup = users.filter(function(x){ return x.name === name && (!u || x.id !== u.id); });
     if(dup.length){ msg.textContent = '같은 이름이 이미 있습니다. 구분되게 적어 주세요(예: 홍길동2).'; return; }
     if(u && lastMasterBlocked(u, role, active)){ msg.textContent = factory.name + ' 마스터가 한 명뿐입니다. 다른 마스터를 먼저 등록하세요.'; return; }
     var pinHashNew = u ? u.pinHash : '';
-    if(!needsPin){ pinHashNew = ''; }
+    if(pinReset){ pinHashNew = ''; }
     else if(p1 || p2){
       if(p1.length < 4){ msg.textContent = 'PIN은 4자 이상으로 정하세요.'; return; }
       if(p1 !== p2){ msg.textContent = '두 PIN이 서로 다릅니다.'; return; }
@@ -2232,7 +2265,7 @@
     var db = initFB();
     if(!db){ msg.textContent = 'Firebase에 연결되지 않아 저장할 수 없습니다.'; return; }
     var id = u ? u.id : uid('u');
-    if(needsPin && (p1 || p2)){ pinHashNew = userPinHash(id, p1); }
+    if(!pinReset && (p1 || p2)){ pinHashNew = userPinHash(id, p1); }
     var next = {id: id, name: name, fr: fr, role: role, pinHash: pinHashNew, active: active, note: note,
       createdAt: u ? u.createdAt : Date.now(), createdBy: u ? u.createdBy : (me ? me.name : ''),
       lastLoginAt: u ? u.lastLoginAt : 0, loginCount: u ? u.loginCount : 0};
@@ -2246,7 +2279,7 @@
         if(u.name !== name) ch.push('이름 ' + u.name + ' → ' + name);
         if(frText(u.fr) !== frText(fr)) ch.push('권한 ' + frText(u.fr) + ' → ' + frText(fr));
         if(u.active !== active) ch.push(active ? '사용' : '정지');
-        if(pinHashNew !== u.pinHash) ch.push('PIN 재설정');
+        if(pinHashNew !== u.pinHash) ch.push(pinHashNew ? 'PIN 재설정' : 'PIN 지움(본인이 다시 정함)');
         audit('사용자 수정', name, ch.length ? ch.join(' / ') : det);
       } else {
         audit('사용자 추가', name, det);
@@ -4846,14 +4879,14 @@
       if(r.bottom < crop.top || r.top > crop.bottom || r.right < crop.left || r.left > crop.right) return;  // 보이지 않는 라벨은 제외
       var dx = 0;   // 도면 칸 밖으로 삐져나가면 가로로 밀어 넣는다
       if(r.width < crop.width){
-        if(r.right > crop.right - 1) dx = crop.right - 1 - r.right;
-        if(r.left + dx < crop.left + 1) dx = crop.left + 1 - r.left;
+        if(r.right > crop.right - 2) dx = crop.right - 2 - r.right;
+        if(r.left + dx < crop.left + 2) dx = crop.left + 2 - r.left;
       }
       it.push({el: el, l: r.left + dx, r: r.right + dx, t: r.top, h: r.height, dx: dx, dy: 0, fixed: el.classList.contains('sel')});
     });
     if(it.length < 2) return;
     var GAP = 3;
-    var lo = crop.top + 1, hi = crop.bottom - 1;
+    var lo = crop.top + 2, hi = crop.bottom - 2;
     function clampAll(){
       it.forEach(function(a){
         if(a.t + a.dy < lo) a.dy = lo - a.t;
@@ -4882,7 +4915,7 @@
     }
     it.forEach(function(a){
       if(Math.abs(a.dy) < 0.5 && Math.abs(a.dx) < 0.5) return;
-      a.el.style.transform = 'translateY(-100%) translate(' + Math.round(a.dx) + 'px,' + Math.round(a.dy) + 'px)';
+      a.el.style.transform = 'translateY(-100%) translate(' + a.dx.toFixed(2) + 'px,' + a.dy.toFixed(2) + 'px)';
     });
   }
   function renderZoneBar(){
@@ -5291,6 +5324,14 @@
     if(e.key !== 'Escape' || byId('facScreen').classList.contains('hidden')) return;
     if(booted) closeFacScreen();          // 아직 한 번도 안 골랐으면 못 닫는다
   });
+  // 도면 칸 크기가 바뀌면(창 크기·위쪽 패널 높이·도면 그림 도착) 라벨을 다시 배치한다
+  if(window.ResizeObserver){
+    var planRO = new ResizeObserver(function(){ scheduleSpread(); });
+    planRO.observe(planWrap);
+    planRO.observe(byId('planInner'));
+  }
+  // 도면이 확대·축소되는 동안 라벨이 같이 움직이므로, 움직임이 끝난 뒤 한 번 더 잡는다
+  byId('planInner').addEventListener('transitionend', function(e){ if(e.target === this) scheduleSpread(); });
   byId('floorplanImg').addEventListener('error', planImgFailed);
   byId('floorplanImg').addEventListener('load', function(){ byId('planMissing').classList.add('hidden'); syncPlanSize(); });
 
