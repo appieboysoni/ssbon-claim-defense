@@ -382,6 +382,15 @@
   .rep-th.more{width:auto;height:auto;padding:2px 6px;font-size:11px;color:#667085;cursor:default;}
   .rep-nophoto{font-size:11px;color:#c3c8d0;}
   .rep-sec{font-size:13px;font-weight:700;margin:4px 0 6px;}
+  /* 사진 모아보기 */
+  .pho-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--phoW,240px),1fr));gap:12px;}
+  .pho-card{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#fff;display:flex;flex-direction:column;}
+  .pho-card img{display:block;width:100%;height:calc(var(--phoW,240px) * 0.75);object-fit:cover;background:#f2f4f7;cursor:zoom-in;}
+  .pho-meta{padding:6px 9px 8px;font-size:12px;line-height:1.5;}
+  .pho-meta .z{color:#667085;font-size:11px;}
+  .pho-meta .t{font-weight:700;font-size:13px;overflow-wrap:anywhere;}
+  .pho-meta .mtag{margin:3px 4px 0 0;}
+  .pho-none{font-size:13px;color:#8a94a6;line-height:1.8;padding:10px 2px;}
   .rep-note{font-size:11px;color:#667085;margin:-6px 0 10px;}
   #printArea{display:none;}
   @media print{
@@ -393,6 +402,11 @@
     #printArea table{width:100%;border-collapse:collapse;font-size:8pt;margin-bottom:4mm;}
     #printArea th,#printArea td{border:1px solid #999;padding:2px 4px;text-align:left;}
     #printArea .rep-th{width:22mm;height:16mm;object-fit:cover;border:1px solid #bbb;margin:0 1mm 0 0;}
+    #printArea .pho-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;}
+    #printArea .pho-card{border:1px solid #999;border-radius:0;break-inside:avoid;}
+    #printArea .pho-card img{width:100%;height:38mm;object-fit:cover;}
+    #printArea .pho-meta{padding:1mm 1.5mm;font-size:7.5pt;}
+    #printArea .pho-meta .mtag{display:none;}
     #printArea .rep-nophoto{color:#999;}
     #printArea th{background:#eee;}
     #printArea .rep-sec{font-size:10pt;font-weight:700;margin:3mm 0 1mm;}
@@ -610,7 +624,7 @@
   </div>
 </div>
 <div id="printArea"></div>
-<footer id="facFootLine">본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · v0.22 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer id="facFootLine">본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · v0.23 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -837,6 +851,7 @@
     <div class="m-title">리포트</div>
     <div class="rep-tabs">
       <button id="repTabMat" class="on">재질별 물질 리스트</button>
+      <button id="repTabPho">사진 모아보기</button>
       <button id="repTabRec">점검 기록</button>
     </div>
     <div class="rep-filters" id="repFiltersMat">
@@ -849,6 +864,19 @@
       <label><input type="checkbox" id="repMatEmpty"> 재질 미지정 품목도 포함</label>
       <div class="sp"></div>
       <label><input type="checkbox" id="repMatPhoto" checked> 사진 같이 보기</label>
+    </div>
+    <div class="rep-filters hidden" id="repFiltersPho">
+      <label for="repPhoMat">재질</label>
+      <select id="repPhoMat"><option value="">전체</option></select>
+      <div class="sp"></div>
+      <label for="repPhoZone">작업장</label>
+      <select id="repPhoZone"><option value="">전체</option></select>
+      <div class="sp"></div>
+      <label for="repPhoCat">구분</label>
+      <select id="repPhoCat"><option value="">전체</option><option value="equip">설비</option><option value="tool">공기구</option></select>
+      <div class="sp"></div>
+      <label for="repPhoSize">사진 크기</label>
+      <select id="repPhoSize"><option value="180">보통</option><option value="240" selected>크게</option><option value="300">아주 크게</option></select>
     </div>
     <div class="rep-filters hidden" id="repFiltersRec">
       <label for="repFrom">기간</label>
@@ -1132,7 +1160,7 @@
     byId('facTag').textContent = factory.name;
     byId('facTag').title = '공장 바꾸기 (지금 ' + factory.name + ')';
     document.title = '이물관리 - 순수본 ' + factory.name;
-    byId('facFootLine').textContent = '본죽 순수본 ' + factory.name + ' · 이물 클레임 대응 관리 도구 · v0.22 (도면: ' + factory.planNote + ')';
+    byId('facFootLine').textContent = '본죽 순수본 ' + factory.name + ' · 이물 클레임 대응 관리 도구 · v0.23 (도면: ' + factory.planNote + ')';
   }
   function initFB(){
     try{
@@ -4267,18 +4295,20 @@
     return [ymd(from), ymd(to)];
   }
   function fillRepZones(){
-    ['repMatZone', 'repRecZone'].forEach(function(id){
+    ['repMatZone', 'repPhoZone', 'repRecZone'].forEach(function(id){
       var sel = byId(id), cur = sel.value;
       sel.innerHTML = '<option value="">전체</option>' + zones.map(function(z){
         return '<option value="' + z.id + '">' + escapeHtml(z.name) + '</option>';
       }).join('');
       sel.value = cur;
     });
-    var ms = byId('repMatSel'), cm = ms.value;
-    ms.innerHTML = '<option value="">전체</option>' + MATERIALS.map(function(m){
-      return '<option value="' + m.id + '">' + escapeHtml(m.name) + '</option>';
-    }).join('');
-    ms.value = cm;
+    ['repMatSel', 'repPhoMat'].forEach(function(id){
+      var ms = byId(id), cm = ms.value;
+      ms.innerHTML = '<option value="">전체</option>' + MATERIALS.map(function(m){
+        return '<option value="' + m.id + '">' + escapeHtml(m.name) + '</option>';
+      }).join('');
+      ms.value = cm;
+    });
   }
   function openReport(){
     if(!me){ openLogin(); return; }
@@ -4290,11 +4320,95 @@
   function setRepTab(tab){
     repTab = tab;
     byId('repTabMat').classList.toggle('on', tab === 'mat');
+    byId('repTabPho').classList.toggle('on', tab === 'pho');
     byId('repTabRec').classList.toggle('on', tab === 'rec');
     byId('repFiltersMat').classList.toggle('hidden', tab !== 'mat');
+    byId('repFiltersPho').classList.toggle('hidden', tab !== 'pho');
     byId('repFiltersRec').classList.toggle('hidden', tab !== 'rec');
+    byId('repXlsx').disabled = (tab === 'pho');          // 엑셀에는 사진을 넣을 수 없다
     byId('repMsg').textContent = '';
-    if(tab === 'mat'){ renderMatReport(); } else { renderRecReport(); }
+    if(tab === 'mat'){ renderMatReport(); }
+    else if(tab === 'pho'){ renderPhotoReport(); }
+    else { renderRecReport(); }
+  }
+  // ---- 사진 모아보기: 이물이 나왔을 때 사진을 한눈에 훑어보는 화면 ----
+  function phoData(){
+    var mSel = byId('repPhoMat').value, zSel = byId('repPhoZone').value, cSel = byId('repPhoCat').value;
+    var zoneList = zones.filter(function(z){ return !zSel || z.id === zSel; });
+    var rows = [];
+    zoneList.forEach(function(z){
+      nodes.filter(function(n){ return n.zoneId === z.id; }).forEach(function(n){
+        if(cSel && n.category !== cSel) return;
+        var ms = nodeMats(n);
+        if(mSel && ms.indexOf(mSel) < 0) return;
+        rows.push({zone: z, n: n, mats: ms});
+      });
+    });
+    rows.sort(function(a, b){
+      var zi = zones.indexOf(a.zone) - zones.indexOf(b.zone);
+      if(zi) return zi;
+      if(a.n.category !== b.n.category) return a.n.category === 'equip' ? -1 : 1;
+      var pa = pathNames(a.n).join('\u0001'), pb = pathNames(b.n).join('\u0001');
+      return pa < pb ? -1 : (pa > pb ? 1 : 0);
+    });
+    return {rows: rows, mSel: mSel, zSel: zSel, cSel: cSel};
+  }
+  function renderPhotoReport(){
+    var d = phoData();
+    var zids = {};
+    d.rows.forEach(function(r){ zids[r.zone.id] = 1; });
+    var keys = Object.keys(zids);
+    if(!keys.length){ drawPhotoReport(d); return; }
+    if(!keys.every(function(z){ return !!thumbCache[z]; })){
+      byId('repBody').innerHTML = '<div class="placeholder">사진 불러오는 중...</div>';
+    }
+    ensureThumbs(keys).then(function(){ drawPhotoReport(d); });
+  }
+  function drawPhotoReport(d){
+    var size = byId('repPhoSize').value || '240';
+    var title = '사진 모아보기 · ' + (d.mSel ? MAT_BY_ID[d.mSel].name : '전체 재질') + ' · ' +
+      (d.zSel ? repZoneName(d.zSel) : '공장 전체') + (d.cSel ? ' · ' + CAT_LABEL[d.cSel] : '');
+    // 사진 한 장이 카드 하나 (한 품목에 여러 장이면 여러 카드)
+    var cards = [], withPhoto = 0, missing = 0, none = 0;
+    d.rows.forEach(function(r){
+      var ts = nodeThumbs(r.n.id);
+      if(!ts.length){
+        if((r.n.photoNames || []).length) missing++;      // 사진은 올렸는데 미리보기가 아직 없음
+        else if(!hasChildren(r.n.id)) none++;             // 아예 사진이 없는 말단 품목
+        return;
+      }
+      withPhoto++;
+      ts.forEach(function(th){ cards.push({r: r, th: th}); });
+    });
+    var noPhoto = missing;
+    var h = '<div class="rep-tiles">' +
+      '<div class="rep-tile"><div class="k">사진</div><div class="v">' + cards.length + '</div></div>' +
+      '<div class="rep-tile"><div class="k">사진 있는 품목</div><div class="v">' + withPhoto + '</div></div>' +
+      '<div class="rep-tile' + (none ? ' bad' : '') + '"><div class="k">사진 없는 품목</div><div class="v">' + none + '</div></div>' +
+      '<div class="rep-tile"><div class="k">작업장</div><div class="v">' + Object.keys(cards.reduce(function(a, c){ a[c.r.zone.id] = 1; return a; }, {})).length + '</div></div>' +
+      '</div>';
+    if(!cards.length){
+      byId('repBody').innerHTML = h + '<div class="pho-none">조건에 맞는 사진이 없습니다.' +
+        (noPhoto ? ' 사진이 올라간 품목 ' + noPhoto + '건은 미리보기가 아직 없습니다 — 마스터가 [사진 미리보기 만들기]를 누르면 보입니다.' : '') + '</div>';
+      repRows = {kind: 'pho', title: title, html: h, sheets: []};
+      return;
+    }
+    h += '<div class="pho-grid" style="--phoW:' + size + 'px">';
+    cards.forEach(function(c){
+      var n = c.r.n;
+      h += '<div class="pho-card">' +
+        '<img src="' + c.th.data + '" data-act="repzoom" data-pid="' + escapeHtml(c.th.photoId || c.th.id) + '" title="' + escapeHtml(c.th.fileName || '') + '" alt="">' +
+        '<div class="pho-meta">' +
+          '<div class="z">' + escapeHtml(c.r.zone.name) + ' · ' + CAT_LABEL[n.category] + '</div>' +
+          '<div class="t">' + escapeHtml(pathNames(n).join(' › ')) + '</div>' +
+          (n.note ? '<div class="z">' + escapeHtml(n.note) + '</div>' : '') +
+          (c.r.mats.length ? '<div class="mtags">' + matTags(n) + '</div>' : '') +
+        '</div></div>';
+    });
+    h += '</div>';
+    if(noPhoto) h += '<div class="rep-note">사진이 올라간 품목 ' + noPhoto + '건은 미리보기가 아직 없어 빠졌습니다. 마스터가 [사진 미리보기 만들기]를 누르면 나옵니다.</div>';
+    byId('repBody').innerHTML = h;
+    repRows = {kind: 'pho', title: title, html: h, sheets: []};
   }
   function repZoneName(id){ var z = findZone(id); return z ? z.name : '(없는 작업장)'; }
   var REP_TH_MAX = 3;      // 한 줄에 보여줄 썸네일 수(나머지는 +n)
@@ -4549,6 +4663,7 @@
     if(repTab === 'mat') return factory.name + '_이물관리_재질목록_' + t + '.xlsx';
     return factory.name + '_이물관리_점검기록_' + (byId('repFrom').value || '').replace(/-/g, '') + '-' + (byId('repTo').value || '').replace(/-/g, '') + '.xlsx';
   }
+  function repTabLabel(){ return repTab === 'mat' ? '재질별 물질 리스트' : (repTab === 'pho' ? '사진 모아보기' : '점검 기록'); }
   function repXlsx(){
     if(!repRows || !repRows.sheets || !repRows.sheets.length){ byId('repMsg').textContent = '먼저 리포트를 조회하세요.'; return; }
     byId('repMsg').textContent = '엑셀 만드는 중...';
@@ -4561,13 +4676,13 @@
       });
       X.writeFile(wb, repFileName());
       byId('repMsg').textContent = '엑셀로 저장했습니다.';
-      audit('리포트 내보내기', repTab === 'mat' ? '재질별 물질 리스트' : '점검 기록', repRows.title);
+      audit('리포트 내보내기', repTabLabel(), repRows.title);
     }).catch(function(e){ byId('repMsg').textContent = '엑셀 만들기 실패: ' + (e.message || e); });
   }
   function repPrint(){
     if(!repRows || !repRows.html){ byId('repMsg').textContent = '먼저 리포트를 조회하세요.'; return; }
     byId('printArea').innerHTML = '<h1>' + escapeHtml(repRows.title) + '</h1>' +
-      '<div class="meta">순수본 2공장 이물관리 · 출력 ' + fmtTime(Date.now()) + ' · ' + escapeHtml(me ? me.name : '') + '</div>' + repRows.html;
+      '<div class="meta">순수본 ' + factory.name + ' 이물관리 · 출력 ' + fmtTime(Date.now()) + ' · ' + escapeHtml(me ? me.name : '') + '</div>' + repRows.html;
     document.body.classList.add('printing');
     var done = function(){ document.body.classList.remove('printing'); window.removeEventListener('afterprint', done); };
     window.addEventListener('afterprint', done);
@@ -4576,6 +4691,8 @@
   byId('btnReport').addEventListener('click', openReport);
   byId('repClose').addEventListener('click', function(){ byId('reportModal').classList.add('hidden'); });
   byId('repTabMat').addEventListener('click', function(){ setRepTab('mat'); });
+  byId('repTabPho').addEventListener('click', function(){ setRepTab('pho'); });
+  byId('repFiltersPho').addEventListener('change', function(){ renderPhotoReport(); });
   byId('repTabRec').addEventListener('click', function(){ setRepTab('rec'); });
   ['repMatSel', 'repMatZone', 'repMatEmpty', 'repMatPhoto'].forEach(function(id){ byId(id).addEventListener('change', function(){ if(repTab === 'mat') renderMatReport(); }); });
   byId('repRecPhoto').addEventListener('change', function(){ if(repTab === 'rec' && repRecLoaded) renderRecReport(true); });
