@@ -213,12 +213,17 @@
   table.pv td{padding:4px 6px;border-bottom:1px solid #eef0f3;vertical-align:top;}
   table.pv tr.err td{background:#fff5f4;}
   .pv-sum{font-size:12px;margin:8px 0;}
+  .pv-auto{font-size:9px;background:#e3f5ec;color:#157347;border-radius:7px;padding:0 5px;white-space:nowrap;}
   .ph-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin:10px 0;}
   .ph-item{border:1px solid #e4e7ec;border-radius:6px;overflow:hidden;font-size:10px;color:#667085;}
   .ph-item img{display:block;width:100%;height:110px;object-fit:cover;cursor:zoom-in;background:#f2f4f7;}
   .ph-meta{padding:4px 6px;display:flex;justify-content:space-between;align-items:center;gap:4px;}
   .ph-meta span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .ph-meta button{padding:1px 5px;font-size:10px;flex-shrink:0;}
+  .ph-cap{padding:4px 6px 0;}
+  .ph-cap input{width:100%;margin:0;padding:3px 6px;font-size:11px;border:1px solid var(--border);border-radius:5px;}
+  .ph-cap .capro{display:none;font-size:11px;font-weight:700;color:#1c2430;}
+  body:not(.can-manage) .ph-cap .capro{display:block;}
   #lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:80;cursor:zoom-out;}
   #lightbox.hidden{display:none;}
   #lightbox img{max-width:95vw;max-height:92vh;}
@@ -393,6 +398,38 @@
   .pho-meta .t{font-weight:700;font-size:13px;overflow-wrap:anywhere;}
   .pho-meta .mtag{margin:3px 4px 0 0;}
   .pho-none{font-size:13px;color:#8a94a6;line-height:1.8;padding:10px 2px;}
+  .pho-meta .cap{display:inline-block;font-size:11px;font-weight:700;background:#1c2430;color:#fff;border-radius:9px;padding:1px 7px;margin-top:3px;}
+  /* 사진 배정 */
+  .as-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;border:1px solid var(--border);border-radius:8px;padding:9px 11px;margin:10px 0;background:#f9fafb;}
+  .as-bar input[type=file]{display:none;}
+  .as-bar label{font-size:12px;color:#475467;margin:0;}
+  .as-bar #asCap{width:140px;margin:0;padding:5px 7px;font-size:13px;}
+  .as-bar .sp{width:1px;height:20px;background:#e4e7ec;}
+  .as-quick{display:flex;gap:4px;}
+  .as-quick button{padding:4px 9px;font-size:12px;}
+  .as-cols{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;}
+  .as-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;margin-bottom:6px;}
+  .as-head select,.as-head input[type=search]{margin:0;padding:5px 7px;font-size:13px;width:auto;flex:1 1 120px;min-width:0;}
+  .as-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;max-height:44vh;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px;}
+  .as-ph{position:relative;border:2px solid transparent;border-radius:6px;overflow:hidden;cursor:pointer;background:#f2f4f7;}
+  .as-ph img{display:block;width:100%;height:78px;object-fit:cover;}
+  .as-ph .nm{font-size:10px;color:#667085;padding:2px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .as-ph.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(47,111,237,.25);}
+  .as-ph.on::after{content:'✓';position:absolute;top:3px;right:4px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;line-height:18px;text-align:center;}
+  .as-ph.done{opacity:.4;}
+  .as-list{max-height:44vh;overflow:auto;border:1px solid var(--border);border-radius:8px;}
+  .as-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #eef0f3;cursor:pointer;font-size:13px;}
+  .as-row:last-child{border-bottom:none;}
+  .as-row:hover{background:#f7f9ff;}
+  .as-row .z{font-size:11px;color:#667085;flex-shrink:0;}
+  .as-row .p{flex:1;min-width:0;overflow-wrap:anywhere;}
+  .as-row .c{font-size:11px;color:#667085;flex-shrink:0;}
+  .as-row.busy{opacity:.5;pointer-events:none;}
+  @media (max-width: 820px){
+    .as-cols{grid-template-columns:1fr;}
+    .as-grid,.as-list{max-height:34vh;}
+    .as-bar #asCap{width:100%;}
+  }
   .rep-note{font-size:11px;color:#667085;margin:-6px 0 10px;}
   #printArea{display:none;}
   @media print{
@@ -409,6 +446,7 @@
     #printArea .pho-card img{width:100%;height:38mm;object-fit:cover;}
     #printArea .pho-meta{padding:1mm 1.5mm;font-size:7.5pt;}
     #printArea .pho-meta .mtag{display:none;}
+    #printArea .pho-meta .cap{font-weight:700;}
     #printArea .rep-nophoto{color:#999;}
     #printArea th{background:#eee;}
     #printArea .rep-sec{font-size:10pt;font-weight:700;margin:3mm 0 1mm;}
@@ -585,6 +623,7 @@
       <button type="button" class="mtop" data-mgroup="data" aria-expanded="false" aria-haspopup="true"><span class="ich" data-ico="floppy"></span><span class="lbl">데이터</span><span class="car">▾</span></button>
       <div class="mlist">
         <button id="btnBulk" class="need-manage">일괄 등록 (엑셀+사진)</button>
+        <button id="btnAssign" class="need-manage">사진 배정</button>
         <button id="btnExport" class="need-manage">구역 내보내기</button>
         <button id="btnImportTrigger" class="need-manage">구역 가져오기</button>
       </div>
@@ -626,7 +665,7 @@
   </div>
 </div>
 <div id="printArea"></div>
-<footer id="facFootLine">본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · v0.24 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer id="facFootLine">본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · v0.25 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -706,8 +745,9 @@
       <div class="step-line"><b>3</b> 사진 선택 (선택사항) <button id="bkPickPhotos">사진 파일 선택</button><button id="bkPickFolder">사진 폴더 선택</button><button id="bkPickZip">압축파일(zip) 선택</button><button id="bkClearPhotos">사진 선택 비우기</button>
         <input type="file" id="bkPhotos" accept="image/*,.zip" multiple><input type="file" id="bkFolder" webkitdirectory multiple><input type="file" id="bkZip" accept=".zip,application/zip" multiple>
         <span id="bkPhotoCount" class="muted" style="margin:0;">선택된 사진 0장</span></div>
-      <div class="muted">엑셀의 '사진파일명' 칸에 적은 이름과 파일 이름이 같아야 연결됩니다(대소문자 무시, 여러 장은 쉼표로 구분).</div>
-      <div class="muted">압축파일(zip)로 올려도 됩니다. 안에 폴더가 있어도 사진 파일만 골라서 씁니다(암호가 걸린 zip, 7z·rar은 안 됩니다).</div>
+      <div class="muted"><b>쉬운 방법 — 폴더로 묶기:</b> 항목 이름으로 폴더를 만들고 그 안에 사진을 넣으세요(파일 이름은 아무거나). 예: <code>스퀴즈</code> 폴더 안에 IMG_0012.jpg, IMG_0013.jpg → 스퀴즈에 2장. 엑셀 '사진파일명' 칸은 비워 두면 됩니다. [사진 폴더 선택] 또는 폴더를 그대로 zip으로 묶어 올리면 됩니다.</div>
+      <div class="muted">폴더를 안 쓸 때는 엑셀 '사진파일명' 칸에 파일 이름을 그대로 적으세요(대소문자 무시, 여러 장은 쉼표로 구분). 칸에 적은 게 있으면 그쪽이 우선입니다.</div>
+      <div class="muted">압축파일(zip)도 됩니다(암호가 걸린 zip, 7z·rar은 안 됩니다). 등록 뒤에 사진만 따로 붙이려면 [데이터] → [사진 배정]을 쓰세요.</div>
     </div>
     <div class="step">
       <div class="step-line"><b>4</b> 미리보기 확인 후 등록 <button id="bkPreview" class="primary">미리보기</button></div>
@@ -844,6 +884,46 @@
     <div class="modal-actions">
       <button id="ckClose">닫기</button>
       <button id="ckSave" class="primary">점검 기록 저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="assignModal">
+  <div class="modal-box wide">
+    <div class="m-title">사진 배정</div>
+    <div class="muted">사진을 한꺼번에 올려 두고, 사진을 고른 뒤 붙일 항목을 누르면 됩니다. 파일 이름이나 폴더를 맞출 필요가 없습니다. 앞면·뒷면처럼 여러 장을 한 항목에 붙일 때는 두 장을 같이 고르고 한 번만 누르세요.</div>
+    <div class="as-bar">
+      <button id="asPick" class="primary">사진 고르기</button>
+      <button id="asPickFolder">폴더 고르기</button>
+      <button id="asPickZip">압축파일(zip)</button>
+      <input type="file" id="asFiles" accept="image/*,.zip" multiple>
+      <input type="file" id="asFolder" webkitdirectory multiple>
+      <input type="file" id="asZip" accept=".zip,application/zip" multiple>
+      <span class="sp"></span>
+      <label for="asCap">설명 (선택)</label>
+      <input type="text" id="asCap" maxlength="30" placeholder="예: 앞면">
+      <span class="as-quick"><button data-ascap="앞면">앞면</button><button data-ascap="뒷면">뒷면</button><button data-ascap="분해">분해</button><button data-ascap="">지우기</button></span>
+      <span class="sp"></span>
+      <button id="asClear">고른 사진 비우기</button>
+      <span class="muted" id="asCount" style="margin:0;">사진 0장</span>
+    </div>
+    <div class="as-cols">
+      <div class="as-left">
+        <div class="as-head"><b>붙일 사진</b> <span class="muted" id="asSel" style="margin:0;"></span>
+          <button id="asAll" class="linkish">모두 고르기</button><button id="asNone" class="linkish">모두 해제</button></div>
+        <div class="as-grid" id="asGrid"><div class="placeholder">위에서 사진을 고르세요.</div></div>
+      </div>
+      <div class="as-right">
+        <div class="as-head"><b>붙일 항목</b>
+          <select id="asZone"><option value="">작업장 전체</option></select>
+          <input type="search" id="asSearch" placeholder="항목 이름으로 찾기">
+        </div>
+        <div class="as-list" id="asList"></div>
+      </div>
+    </div>
+    <div class="modal-actions" style="margin-top:12px;">
+      <span class="muted" id="asMsg" style="margin:0 auto 0 0;"></span>
+      <button id="asClose">닫기</button>
     </div>
   </div>
 </div>
@@ -1168,7 +1248,7 @@
     byId('facTag').textContent = factory.name;
     byId('facTag').title = '공장 바꾸기 (지금 ' + factory.name + ')';
     document.title = '이물관리 - 순수본 ' + factory.name;
-    byId('facFootLine').textContent = '본죽 순수본 ' + factory.name + ' · 이물 클레임 대응 관리 도구 · v0.24 (도면: ' + factory.planNote + ')';
+    byId('facFootLine').textContent = '본죽 순수본 ' + factory.name + ' · 이물 클레임 대응 관리 도구 · v0.25 (도면: ' + factory.planNote + ')';
   }
   function initFB(){
     try{
@@ -1644,8 +1724,8 @@
     }
     return {data: d, width: c.width, height: c.height, bytes: d.length};
   }
-  function thumbDoc(n, photoId, fileName, t, source){
-    return {photoId: photoId, nodeId: n.id, zoneId: n.zoneId, fileName: fileName || '',
+  function thumbDoc(n, photoId, fileName, t, source, caption){
+    return {photoId: photoId, nodeId: n.id, zoneId: n.zoneId, fileName: fileName || '', caption: String(caption || ''),
       data: t.data, width: t.width, height: t.height, bytes: t.bytes, source: source || '', createdAt: Date.now()};
   }
   var thumbCache = {};       // zoneId -> Promise([썸네일])
@@ -1691,16 +1771,17 @@
     p.catch(function(){ if(photoCache[nodeId] === p) delete photoCache[nodeId]; });
     return p;
   }
-  function addPhotoToNode(n, file, source){
+  function addPhotoToNode(n, file, source, caption){
     var db = initFB();
     if(!db){ return Promise.reject(new Error('Firebase 연결 안 됨 — 사진은 저장할 수 없습니다.')); }
+    var cap = String(caption || '').trim().slice(0, 30);
     return compressImage(file).then(function(c){
       return db.collection(PHOTOS_COL).add({
-        nodeId: n.id, zoneId: n.zoneId, fileName: file.name, data: c.data,
+        nodeId: n.id, zoneId: n.zoneId, fileName: file.name, caption: cap, data: c.data,
         width: c.width, height: c.height, bytes: c.bytes, source: source, createdAt: Date.now()
       }).then(function(ref){
         // 썸네일은 따로 저장(리포트에서 원본을 내려받지 않게)
-        return db.collection(THUMBS_COL).doc(ref.id).set(thumbDoc(n, ref.id, file.name, c.thumb, source)).catch(function(e){ console.warn('썸네일 저장 실패', e); });
+        return db.collection(THUMBS_COL).doc(ref.id).set(thumbDoc(n, ref.id, file.name, c.thumb, source, cap)).catch(function(e){ console.warn('썸네일 저장 실패', e); });
       });
     }).then(function(){
       delete photoCache[n.id];
@@ -1731,7 +1812,9 @@
       list.forEach(function(p){
         var dt = p.createdAt ? ymd(new Date(p.createdAt)) : '';
         h += '<div class="ph-item"><img src="' + p.data + '" data-act="zoom" alt="">' +
-          '<div class="ph-meta"><span title="' + escapeHtml(p.fileName || '') + '">' + escapeHtml(p.fileName || '') + '<br>' + dt + (p.source === 'bulk' ? ' · 일괄' : '') + '</span>' +
+          '<div class="ph-cap"><input type="text" class="need-manage" data-act="phcap" data-id="' + p.id + '" value="' + escapeHtml(p.caption || '') + '" maxlength="30" placeholder="설명 (예: 앞면)">' +
+            '<span class="capro">' + (p.caption ? escapeHtml(p.caption) : '') + '</span></div>' +
+          '<div class="ph-meta"><span title="' + escapeHtml(p.fileName || '') + '">' + escapeHtml(p.fileName || '') + '<br>' + dt + (p.source === 'bulk' ? ' · 일괄' : (p.source === 'assign' ? ' · 배정' : '')) + '</span>' +
           '<button class="danger need-manage" data-act="phdel" data-id="' + p.id + '" data-name="' + escapeHtml(p.fileName || '') + '">삭제</button></div></div>';
       });
       grid.innerHTML = h;
@@ -1792,6 +1875,24 @@
       }).catch(saveFail);
     }
   });
+  // 사진 설명 고치기 (칸에서 벗어나거나 Enter 를 누르면 저장)
+  function savePhotoCaption(input){
+    if(!canManage()) return;
+    var db = initFB(); if(!db) return;
+    var id = input.dataset.id, cap = input.value.trim().slice(0, 30);
+    if(input.dataset.saved === cap) return;
+    input.dataset.saved = cap;
+    var n = findNode(photoNodeId);
+    db.collection(PHOTOS_COL).doc(id).update({caption: cap}).then(function(){
+      return db.collection(THUMBS_COL).doc(id).update({caption: cap}).catch(function(){});
+    }).then(function(){
+      if(n){ delete photoCache[n.id]; clearThumbCache(n.zoneId); }
+      byId('photoStatus').textContent = cap ? "설명 '" + cap + "' 저장" : '설명 지움';
+      renderAll();
+    }).catch(function(e){ byId('photoStatus').textContent = '설명 저장 실패: ' + (e.message || e); });
+  }
+  byId('photoGrid').addEventListener('change', function(e){ if(e.target.dataset.act === 'phcap') savePhotoCaption(e.target); });
+  byId('photoGrid').addEventListener('keydown', function(e){ if(e.key === 'Enter' && e.target.dataset.act === 'phcap'){ e.preventDefault(); e.target.blur(); } });
   byId('photoClose').addEventListener('click', function(){ byId('photoModal').classList.add('hidden'); photoNodeId = null; });
   byId('lightbox').addEventListener('click', function(){ byId('lightbox').classList.add('hidden'); });
 
@@ -3482,6 +3583,7 @@
   var TEMPLATE_HEADERS = ['구역', '구분', '1단계', '2단계', '3단계', '4단계', '5단계', '비고', '재질', '점검주기', '주기단위', '최근점검일', '기준수량', '사진파일명'];
   var bulkRows = null;
   var bulkPhotos = {};
+  var bulkFolders = {};        // 사진 파일 이름(소문자) → 바로 위 폴더 이름
   var bulkPlan = null;
   var xlsxPromise = null;
 
@@ -3617,6 +3719,17 @@
         var f = photoMap[pn.toLowerCase()];
         if(f){ matched.push(f); } else { info.warnings.push('사진 파일 없음: ' + pn); }
       });
+      // 사진파일명 칸을 비워 두면, 항목 이름과 같은 폴더에 든 사진을 전부 붙인다
+      info.byFolder = 0;
+      if(!photoNames.length && info.path.length){
+        var leaf = info.path[info.path.length - 1];
+        var fromFolder = photosInFolder(leaf);
+        if(fromFolder.length){
+          matched = fromFolder;
+          info.byFolder = fromFolder.length;
+          info.notes = (info.notes || []).concat(["'" + leaf + "' 폴더에서 " + fromFolder.length + '장 자동 연결']);
+        }
+      }
       info.photoCount = matched.length;
       info.cycle = cyc ? cyc + (UNIT_LABEL[unit] || '') : '';
       info.lastDate = dt.ok ? dt.value : '';
@@ -3712,10 +3825,11 @@
     var h = '<div class="pv-wrap"><table class="pv"><thead><tr><th>행</th><th>상태</th><th>구역</th><th>구분</th><th>경로</th><th>비고</th><th>재질</th><th>주기</th><th>최근점검일</th><th>기준수량</th><th>사진</th><th>오류·경고</th></tr></thead><tbody>';
     plan.rows.forEach(function(r){
       var msgs = r.errors.map(function(m){ return '<span style="color:#b42318;">' + escapeHtml(m) + '</span>'; })
-        .concat(r.warnings.map(function(m){ return '<span style="color:#a15c00;">' + escapeHtml(m) + '</span>'; }));
+        .concat(r.warnings.map(function(m){ return '<span style="color:#a15c00;">' + escapeHtml(m) + '</span>'; }))
+        .concat((r.notes || []).map(function(m){ return '<span style="color:#157347;">' + escapeHtml(m) + '</span>'; }));
       h += '<tr class="' + (r.errors.length ? 'err' : '') + '"><td>' + r.rowNo + '</td><td>' + escapeHtml(r.status) + '</td><td>' + escapeHtml(r.zone) + '</td><td>' + escapeHtml(r.cat) + '</td>' +
         '<td>' + escapeHtml(r.path.join(' > ')) + '</td><td>' + escapeHtml(r.note || '') + '</td><td>' + escapeHtml(r.mats ? matNames(r.mats) : '') + '</td><td>' + escapeHtml(r.cycle || '') + '</td><td>' + escapeHtml(r.lastDate || '') + '</td>' +
-        '<td>' + (r.qty === null || r.qty === undefined ? '' : r.qty) + '</td><td>' + (r.photoCount || '') + '</td><td>' + msgs.join('<br>') + '</td></tr>';
+        '<td>' + (r.qty === null || r.qty === undefined ? '' : r.qty) + '</td><td>' + (r.photoCount || '') + (r.byFolder ? ' <span class="pv-auto">폴더</span>' : '') + '</td><td>' + msgs.join('<br>') + '</td></tr>';
     });
     h += '</tbody></table></div>';
     wrap.innerHTML = h;
@@ -3887,8 +4001,11 @@
       imgs.forEach(function(e){
         seq = seq.then(function(){
           return zipFileData(buf, e).then(function(bytes){
-            var base = e.name.split('/').pop();
-            files.push(new File([bytes], base, {type: mimeOf(base)}));
+            var parts = e.name.split('/');
+            var base = parts.pop();
+            var f = new File([bytes], base, {type: mimeOf(base)});
+            f.__folder = parts.length ? parts[parts.length - 1] : '';   // 바로 위 폴더 이름
+            files.push(f);
           });
         });
       });
@@ -3916,29 +4033,198 @@
     });
     return seq.then(function(){
       updatePhotoCount();
-      if(!got){ cnt.textContent = '선택된 사진 ' + Object.keys(bulkPhotos).length + '장 · zip 안에 사진 파일이 없습니다'; }
-      else if(skipped){ cnt.textContent = '선택된 사진 ' + Object.keys(bulkPhotos).length + '장 · zip에서 ' + got + '장 꺼냄(사진이 아닌 파일 ' + skipped + '개는 건너뜀)'; }
-      else { cnt.textContent = '선택된 사진 ' + Object.keys(bulkPhotos).length + '장 · zip에서 ' + got + '장 꺼냄'; }
+      if(!got){ cnt.textContent = photoCountText('zip 안에 사진 파일이 없습니다'); }
+      else if(skipped){ cnt.textContent = photoCountText('zip에서 ' + got + '장 꺼냄(사진이 아닌 파일 ' + skipped + '개는 건너뜀)'); }
+      else { cnt.textContent = photoCountText('zip에서 ' + got + '장 꺼냄'); }
     }).catch(function(e){
       updatePhotoCount();
       cnt.textContent = (e && e.message) ? e.message : 'zip을 푸는 데 실패했습니다.';
     });
   }
-  function updatePhotoCount(){
-    byId('bkPhotoCount').textContent = '선택된 사진 ' + Object.keys(bulkPhotos).length + '장';
+  function photoCountText(extra){
+    var ks = Object.keys(bulkPhotos);
+    var fs = {};
+    ks.forEach(function(k){ if(bulkFolders[k]) fs[folderKey(bulkFolders[k])] = 1; });
+    var nf = Object.keys(fs).length;
+    return '선택된 사진 ' + ks.length + '장' + (nf ? ' · 폴더 ' + nf + '개' : '') + (extra ? ' · ' + extra : '');
+  }
+  function updatePhotoCount(){ byId('bkPhotoCount').textContent = photoCountText(); }
+  // 폴더로 올리면 webkitRelativePath, zip 이면 __folder 에 폴더 이름이 들어 있다
+  function folderOf(f){
+    if(f.__folder) return String(f.__folder);
+    var rel = f.webkitRelativePath || '';
+    if(!rel) return '';
+    var parts = rel.split('/');
+    parts.pop();
+    return parts.length ? parts[parts.length - 1] : '';
   }
   function addBulkPhotos(fileList){
     Array.prototype.forEach.call(fileList || [], function(f){
-      if(/^image\//.test(f.type) || /\.(jpe?g|png|gif|bmp|webp|heic)$/i.test(f.name)){ bulkPhotos[f.name.toLowerCase()] = f; }
+      if(/^image\//.test(f.type) || /\.(jpe?g|png|gif|bmp|webp|heic)$/i.test(f.name)){
+        var k = f.name.toLowerCase();
+        bulkPhotos[k] = f;
+        bulkFolders[k] = folderOf(f);
+      }
     });
     updatePhotoCount();
     invalidatePlan();
+  }
+  // 폴더 이름 ↔ 항목 이름 비교용 (공백·대소문자·괄호 무시)
+  function folderKey(s){ return String(s || '').toLowerCase().replace(/[\s_\-()[\]]/g, ''); }
+  function photosInFolder(name){
+    var want = folderKey(name);
+    if(!want) return [];
+    var out = [];
+    Object.keys(bulkPhotos).forEach(function(k){
+      if(folderKey(bulkFolders[k]) === want) out.push(bulkPhotos[k]);
+    });
+    out.sort(function(a, b){ return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); });
+    return out;
   }
   function invalidatePlan(){
     bulkPlan = null;
     byId('bkRun').disabled = true;
     if(byId('bkTableWrap').innerHTML){ byId('bkSummary').innerHTML = '<span class="placeholder">파일이 바뀌었습니다. 미리보기를 다시 누르세요.</span>'; byId('bkTableWrap').innerHTML = ''; }
   }
+  // ---- 사진 배정 (사진을 먼저 올려 두고 항목에 붙이기) ----
+  var asPhotos = [];        // {id, file, url, done}
+  var asSeq = 0;
+  function asRenderGrid(){
+    var g = byId('asGrid');
+    if(!asPhotos.length){ g.innerHTML = '<div class="placeholder">위에서 사진을 고르세요.</div>'; asRenderSel(); return; }
+    g.innerHTML = asPhotos.map(function(p){
+      return '<div class="as-ph' + (p.on ? ' on' : '') + (p.done ? ' done' : '') + '" data-asid="' + p.id + '">' +
+        '<img src="' + p.url + '" alt="">' +
+        '<div class="nm" title="' + escapeHtml(p.file.name) + '">' + escapeHtml(p.done ? '붙임 · ' + p.file.name : p.file.name) + '</div></div>';
+    }).join('');
+    asRenderSel();
+  }
+  function asPicked(){ return asPhotos.filter(function(p){ return p.on && !p.done; }); }
+  function asRenderSel(){
+    var n = asPicked().length;
+    byId('asSel').textContent = n ? n + '장 고름' : '사진을 눌러 고르세요';
+    byId('asCount').textContent = '사진 ' + asPhotos.length + '장' + (asPhotos.filter(function(p){ return p.done; }).length ? ' · 붙인 것 ' + asPhotos.filter(function(p){ return p.done; }).length + '장' : '');
+  }
+  function asAddFiles(fileList){
+    Array.prototype.forEach.call(fileList || [], function(f){
+      if(!(/^image\//.test(f.type) || IMG_RE.test(f.name))) return;
+      if(asPhotos.some(function(p){ return p.file.name === f.name && p.file.size === f.size; })) return;   // 같은 사진 중복 방지
+      asPhotos.push({id: 'a' + (++asSeq), file: f, url: URL.createObjectURL(f), on: false, done: false});
+    });
+    asRenderGrid();
+  }
+  function asClearPhotos(){
+    asPhotos.forEach(function(p){ try{ URL.revokeObjectURL(p.url); }catch(e){} });
+    asPhotos = [];
+    asRenderGrid();
+  }
+  // 붙일 수 있는 항목 = 하위가 없는 말단 항목
+  function asNodes(){
+    var z = byId('asZone').value, q = folderKey(byId('asSearch').value);
+    return nodes.filter(function(n){
+      if(hasChildren(n.id)) return false;
+      if(z && n.zoneId !== z) return false;
+      if(q && folderKey(pathNames(n).join('')).indexOf(q) < 0 && folderKey(zoneName(n.zoneId)).indexOf(q) < 0) return false;
+      return true;
+    }).sort(function(a, b){
+      var zi = zones.findIndex(function(x){ return x.id === a.zoneId; }) - zones.findIndex(function(x){ return x.id === b.zoneId; });
+      if(zi) return zi;
+      var pa = pathNames(a).join('\u0001'), pb = pathNames(b).join('\u0001');
+      return pa < pb ? -1 : (pa > pb ? 1 : 0);
+    });
+  }
+  function asRenderList(){
+    var list = asNodes();
+    byId('asList').innerHTML = list.length ? list.map(function(n){
+      var pc = (n.photoNames || []).length;
+      return '<div class="as-row" data-asnode="' + n.id + '">' +
+        '<span class="z">' + escapeHtml(zoneName(n.zoneId)) + '</span>' +
+        '<span class="p">' + escapeHtml(pathNames(n).join(' › ')) + '</span>' +
+        '<span class="c">' + (pc ? '사진 ' + pc + '장' : '사진 없음') + '</span></div>';
+    }).join('') : '<div class="placeholder" style="padding:12px;">조건에 맞는 항목이 없습니다.</div>';
+  }
+  function openAssign(){
+    if(!canManage()) return;
+    var zs = byId('asZone'), cur = zs.value;
+    zs.innerHTML = '<option value="">작업장 전체</option>' + zones.map(function(z){
+      return '<option value="' + z.id + '">' + escapeHtml(z.name) + '</option>';
+    }).join('');
+    zs.value = cur;
+    byId('asMsg').textContent = '';
+    asRenderGrid();
+    asRenderList();
+    byId('assignModal').classList.remove('hidden');
+  }
+  byId('asGrid').addEventListener('click', function(e){
+    var el = e.target.closest ? e.target.closest('[data-asid]') : null;
+    if(!el) return;
+    var p = asPhotos.filter(function(x){ return x.id === el.dataset.asid; })[0];
+    if(!p || p.done) return;
+    p.on = !p.on;
+    el.classList.toggle('on', p.on);
+    asRenderSel();
+  });
+  byId('asList').addEventListener('click', function(e){
+    var el = e.target.closest ? e.target.closest('[data-asnode]') : null;
+    if(!el) return;
+    var n = findNode(el.dataset.asnode);
+    var picked = asPicked();
+    if(!n) return;
+    if(!picked.length){ byId('asMsg').textContent = '먼저 왼쪽에서 붙일 사진을 고르세요.'; return; }
+    var cap = byId('asCap').value.trim();
+    el.classList.add('busy');
+    var done = 0, failed = [];
+    var chain = Promise.resolve();
+    picked.forEach(function(p){
+      chain = chain.then(function(){
+        byId('asMsg').textContent = '붙이는 중... ' + (done + 1) + '/' + picked.length;
+        return addPhotoToNode(n, p.file, 'assign', cap).then(function(){
+          p.done = true; p.on = false; done++;
+        }, function(e){ failed.push(e.message || String(e)); });
+      });
+    });
+    chain.then(function(){
+      el.classList.remove('busy');
+      byId('asMsg').textContent = pathNames(n).join(' › ') + '에 ' + done + '장 붙였습니다.' + (failed.length ? ' 실패 ' + failed.length + '장: ' + failed.join(' / ') : '');
+      if(done) audit('사진 추가', nodeLabel(n), done + '장 · 사진 배정' + (cap ? ' · ' + cap : ''));
+      asRenderGrid();
+      asRenderList();
+      renderAll();
+    });
+  });
+  byId('asPick').addEventListener('click', function(){ byId('asFiles').click(); });
+  byId('asPickFolder').addEventListener('click', function(){ byId('asFolder').click(); });
+  byId('asPickZip').addEventListener('click', function(){ byId('asZip').click(); });
+  function asTakeFiles(fileList){
+    var zips = Array.prototype.filter.call(fileList || [], function(f){ return /\.zip$/i.test(f.name) || f.type === 'application/zip'; });
+    var others = Array.prototype.filter.call(fileList || [], function(f){ return !(/\.zip$/i.test(f.name) || f.type === 'application/zip'); });
+    if(others.length) asAddFiles(others);
+    if(!zips.length) return;
+    byId('asMsg').textContent = '압축파일 푸는 중...';
+    var seq = Promise.resolve(), got = 0;
+    zips.forEach(function(z){
+      seq = seq.then(function(){
+        return readZipPhotos(z).then(function(r){ got += r.files.length; asAddFiles(r.files); },
+          function(e){ byId('asMsg').textContent = e.message || String(e); });
+      });
+    });
+    seq.then(function(){ if(got) byId('asMsg').textContent = '압축파일에서 ' + got + '장 꺼냈습니다.'; });
+  }
+  byId('asFiles').addEventListener('change', function(e){ asTakeFiles(e.target.files); e.target.value = ''; });
+  byId('asFolder').addEventListener('change', function(e){ asTakeFiles(e.target.files); e.target.value = ''; });
+  byId('asZip').addEventListener('change', function(e){ asTakeFiles(e.target.files); e.target.value = ''; });
+  byId('asClear').addEventListener('click', asClearPhotos);
+  byId('asAll').addEventListener('click', function(){ asPhotos.forEach(function(p){ if(!p.done) p.on = true; }); asRenderGrid(); });
+  byId('asNone').addEventListener('click', function(){ asPhotos.forEach(function(p){ p.on = false; }); asRenderGrid(); });
+  byId('asZone').addEventListener('change', asRenderList);
+  byId('asSearch').addEventListener('input', asRenderList);
+  byId('assignModal').addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('[data-ascap]') : null;
+    if(b){ byId('asCap').value = b.dataset.ascap; }
+  });
+  byId('asClose').addEventListener('click', function(){ byId('assignModal').classList.add('hidden'); });
+  byId('btnAssign').addEventListener('click', openAssign);
+
   byId('btnBulk').addEventListener('click', function(){
     if(!canManage()) return;
     byId('bulkModal').classList.remove('hidden');
@@ -3950,7 +4236,7 @@
   byId('bkPickXlsx').addEventListener('click', function(){ byId('bkXlsx').click(); });
   byId('bkPickPhotos').addEventListener('click', function(){ byId('bkPhotos').click(); });
   byId('bkPickFolder').addEventListener('click', function(){ byId('bkFolder').click(); });
-  byId('bkClearPhotos').addEventListener('click', function(){ bulkPhotos = {}; updatePhotoCount(); invalidatePlan(); });
+  byId('bkClearPhotos').addEventListener('click', function(){ bulkPhotos = {}; bulkFolders = {}; updatePhotoCount(); invalidatePlan(); });
   byId('bkPickZip').addEventListener('click', function(){ byId('bkZip').click(); });
   byId('bkPhotos').addEventListener('change', function(e){ addZipFiles(e.target.files); e.target.value = ''; });
   byId('bkZip').addEventListener('change', function(e){ addZipFiles(e.target.files); e.target.value = ''; });
@@ -4409,6 +4695,7 @@
         '<div class="pho-meta">' +
           '<div class="z">' + escapeHtml(c.r.zone.name) + ' · ' + CAT_LABEL[n.category] + '</div>' +
           '<div class="t">' + escapeHtml(pathNames(n).join(' › ')) + '</div>' +
+          (c.th.caption ? '<div class="cap">' + escapeHtml(c.th.caption) + '</div>' : '') +
           (n.note ? '<div class="z">' + escapeHtml(n.note) + '</div>' : '') +
           (c.r.mats.length ? '<div class="mtags">' + matTags(n) + '</div>' : '') +
         '</div></div>';
