@@ -113,6 +113,8 @@
     box-shadow:0 0 0 3px rgba(94,42,44,.5), 0 14px 30px rgba(74,49,48,.26);}
   .fac-pick:focus-visible{outline:none;}
   .fac-name{font-size:16px;font-weight:700;letter-spacing:1px;color:#5e2a2c;}
+  .fac-pick.last .fac-name::after{content:'지난번';font-size:10px;font-weight:700;letter-spacing:0;margin-left:6px;padding:1px 6px;border-radius:9px;background:#5e2a2c;color:#fff;vertical-align:2px;}
+  .fac-pick:focus-visible .fac-card{box-shadow:0 0 0 3px rgba(94,42,44,.5), 0 14px 30px rgba(74,49,48,.26);}
   .fac-foot{font-size:12px;color:#9c8280;letter-spacing:.5px;}
   #facTag{font:inherit;font-size:11px;font-weight:700;padding:1px 9px;border-radius:10px;border:1px solid #3b4658;background:#38445a;color:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;}
   #facTag:hover{background:#4a586f;}
@@ -624,7 +626,7 @@
   </div>
 </div>
 <div id="printArea"></div>
-<footer id="facFootLine">본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · v0.23 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer id="facFootLine">본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · v0.24 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -1120,9 +1122,9 @@
     return findFactory(v) ? v : '';
   }
   function renderFacScreen(){
-    var h = '';
+    var h = '', last = savedFactory();
     FACTORIES.forEach(function(f){
-      h += '<button type="button" class="fac-pick" data-fac="' + f.id + '">' +
+      h += '<button type="button" class="fac-pick' + (f.id === last ? ' last' : '') + '" data-fac="' + f.id + '">' +
              '<span class="fac-card" style="background:' + f.logoBg + '">' +
                '<img src="' + f.logo + '" alt="' + escapeHtml(f.brand) + '">' +
              '</span>' +
@@ -1130,10 +1132,16 @@
            '</button>';
     });
     byId('facRow').innerHTML = h;
-    byId('facFoot').textContent = savedFactory() ? '마지막에 본 곳: ' + (findFactory(savedFactory()) || {}).name : '설비 · 공기구 점검 관리';
+    byId('facFoot').textContent = last ? '지난번에 본 곳: ' + (findFactory(last) || {}).name : '설비 · 공기구 점검 관리';
   }
   var booted = false;
-  function openFacScreen(){ renderFacScreen(); byId('facScreen').classList.remove('hidden'); }
+  function openFacScreen(){
+    renderFacScreen();
+    byId('facScreen').classList.remove('hidden');
+    // 지난번에 본 공장에 커서를 둬서 Enter 한 번으로 들어갈 수 있게
+    var want = byId('facRow').querySelector('.fac-pick.last') || byId('facRow').querySelector('.fac-pick');
+    if(want) setTimeout(function(){ try{ want.focus(); }catch(e){} }, 0);
+  }
   function closeFacScreen(){ byId('facScreen').classList.add('hidden'); }
   // 공장을 바꾸면 화면에 올라와 있던 그 공장 자료를 모두 버리고 새로 불러온다
   function setFactory(id, force){
@@ -1160,7 +1168,7 @@
     byId('facTag').textContent = factory.name;
     byId('facTag').title = '공장 바꾸기 (지금 ' + factory.name + ')';
     document.title = '이물관리 - 순수본 ' + factory.name;
-    byId('facFootLine').textContent = '본죽 순수본 ' + factory.name + ' · 이물 클레임 대응 관리 도구 · v0.23 (도면: ' + factory.planNote + ')';
+    byId('facFootLine').textContent = '본죽 순수본 ' + factory.name + ' · 이물 클레임 대응 관리 도구 · v0.24 (도면: ' + factory.planNote + ')';
   }
   function initFB(){
     try{
@@ -5452,10 +5460,8 @@
   byId('floorplanImg').addEventListener('error', planImgFailed);
   byId('floorplanImg').addEventListener('load', function(){ byId('planMissing').classList.add('hidden'); syncPlanSize(); });
 
-  // 들어오면 먼저 공장을 고른다. 전에 고른 적이 있으면 그대로 들어가고, 상단 배지로 언제든 바꾼다.
+  // 접속하면 언제나 공장 고르기 화면부터. 고른 뒤에는 상단 배지로 바꾼다.
   (function boot(){
-    var saved = savedFactory();
-    if(saved){ setFactory(saved, true); return; }
     applyFactoryName();
     applyFactoryPlan();
     openFacScreen();
