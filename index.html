@@ -407,6 +407,14 @@
   .as-bar .sp{width:1px;height:20px;background:#e4e7ec;}
   .as-quick{display:flex;gap:4px;}
   .as-quick button{padding:4px 9px;font-size:12px;}
+  .as-bar .asg{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;}
+  .as-bar .asg.hidden{display:none;}
+  .as-bar .aschk{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#344054;cursor:pointer;}
+  .as-bar .aschk input{margin:0;width:auto;}
+  .as-src{display:inline-flex;border:1px solid var(--border);border-radius:7px;overflow:hidden;}
+  .as-src button{margin:0;border:none;border-radius:0;padding:5px 11px;font-size:12px;font-weight:700;background:#fff;color:#667085;}
+  .as-src button + button{border-left:1px solid var(--border);}
+  .as-src button.on{background:#1c2430;color:#fff;}
   .as-cols{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;}
   .as-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;margin-bottom:6px;}
   .as-head select,.as-head input[type=search]{margin:0;padding:5px 7px;font-size:13px;width:auto;flex:1 1 120px;min-width:0;}
@@ -417,6 +425,9 @@
   .as-ph.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(47,111,237,.25);}
   .as-ph.on::after{content:'✓';position:absolute;top:3px;right:4px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;line-height:18px;text-align:center;}
   .as-ph.done{opacity:.4;}
+  .as-ph .badge{position:absolute;top:3px;left:4px;font-size:10px;font-weight:700;background:#0f7b3f;color:#fff;border-radius:9px;padding:1px 6px;}
+  .as-ph.used img{opacity:.62;}
+  .as-ph.used{background:#eaf4ee;}
   .as-list{max-height:44vh;overflow:auto;border:1px solid var(--border);border-radius:8px;}
   .as-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #eef0f3;cursor:pointer;font-size:13px;}
   .as-row:last-child{border-bottom:none;}
@@ -665,7 +676,7 @@
   </div>
 </div>
 <div id="printArea"></div>
-<footer id="facFootLine">본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · v0.25 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer id="facFootLine">본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · v0.26 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -891,11 +902,22 @@
 <div class="modal hidden" id="assignModal">
   <div class="modal-box wide">
     <div class="m-title">사진 배정</div>
-    <div class="muted">사진을 한꺼번에 올려 두고, 사진을 고른 뒤 붙일 항목을 누르면 됩니다. 파일 이름이나 폴더를 맞출 필요가 없습니다. 앞면·뒷면처럼 여러 장을 한 항목에 붙일 때는 두 장을 같이 고르고 한 번만 누르세요.</div>
+    <div class="muted" id="asGuide">사진을 한꺼번에 올려 두고, 사진을 고른 뒤 붙일 항목을 누르면 됩니다. 파일 이름이나 폴더를 맞출 필요가 없습니다. 앞면·뒷면처럼 여러 장을 한 항목에 붙일 때는 두 장을 같이 고르고 한 번만 누르세요.</div>
     <div class="as-bar">
-      <button id="asPick" class="primary">사진 고르기</button>
-      <button id="asPickFolder">폴더 고르기</button>
-      <button id="asPickZip">압축파일(zip)</button>
+      <span class="asg" id="asgPc">
+        <button id="asPick" class="primary">사진 고르기</button>
+        <button id="asPickFolder">폴더 고르기</button>
+        <button id="asPickZip">압축파일(zip)</button>
+        <span class="sp"></span>
+        <button id="asToInbox">보관함에 올리기</button>
+        <button id="asClear">고른 사진 비우기</button>
+      </span>
+      <span class="asg hidden" id="asgInbox">
+        <button id="asInboxReload">새로 불러오기</button>
+        <label class="aschk" for="asShowUsed"><input type="checkbox" id="asShowUsed"> 붙인 사진도 보기</label>
+        <span class="sp"></span>
+        <button id="asInboxPurge">붙인 사진 치우기</button>
+      </span>
       <input type="file" id="asFiles" accept="image/*,.zip" multiple>
       <input type="file" id="asFolder" webkitdirectory multiple>
       <input type="file" id="asZip" accept=".zip,application/zip" multiple>
@@ -904,12 +926,13 @@
       <input type="text" id="asCap" maxlength="30" placeholder="예: 앞면">
       <span class="as-quick"><button data-ascap="앞면">앞면</button><button data-ascap="뒷면">뒷면</button><button data-ascap="분해">분해</button><button data-ascap="">지우기</button></span>
       <span class="sp"></span>
-      <button id="asClear">고른 사진 비우기</button>
       <span class="muted" id="asCount" style="margin:0;">사진 0장</span>
     </div>
     <div class="as-cols">
       <div class="as-left">
-        <div class="as-head"><b>붙일 사진</b> <span class="muted" id="asSel" style="margin:0;"></span>
+        <div class="as-head">
+          <span class="as-src"><button type="button" class="on" data-assrc="pc">내 PC 사진</button><button type="button" data-assrc="inbox">올라온 사진</button></span>
+          <span class="muted" id="asSel" style="margin:0;"></span>
           <button id="asAll" class="linkish">모두 고르기</button><button id="asNone" class="linkish">모두 해제</button></div>
         <div class="as-grid" id="asGrid"><div class="placeholder">위에서 사진을 고르세요.</div></div>
       </div>
@@ -1185,7 +1208,7 @@
   function findFactory(id){ for(var i = 0; i < FACTORIES.length; i++){ if(FACTORIES[i].id === id) return FACTORIES[i]; } return null; }
   var factory = findFactory(FAC_DEFAULT);
   // 공장마다 따로 쓰는 저장소 (setFactory 에서 다시 정해짐)
-  var ZONES_COL, NODES_COL, PHOTOS_COL, TYPES_COL, RECORDS_COL, AUDIT_COL, THUMBS_COL;
+  var ZONES_COL, NODES_COL, PHOTOS_COL, TYPES_COL, RECORDS_COL, AUDIT_COL, THUMBS_COL, INBOX_COL, INBOXFULL_COL;
   // 두 공장이 같이 쓰는 저장소
   var SETTINGS_COL = 'claimdefense_settings';
   var USERS_COL = 'claimdefense_users';
@@ -1194,6 +1217,8 @@
     var p = 'claimdefense_' + factory.pfx;
     ZONES_COL = p + 'zones'; NODES_COL = p + 'nodes'; PHOTOS_COL = p + 'photos'; TYPES_COL = p + 'zonetypes';
     RECORDS_COL = p + 'records'; AUDIT_COL = p + 'audit'; THUMBS_COL = p + 'thumbs';
+    // 사진 보관함 — 아직 어디에 붙일지 정하지 않은 사진. 목록용(작은 미리보기)과 원본을 따로 둔다.
+    INBOX_COL = p + 'inbox'; INBOXFULL_COL = p + 'inboxfull';
   }
   applyFactoryCols();
   function savedFactory(){
@@ -1235,6 +1260,7 @@
     zoneTypes = DEFAULT_TYPES.map(function(t){ return Object.assign({}, t); });
     selectedZoneId = null; selectedItemId = null; matFilter = [];
     thumbCache = {}; recCache = {};
+    asInbox = []; asInboxOn = {}; asInboxLoaded = false; asSrc = 'pc';   // 보관함도 공장별로 따로
     if(editMode) setEditMode(false);
     applyFactoryName();
     applyFactoryPlan();
@@ -1248,7 +1274,7 @@
     byId('facTag').textContent = factory.name;
     byId('facTag').title = '공장 바꾸기 (지금 ' + factory.name + ')';
     document.title = '이물관리 - 순수본 ' + factory.name;
-    byId('facFootLine').textContent = '본죽 순수본 ' + factory.name + ' · 이물 클레임 대응 관리 도구 · v0.25 (도면: ' + factory.planNote + ')';
+    byId('facFootLine').textContent = '본죽 순수본 ' + factory.name + ' · 이물 클레임 대응 관리 도구 · v0.26 (도면: ' + factory.planNote + ')';
   }
   function initFB(){
     try{
@@ -1788,6 +1814,61 @@
       clearThumbCache(n.zoneId);
       n.photoNames = (n.photoNames || []).concat([file.name]);
       return saveNodeToFirestore(n);
+    });
+  }
+  // ---- 사진 보관함 (아직 어디에 붙일지 정하지 않은 사진) ----
+  // 목록(INBOX_COL)에는 작은 미리보기만 두고, 원본(INBOXFULL_COL)은 실제로 붙일 때만 읽는다.
+  function addToInbox(file, caption){
+    var db = initFB();
+    if(!db){ return Promise.reject(new Error('Firebase 연결 안 됨 — 보관함에 올릴 수 없습니다.')); }
+    var cap = String(caption || '').trim().slice(0, 30);
+    return compressImage(file).then(function(c){
+      return db.collection(INBOX_COL).add({
+        fileName: file.name, caption: cap,
+        thumb: c.thumb.data, tw: c.thumb.width, th: c.thumb.height,
+        width: c.width, height: c.height, bytes: c.bytes,
+        usedCount: 0, usedNodes: [], by: (me && me.name) || '', createdAt: Date.now()
+      }).then(function(ref){
+        return db.collection(INBOXFULL_COL).doc(ref.id).set({
+          fileName: file.name, data: c.data, width: c.width, height: c.height, bytes: c.bytes, createdAt: Date.now()
+        }).then(function(){ return ref.id; });
+      });
+    });
+  }
+  // 보관함 사진을 항목에 붙인다. 보관함에서 빼지 않고 '붙임' 표시만 올린다
+  // (가위·청소도구처럼 여러 작업장에서 같은 사진을 쓰는 경우를 위해).
+  function assignInboxToNode(n, it, caption){
+    var db = initFB();
+    if(!db){ return Promise.reject(new Error('Firebase 연결 안 됨 — 사진은 저장할 수 없습니다.')); }
+    var cap = String(caption || '').trim().slice(0, 30) || String(it.caption || '');
+    return db.collection(INBOXFULL_COL).doc(it.id).get().then(function(doc){
+      if(!doc || !doc.exists){ throw new Error('보관함 원본을 찾을 수 없음: ' + it.fileName); }
+      var f = doc.data();
+      return db.collection(PHOTOS_COL).add({
+        nodeId: n.id, zoneId: n.zoneId, fileName: it.fileName, caption: cap, data: f.data,
+        width: f.width, height: f.height, bytes: f.bytes, source: 'inbox', inboxId: it.id, createdAt: Date.now()
+      }).then(function(ref){
+        var t = {data: it.thumb, width: it.tw, height: it.th, bytes: String(it.thumb || '').length};
+        return db.collection(THUMBS_COL).doc(ref.id).set(thumbDoc(n, ref.id, it.fileName, t, 'inbox', cap))
+          .catch(function(e){ console.warn('썸네일 저장 실패', e); });
+      });
+    }).then(function(){
+      var used = (it.usedNodes || []).filter(function(x){ return x !== n.id; }).concat([n.id]);
+      it.usedNodes = used; it.usedCount = used.length;
+      return db.collection(INBOX_COL).doc(it.id).update({usedCount: used.length, usedNodes: used, usedAt: Date.now()})
+        .catch(function(e){ console.warn('보관함 표시 실패', e); });
+    }).then(function(){
+      delete photoCache[n.id];
+      clearThumbCache(n.zoneId);
+      n.photoNames = (n.photoNames || []).concat([it.fileName]);
+      return saveNodeToFirestore(n);
+    });
+  }
+  function removeFromInbox(id){
+    var db = initFB();
+    if(!db){ return Promise.reject(new Error('Firebase 연결 안 됨')); }
+    return db.collection(INBOX_COL).doc(id).delete().then(function(){
+      return db.collection(INBOXFULL_COL).doc(id).delete().catch(function(){});
     });
   }
   function openPhotoModal(nodeId){
@@ -4087,9 +4168,15 @@
     if(byId('bkTableWrap').innerHTML){ byId('bkSummary').innerHTML = '<span class="placeholder">파일이 바뀌었습니다. 미리보기를 다시 누르세요.</span>'; byId('bkTableWrap').innerHTML = ''; }
   }
   // ---- 사진 배정 (사진을 먼저 올려 두고 항목에 붙이기) ----
-  var asPhotos = [];        // {id, file, url, done}
+  var asPhotos = [];        // 내 PC에서 고른 사진 {id, file, url, on, done}
   var asSeq = 0;
+  var asSrc = 'pc';         // 'pc' = 내 PC 사진 · 'inbox' = 사이트에 올라온 사진(보관함)
+  var asInbox = [];         // 보관함 목록 {id, fileName, caption, thumb, tw, th, usedCount, usedNodes, by, createdAt}
+  var asInboxOn = {};       // 보관함에서 고른 사진 id -> true
+  var asInboxLoaded = false;
+  var asShowUsedOn = false; // 붙인 사진도 보기
   function asRenderGrid(){
+    if(asSrc === 'inbox'){ asRenderInboxGrid(); return; }
     var g = byId('asGrid');
     if(!asPhotos.length){ g.innerHTML = '<div class="placeholder">위에서 사진을 고르세요.</div>'; asRenderSel(); return; }
     g.innerHTML = asPhotos.map(function(p){
@@ -4099,11 +4186,80 @@
     }).join('');
     asRenderSel();
   }
+  // 보관함에서 지금 보여 줄 사진 — 기본은 아직 안 붙인 것만.
+  // 지금 골라 둔 사진은 붙인 뒤에도 그대로 남겨 둔다(다른 작업장에 이어서 붙일 수 있게).
+  function asInboxView(){
+    return asInbox.filter(function(it){ return asShowUsedOn || !(it.usedCount > 0) || asInboxOn[it.id]; });
+  }
+  function asRenderInboxGrid(){
+    var g = byId('asGrid');
+    if(!asInboxLoaded){ g.innerHTML = '<div class="placeholder">보관함을 불러오는 중...</div>'; asRenderSel(); return; }
+    var list = asInboxView();
+    if(!list.length){
+      g.innerHTML = '<div class="placeholder">' + (asInbox.length
+        ? '안 붙인 사진이 없습니다. ‘붙인 사진도 보기’를 켜면 이미 붙인 사진도 다시 쓸 수 있습니다.'
+        : '보관함이 비어 있습니다. ‘내 PC 사진’에서 사진을 골라 ‘보관함에 올리기’를 누르세요.') + '</div>';
+      asRenderSel();
+      return;
+    }
+    g.innerHTML = list.map(function(it){
+      var nm = (it.caption ? it.caption + ' · ' : '') + it.fileName;
+      return '<div class="as-ph' + (asInboxOn[it.id] ? ' on' : '') + (it.usedCount ? ' used' : '') + '" data-asinbox="' + it.id + '">' +
+        '<img src="' + it.thumb + '" alt="">' +
+        (it.usedCount ? '<span class="badge">붙임 ' + it.usedCount + '</span>' : '') +
+        '<div class="nm" title="' + escapeHtml(nm) + '">' + escapeHtml(nm) + '</div></div>';
+    }).join('');
+    asRenderSel();
+  }
   function asPicked(){ return asPhotos.filter(function(p){ return p.on && !p.done; }); }
+  function asInboxPicked(){ return asInbox.filter(function(it){ return !!asInboxOn[it.id]; }); }
   function asRenderSel(){
+    if(asSrc === 'inbox'){
+      var k = asInboxPicked().length;
+      byId('asSel').textContent = k ? k + '장 고름' : '사진을 눌러 고르세요';
+      var used = asInbox.filter(function(it){ return it.usedCount > 0; }).length;
+      byId('asCount').textContent = '보관함 ' + asInbox.length + '장' + (used ? ' · 붙인 것 ' + used + '장' : '');
+      return;
+    }
     var n = asPicked().length;
     byId('asSel').textContent = n ? n + '장 고름' : '사진을 눌러 고르세요';
     byId('asCount').textContent = '사진 ' + asPhotos.length + '장' + (asPhotos.filter(function(p){ return p.done; }).length ? ' · 붙인 것 ' + asPhotos.filter(function(p){ return p.done; }).length + '장' : '');
+  }
+  function loadInbox(force){
+    var db = initFB();
+    if(!db){ asInbox = []; asInboxLoaded = true; return Promise.resolve([]); }
+    if(asInboxLoaded && !force) return Promise.resolve(asInbox);
+    return db.collection(INBOX_COL).get().then(function(snap){
+      var list = [];
+      snap.forEach(function(doc){
+        var d = doc.data(); d.id = doc.id;
+        d.usedNodes = d.usedNodes || []; d.usedCount = d.usedCount || 0;
+        list.push(d);
+      });
+      list.sort(function(a, b){ return (a.createdAt || 0) - (b.createdAt || 0); });
+      asInbox = list; asInboxLoaded = true;
+      var live = {};
+      list.forEach(function(it){ if(asInboxOn[it.id]) live[it.id] = true; });
+      asInboxOn = live;
+      return list;
+    }, function(e){
+      asInbox = []; asInboxLoaded = true;
+      byId('asMsg').textContent = '보관함 불러오기 실패: ' + (e.message || e);
+      return [];
+    });
+  }
+  function asSetSrc(src){
+    asSrc = (src === 'inbox') ? 'inbox' : 'pc';
+    Array.prototype.forEach.call(document.querySelectorAll('.as-src [data-assrc]'), function(b){
+      b.classList.toggle('on', b.dataset.assrc === asSrc);
+    });
+    byId('asgPc').classList.toggle('hidden', asSrc !== 'pc');
+    byId('asgInbox').classList.toggle('hidden', asSrc !== 'inbox');
+    byId('asGuide').textContent = asSrc === 'inbox'
+      ? '사이트에 이미 올라온 사진을 골라 항목에 붙입니다. 내 PC에서 사진을 꺼내 올 필요가 없습니다. 붙여도 보관함에 그대로 남아 ‘붙임’ 표시만 붙으니, 가위·청소도구처럼 여러 작업장에서 쓰는 사진은 고른 채로 다른 항목을 계속 누르면 됩니다.'
+      : '사진을 한꺼번에 올려 두고, 사진을 고른 뒤 붙일 항목을 누르면 됩니다. 파일 이름이나 폴더를 맞출 필요가 없습니다. 바로 붙이지 않을 사진은 ‘보관함에 올리기’로 올려 두면 다른 담당자가 사이트에서 직접 붙일 수 있습니다.';
+    asRenderGrid();
+    if(asSrc === 'inbox' && !asInboxLoaded){ loadInbox().then(asRenderGrid); }
   }
   function asAddFiles(fileList){
     Array.prototype.forEach.call(fileList || [], function(f){
@@ -4151,11 +4307,19 @@
     }).join('');
     zs.value = cur;
     byId('asMsg').textContent = '';
-    asRenderGrid();
+    asSetSrc(asSrc);
     asRenderList();
     byId('assignModal').classList.remove('hidden');
   }
   byId('asGrid').addEventListener('click', function(e){
+    var cl = e.target.closest ? e.target.closest('[data-asinbox]') : null;
+    if(cl){
+      var id = cl.dataset.asinbox;
+      if(asInboxOn[id]){ delete asInboxOn[id]; } else { asInboxOn[id] = true; }
+      cl.classList.toggle('on', !!asInboxOn[id]);
+      asRenderSel();
+      return;
+    }
     var el = e.target.closest ? e.target.closest('[data-asid]') : null;
     if(!el) return;
     var p = asPhotos.filter(function(x){ return x.id === el.dataset.asid; })[0];
@@ -4168,16 +4332,21 @@
     var el = e.target.closest ? e.target.closest('[data-asnode]') : null;
     if(!el) return;
     var n = findNode(el.dataset.asnode);
-    var picked = asPicked();
     if(!n) return;
-    if(!picked.length){ byId('asMsg').textContent = '먼저 왼쪽에서 붙일 사진을 고르세요.'; return; }
     var cap = byId('asCap').value.trim();
+    var inbox = asSrc === 'inbox';
+    var picked = inbox ? asInboxPicked() : asPicked();
+    if(!picked.length){ byId('asMsg').textContent = '먼저 왼쪽에서 붙일 사진을 고르세요.'; return; }
     el.classList.add('busy');
     var done = 0, failed = [];
     var chain = Promise.resolve();
     picked.forEach(function(p){
       chain = chain.then(function(){
         byId('asMsg').textContent = '붙이는 중... ' + (done + 1) + '/' + picked.length;
+        if(inbox){
+          return assignInboxToNode(n, p, cap).then(function(){ done++; },
+            function(e){ failed.push(e.message || String(e)); });
+        }
         return addPhotoToNode(n, p.file, 'assign', cap).then(function(){
           p.done = true; p.on = false; done++;
         }, function(e){ failed.push(e.message || String(e)); });
@@ -4185,11 +4354,73 @@
     });
     chain.then(function(){
       el.classList.remove('busy');
-      byId('asMsg').textContent = pathNames(n).join(' › ') + '에 ' + done + '장 붙였습니다.' + (failed.length ? ' 실패 ' + failed.length + '장: ' + failed.join(' / ') : '');
-      if(done) audit('사진 추가', nodeLabel(n), done + '장 · 사진 배정' + (cap ? ' · ' + cap : ''));
+      byId('asMsg').textContent = pathNames(n).join(' › ') + '에 ' + done + '장 붙였습니다.'
+        + (inbox && done ? ' 고른 사진은 그대로 남아 있으니 다른 항목도 바로 누르세요.' : '')
+        + (failed.length ? ' 실패 ' + failed.length + '장: ' + failed.join(' / ') : '');
+      if(done) audit('사진 추가', nodeLabel(n), done + '장 · ' + (inbox ? '보관함 배정' : '사진 배정') + (cap ? ' · ' + cap : ''));
       asRenderGrid();
       asRenderList();
       renderAll();
+    });
+  });
+  byId('assignModal').addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('[data-assrc]') : null;
+    if(b) asSetSrc(b.dataset.assrc);
+  });
+  // 내 PC에서 고른 사진을 어디에 붙일지 정하지 않고 보관함에만 올려 둔다
+  byId('asToInbox').addEventListener('click', function(){
+    if(!canManage()) return;
+    var picked = asPicked();
+    if(!picked.length){ byId('asMsg').textContent = '먼저 왼쪽에서 보관함에 올릴 사진을 고르세요.'; return; }
+    var cap = byId('asCap').value.trim();
+    var up = 0, failed = [];
+    var chain = Promise.resolve();
+    picked.forEach(function(p){
+      chain = chain.then(function(){
+        byId('asMsg').textContent = '보관함에 올리는 중... ' + (up + 1) + '/' + picked.length;
+        return addToInbox(p.file, cap).then(function(){
+          up++;
+          asPhotos = asPhotos.filter(function(x){ return x !== p; });
+          try{ URL.revokeObjectURL(p.url); }catch(err){}
+        }, function(e){ failed.push(e.message || String(e)); });
+      });
+    });
+    chain.then(function(){
+      if(up) audit('사진 보관함 올리기', '보관함', up + '장' + (cap ? ' · ' + cap : ''));
+      return loadInbox(true).then(function(){
+        byId('asMsg').textContent = '보관함에 ' + up + '장 올렸습니다.' + (failed.length ? ' 실패 ' + failed.length + '장: ' + failed.join(' / ') : '');
+        if(up){ asSetSrc('inbox'); } else { asRenderGrid(); }
+      });
+    });
+  });
+  byId('asInboxReload').addEventListener('click', function(){
+    asInboxLoaded = false; asInboxOn = {};   // 다시 읽으면 골라 둔 것도 해제
+    asRenderGrid();
+    loadInbox(true).then(function(){ byId('asMsg').textContent = '보관함 ' + asInbox.length + '장'; asRenderGrid(); });
+  });
+  byId('asShowUsed').addEventListener('change', function(){
+    asShowUsedOn = this.checked;
+    asRenderGrid();
+  });
+  byId('asInboxPurge').addEventListener('click', function(){
+    if(!canManage()) return;
+    var used = asInbox.filter(function(it){ return it.usedCount > 0; });
+    if(!used.length){ byId('asMsg').textContent = '치울 사진이 없습니다 (붙인 사진만 치웁니다).'; return; }
+    if(!window.confirm('이미 붙인 사진 ' + used.length + '장을 보관함에서 지웁니다.\n항목에 붙인 사진은 그대로 남습니다. 계속할까요?')) return;
+    var gone = 0, failed = [];
+    var chain = Promise.resolve();
+    used.forEach(function(it){
+      chain = chain.then(function(){
+        byId('asMsg').textContent = '치우는 중... ' + (gone + 1) + '/' + used.length;
+        return removeFromInbox(it.id).then(function(){ gone++; }, function(e){ failed.push(e.message || String(e)); });
+      });
+    });
+    chain.then(function(){
+      if(gone) audit('사진 보관함 정리', '보관함', gone + '장 치움');
+      return loadInbox(true).then(function(){
+        byId('asMsg').textContent = '보관함에서 ' + gone + '장 치웠습니다.' + (failed.length ? ' 실패 ' + failed.length + '장' : '');
+        asRenderGrid();
+      });
     });
   });
   byId('asPick').addEventListener('click', function(){ byId('asFiles').click(); });
@@ -4214,8 +4445,16 @@
   byId('asFolder').addEventListener('change', function(e){ asTakeFiles(e.target.files); e.target.value = ''; });
   byId('asZip').addEventListener('change', function(e){ asTakeFiles(e.target.files); e.target.value = ''; });
   byId('asClear').addEventListener('click', asClearPhotos);
-  byId('asAll').addEventListener('click', function(){ asPhotos.forEach(function(p){ if(!p.done) p.on = true; }); asRenderGrid(); });
-  byId('asNone').addEventListener('click', function(){ asPhotos.forEach(function(p){ p.on = false; }); asRenderGrid(); });
+  byId('asAll').addEventListener('click', function(){
+    if(asSrc === 'inbox'){ asInboxView().forEach(function(it){ asInboxOn[it.id] = true; }); }
+    else { asPhotos.forEach(function(p){ if(!p.done) p.on = true; }); }
+    asRenderGrid();
+  });
+  byId('asNone').addEventListener('click', function(){
+    if(asSrc === 'inbox'){ asInboxOn = {}; }
+    else { asPhotos.forEach(function(p){ p.on = false; }); }
+    asRenderGrid();
+  });
   byId('asZone').addEventListener('change', asRenderList);
   byId('asSearch').addEventListener('input', asRenderList);
   byId('assignModal').addEventListener('click', function(e){
@@ -5789,7 +6028,7 @@
     getStep: function(){ return mStep(); },
     getMatFilter: function(){ return matFilter.slice(); },
     getMaterials: function(){ return MATERIALS.map(function(m){ return Object.assign({}, m); }); },
-    getFactory: function(){ return {id: factory.id, name: factory.name, img: factory.img, cols: {zones: ZONES_COL, nodes: NODES_COL, records: RECORDS_COL, audit: AUDIT_COL, photos: PHOTOS_COL, thumbs: THUMBS_COL, types: TYPES_COL}}; },
+    getFactory: function(){ return {id: factory.id, name: factory.name, img: factory.img, cols: {zones: ZONES_COL, nodes: NODES_COL, records: RECORDS_COL, audit: AUDIT_COL, photos: PHOTOS_COL, thumbs: THUMBS_COL, types: TYPES_COL, inbox: INBOX_COL, inboxfull: INBOXFULL_COL}}; },
     setFactory: setFactory,
     openFacScreen: openFacScreen,
     getFactories: function(){ return FACTORIES.map(function(f){ return {id: f.id, name: f.name}; }); },
