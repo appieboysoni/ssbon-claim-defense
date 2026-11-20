@@ -87,6 +87,24 @@
   /* 하단: 도면(왼쪽) + 상세(오른쪽) */
   .work{display:flex;gap:12px;align-items:flex-start;}
   .plan-card{width:var(--planW);flex:0 0 auto;padding:6px;}
+  /* 오른쪽 칸: 작업장·재질·현황을 모아 두고, 도면은 왼쪽을 다 쓴다 */
+  .side{flex:1 1 auto;min-width:0;height:var(--panelH);display:flex;flex-direction:column;gap:10px;}
+  .side #topPanel{flex:0 0 auto;max-height:52%;overflow:auto;margin-bottom:0;display:flex;flex-direction:column;}
+  /* 설비·공기구 카드가 남는 높이를 쓰도록 (예전엔 124px 고정이라 두세 개만 보였다) */
+  .side #zoneItems{flex:1 1 auto;height:auto;min-height:118px;overflow:auto;}
+  .side #detailPanel{flex:1 1 auto;min-height:0;height:auto;overflow:auto;}
+  /* 좁은 칸에 맞춰 버튼을 조금 작게 */
+  .side .zchip{padding:4px 10px;font-size:13px;}
+  .side .mchip{padding:3px 9px;font-size:13px;}
+  .side .bar-label{font-size:13px;margin-right:4px;}
+  .side .legend{font-size:11px;gap:7px;}
+  .side .mat-bar .hint{display:none;}
+  /* 오른쪽 칸이 넓으면 2단으로 쪼개서 빈 자리를 없앤다 (도면은 세로로 긴 그림이라 폭이 남는다) */
+  @media (min-width: 1480px){
+    .side{display:grid;grid-template-columns:minmax(340px, 0.95fr) minmax(360px, 1.05fr);grid-template-rows:100%;gap:10px;}
+    .side #topPanel{max-height:none;min-height:0;}
+    .side #detailPanel{min-height:0;}
+  }
   .plan-crop{position:relative;overflow:hidden;width:100%;aspect-ratio:var(--cropAR, 1);user-select:none;}
   .plan-crop.edit-mode{cursor:crosshair;outline:2px dashed var(--accent);outline-offset:-2px;}
   .plan-inner{position:absolute;left:var(--cL,0);top:var(--cT,0);width:var(--cW,100%);height:var(--cH,100%);transition:left .35s ease, top .35s ease, width .35s ease, height .35s ease;}
@@ -441,6 +459,20 @@
     .as-grid,.as-list{max-height:34vh;}
     .as-bar #asCap{width:100%;}
   }
+  /* 담당 파트 */
+  #partTag{font:inherit;font-size:11px;font-weight:700;padding:1px 9px;border-radius:10px;border:1px solid #3b4658;background:#2b3545;color:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  #partTag.hidden{display:none;}
+  #partTag.mine{background:var(--pc,#2563eb);border-color:var(--pc,#2563eb);}
+  #partTag .sw{opacity:.75;margin-left:4px;font-weight:400;}
+  .ptag{display:inline-flex;align-items:center;gap:4px;font-size:11px;line-height:1.7;padding:1px 8px;border-radius:9px;background:var(--pc,#64748b);color:#fff;font-weight:700;margin-left:4px;white-space:nowrap;}
+  .ptag.inh{background:#fff;color:var(--pc,#64748b);border:1px solid var(--pc,#64748b);font-weight:400;}
+  .prow{display:grid;grid-template-columns:44px 1fr 70px 56px;gap:8px;align-items:center;margin-bottom:8px;}
+  .prow input{margin:0;}
+  .prow input[type=color]{width:44px;height:34px;padding:2px;cursor:pointer;}
+  .prow .cnt{font-size:12px;color:#667085;}
+  .prow button{padding:4px 6px;font-size:12px;}
+  .locked{opacity:.55;}
+  .lockmsg{font-size:12px;color:#a15c00;background:#fff6e6;border:1px solid #f0d9a8;border-radius:6px;padding:6px 9px;margin:8px 0;line-height:1.5;}
   /* 품명 · 색상 */
   .cdot{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid rgba(0,0,0,.2);flex-shrink:0;}
   .ctag{display:inline-flex;align-items:center;gap:5px;font-size:11px;line-height:1.7;padding:1px 8px;border-radius:9px;background:#f2f4f7;color:#344054;margin-left:4px;white-space:nowrap;}
@@ -579,10 +611,16 @@
     .zset input{width:100%;}
     .zset label{flex:1 1 140px;}
     .work{flex-direction:column;}
+    .side{display:contents;}
+    /* display:contents 로 topPanel·detailPanel 이 .work 의 플렉스 아이템이 된다.
+       선택자는 DOM 기준이라 `.work > *` 로는 안 잡히므로 직접 지정해서, 가로로 긴 칩 줄이 폭을 밀지 않게 막는다 */
+    .work > *,.side > *{min-width:0;max-width:100%;}
+    #topPanel,#detailPanel{min-width:0;max-width:100%;}
     .plan-card{width:100%;}
     /* 세로로 긴 도면이어도 첫 화면에 다 들어오게 높이를 제한(폭은 비율대로 줄어듦) */
     .plan-crop{width:min(100%, calc(54vh * var(--cropAR, 1)));margin:0 auto;}
-    #detailPanel{width:100%;height:auto;padding:12px;}
+    #detailPanel,.side #detailPanel{width:100%;height:auto;max-height:none;overflow:visible;padding:12px;}
+    .side #topPanel{max-height:none;overflow:visible;margin-bottom:10px;}
     .zoom-ctl button{padding:8px 12px;font-size:14px;}
     .draw-hint{font-size:12px;}
     .stats{grid-template-columns:repeat(3,minmax(0,1fr));}
@@ -654,7 +692,7 @@
 <header>
   <div>
     <h1>이물관리<span class="hide-m"> · 순수본 <span class="facn">2공장</span> 1층 설비/공기구 점검 관리</span><span class="show-m"> · <span class="facn">2공장</span> 1층</span></h1>
-    <div class="status-row"><button id="facTag" type="button" title="공장 바꾸기">2공장</button><button class="who" id="whoTag" type="button" title="사용자 전환">로그인</button><div class="status" id="statusLine">연결 확인 중...</div></div>
+    <div class="status-row"><button id="facTag" type="button" title="공장 바꾸기">2공장</button><button class="who" id="whoTag" type="button" title="사용자 전환">로그인</button><button id="partTag" type="button" class="hidden" title="내 파트만 보기 / 전체 보기">파트</button><div class="status" id="statusLine">연결 확인 중...</div></div>
   </div>
   <button id="btnMenu" class="menu-btn" aria-label="메뉴" aria-expanded="false">☰</button>
   <div class="toolbar" id="toolbar">
@@ -664,7 +702,7 @@
       <div class="mlist">
         <button id="btnBulk" class="need-manage">일괄 등록 (엑셀+사진)</button>
         <button id="btnAssign" class="need-manage">사진 배정</button>
-        <button id="btnTag" class="need-manage">품명 · 색상 지정</button>
+        <button id="btnTag" class="need-manage">품명 · 색상 · 파트 지정</button>
         <button id="btnExport" class="need-manage">구역 내보내기</button>
         <button id="btnImportTrigger" class="need-manage">구역 가져오기</button>
       </div>
@@ -686,11 +724,6 @@
 </header>
 <div class="page">
   <div id="mBar"><button id="mBack">← 도면</button><div id="mTitle"></div></div>
-  <div id="topPanel" class="card">
-    <div class="zone-bar" id="zoneBar"></div>
-    <div class="mat-bar" id="matBar"></div>
-    <div id="zoneItems"></div>
-  </div>
   <div class="work">
     <div class="plan-card card">
       <div class="plan-crop" id="planWrap">
@@ -703,11 +736,18 @@
         <div class="draw-hint hidden" id="drawHint"></div>
       </div>
     </div>
-    <div id="detailPanel" class="card"></div>
+    <div class="side">
+      <div id="topPanel" class="card">
+        <div class="zone-bar" id="zoneBar"></div>
+        <div class="mat-bar" id="matBar"></div>
+        <div id="zoneItems"></div>
+      </div>
+      <div id="detailPanel" class="card"></div>
+    </div>
   </div>
 </div>
 <div id="printArea"></div>
-<footer id="facFootLine">본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · v0.27 (도면: 2025-08-18 2공장 1층 평면도)</footer>
+<footer id="facFootLine">본죽 순수본 2공장 · 이물 클레임 대응 관리 도구 · v0.29 (도면: 2025-08-18 2공장 1층 평면도)</footer>
 
 <div class="modal hidden" id="nameModal">
   <div class="modal-box">
@@ -1025,15 +1065,17 @@
 
 <div class="modal hidden" id="tagModal">
   <div class="modal-box wide">
-    <div class="m-title">품명 · 색상 지정</div>
-    <div class="muted">작업장이 달라도 <b>같은 물건</b>은 품명을 같게 지정해 두면, 리포트의 <b>공기구별</b> 탭에서 "스쿱이 어느 실에 몇 개 있는지"를 한 번에 볼 수 있습니다. 색상까지 지정하면 이물이 '파란 플라스틱 조각'일 때 바로 좁혀집니다.</div>
+    <div class="m-title">품명 · 색상 · 담당 파트 지정</div>
+    <div class="muted">작업장이 달라도 <b>같은 물건</b>은 품명을 같게 지정해 두면, 리포트의 <b>공기구별</b> 탭에서 "스쿱이 어느 실에 몇 개 있는지"를 한 번에 볼 수 있습니다. 색상까지 지정하면 이물이 '파란 플라스틱 조각'일 때 바로 좁혀집니다. <b>담당 파트</b>는 비워 두면 그 작업장의 기본 파트를 따릅니다 — 예외만 지정하세요.</div>
     <div class="as-bar">
       <button id="tgManageIt">품명 관리</button>
       <button id="tgManageCl">색상 관리</button>
+      <button id="tgManagePt">파트 관리</button>
+      <button id="tgZonePart">작업장 기본 파트</button>
       <span class="sp"></span>
       <select id="tgCat"><option value="tool">공기구만</option><option value="equip">설비만</option><option value="">설비+공기구</option></select>
       <select id="tgZone"><option value="">작업장 전체</option></select>
-      <select id="tgView"><option value="todo">아직 안 지정한 것만</option><option value="all">전체</option></select>
+      <select id="tgView"><option value="todo">아직 안 지정한 것만</option><option value="todopart">파트만 안 정한 것</option><option value="all">전체</option></select>
       <input type="search" id="tgSearch" placeholder="이름으로 찾기">
       <span class="sp"></span>
       <button id="tgGuess" class="primary">자동 추천 채우기</button>
@@ -1041,12 +1083,13 @@
     </div>
     <div class="tg-wrap"><table class="tg"><thead><tr>
       <th class="k"><input type="checkbox" id="tgAll" title="보이는 것 모두 고르기"></th>
-      <th>작업장</th><th>항목</th><th>비고</th><th>품명</th><th>색상</th>
+      <th>작업장</th><th>항목</th><th>비고</th><th>품명</th><th>색상</th><th>담당 파트</th>
     </tr></thead><tbody id="tgRows"></tbody></table></div>
     <div class="as-bar" id="tgBulkBar">
       <b style="font-size:13px;">고른 <span id="tgSel">0</span>개를 한 번에</b>
       <label for="tgBulkIt">품명</label><select id="tgBulkIt"></select>
       <label for="tgBulkCl">색상</label><select id="tgBulkCl"></select>
+      <label for="tgBulkPt">파트</label><select id="tgBulkPt"></select>
       <button id="tgBulkApply">지정</button>
       <span class="muted" style="margin:0;">빈 칸으로 두면 그 항목은 건드리지 않습니다.</span>
     </div>
@@ -1070,6 +1113,34 @@
       <span id="itMsg" class="muted" style="margin:0 auto 0 0;color:#b42318;"></span>
       <button id="itCancel">취소</button>
       <button id="itSave" class="primary">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="ptModal">
+  <div class="modal-box mid">
+    <div class="m-title">파트 관리</div>
+    <div class="muted">품질 · 생산 · 시설처럼 점검을 나눠 맡는 조직입니다. <b>공통</b>은 모든 파트가 함께 보는 항목에 씁니다(지울 수 없습니다). 이름을 바꿔도 지정된 파트는 그대로 따라갑니다. 쓰이고 있는 파트는 지울 수 없습니다.</div>
+    <div class="prow" style="font-size:11px;color:#667085;margin-bottom:4px;"><span>색</span><span>파트 이름</span><span>쓰는 곳</span><span></span></div>
+    <div id="ptRows"></div>
+    <button id="ptAdd">+ 파트 추가</button>
+    <div class="modal-actions" style="margin-top:14px;">
+      <span id="ptMsg" class="muted" style="margin:0 auto 0 0;color:#b42318;"></span>
+      <button id="ptCancel">취소</button>
+      <button id="ptSave" class="primary">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal hidden" id="zpModal">
+  <div class="modal-box mid">
+    <div class="m-title">작업장 기본 파트</div>
+    <div class="muted">작업장마다 주로 쓰는 파트를 정해 둡니다. 그 안의 항목은 <b>담당 파트를 비워 두면 여기 값을 따릅니다.</b> 예외인 항목(자숙실 안의 보일러 = 시설)만 항목에서 따로 지정하면 됩니다.</div>
+    <div id="zpRows"></div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <span id="zpMsg" class="muted" style="margin:0 auto 0 0;"></span>
+      <button id="zpCancel">취소</button>
+      <button id="zpSave" class="primary">저장</button>
     </div>
   </div>
 </div>
@@ -1199,6 +1270,8 @@
       <input id="uName" type="text" maxlength="20" placeholder="예: 홍길동">
       <label>공장별 권한 <span class="umuted">(체크한 공장에서만 로그인됩니다)</span></label>
       <div class="u-facs" id="uFacs"></div>
+      <label for="uPart">소속 파트 <span class="umuted">(정하면 들어올 때 그 파트 것만 보입니다 · 마스터는 늘 전체)</span></label>
+      <select id="uPart"></select>
       <label for="uNote">비고 (선택)</label>
       <input id="uNote" type="text" maxlength="40" placeholder="예: 품질팀">
       <div id="uPinWrap">
@@ -1338,7 +1411,7 @@
   rebuildMats();
   var matFilter = [];   // 선택한 재질 id들 ('none' = 재질 미지정)
 
-  // ---- 색상 (v0.27) — 재질과 같은 방식으로 관리하되 항목마다 하나만 고른다 ----
+  // ---- 색상 (v0.29) — 재질과 같은 방식으로 관리하되 항목마다 하나만 고른다 ----
   var DEFAULT_COLORS = [
     {id: 'blue', name: '청색', hex: '#2563eb'},
     {id: 'red', name: '적색', hex: '#dc2626'},
@@ -1383,7 +1456,48 @@
     return '';
   }
 
-  // ---- 품명 (v0.27) — 작업장이 달라도 같은 물건임을 묶어 주는 이름 ----
+  // ---- 담당 파트 (v0.29) — 품질 / 생산 / 시설 ----
+  var COMMON_PART = 'common';          // 모든 파트가 같이 보는 항목
+  var DEFAULT_PARTS = [
+    {id: 'qa', name: '품질', color: '#2563eb'},
+    {id: 'prod', name: '생산', color: '#16a34a'},
+    {id: 'fac', name: '시설', color: '#a15c00'},
+    {id: COMMON_PART, name: '공통', color: '#64748b'}
+  ];
+  var PARTS = DEFAULT_PARTS.map(function(x){ return Object.assign({}, x); });
+  var PART_BY_ID = {};
+  function rebuildParts(){
+    PART_BY_ID = {};
+    PARTS.forEach(function(x, i){ x.order = i; PART_BY_ID[x.id] = x; });
+    if(!PART_BY_ID[COMMON_PART]){      // '공통'은 항상 있어야 한다
+      var c = {id: COMMON_PART, name: '공통', color: '#64748b', order: PARTS.length};
+      PARTS.push(c); PART_BY_ID[COMMON_PART] = c;
+    }
+  }
+  rebuildParts();
+  function partName(id){ var x = PART_BY_ID[id]; return x ? x.name : ''; }
+  // 항목의 담당 파트 — 비어 있으면 그 작업장의 기본 파트를 따른다
+  function effectivePart(n){
+    if(!n) return '';
+    if(n.partId) return n.partId;
+    var z = findZone(n.zoneId);
+    return (z && z.partId) ? z.partId : '';
+  }
+  function partInherited(n){ return !!(n && !n.partId && effectivePart(n)); }
+  // 내가 손댈 수 있는 항목인가 — 마스터와 파트 미지정 사용자는 전부, 그 외는 자기 파트와 '공통'만
+  function canTouch(n){
+    if(!me) return false;
+    if(isMaster() || !me.partId) return true;
+    var p = effectivePart(n);
+    return !p || p === COMMON_PART || p === me.partId;
+  }
+  function partTag(id, inherited){
+    var x = PART_BY_ID[id];
+    if(!x) return '';
+    return '<span class="ptag' + (inherited ? ' inh' : '') + '" style="--pc:' + x.color + ';">' + escapeHtml(x.name) + (inherited ? ' (작업장)' : '') + '</span>';
+  }
+
+  // ---- 품명 (v0.29) — 작업장이 달라도 같은 물건임을 묶어 주는 이름 ----
   var ITEMTYPES = [];           // {id, name, note, order}
   var IT_BY_ID = {};
   var IT_ALIAS = {};
@@ -1460,6 +1574,7 @@
   var MATERIALS_COL = 'claimdefense_materials';
   var COLORS_COL = 'claimdefense_colors';         // 색상 목록 (두 공장 공용)
   var ITEMTYPES_COL = 'claimdefense_itemtypes';   // 품명 목록 (두 공장 공용)
+  var PARTS_COL = 'claimdefense_parts';           // 담당 파트 목록 (두 공장 공용)
   function applyFactoryCols(){
     var p = 'claimdefense_' + factory.pfx;
     ZONES_COL = p + 'zones'; NODES_COL = p + 'nodes'; PHOTOS_COL = p + 'photos'; TYPES_COL = p + 'zonetypes';
@@ -1521,7 +1636,7 @@
     byId('facTag').textContent = factory.name;
     byId('facTag').title = '공장 바꾸기 (지금 ' + factory.name + ')';
     document.title = '이물관리 - 순수본 ' + factory.name;
-    byId('facFootLine').textContent = '본죽 순수본 ' + factory.name + ' · 이물 클레임 대응 관리 도구 · v0.27 (도면: ' + factory.planNote + ')';
+    byId('facFootLine').textContent = '본죽 순수본 ' + factory.name + ' · 이물 클레임 대응 관리 도구 · v0.29 (도면: ' + factory.planNote + ')';
   }
   function initFB(){
     try{
@@ -1558,8 +1673,8 @@
       order: d.order || 0,
       lastRecDate: d.lastRecDate || '', lastRecQty: (d.lastRecQty === undefined ? null : d.lastRecQty), lastRecResult: d.lastRecResult || '',
       materials: sortMats(Array.isArray(d.materials) ? d.materials : []),
-      // v0.27 — 품명 · 색상 · 교체주기
-      itemTypeId: d.itemTypeId || '', colorId: d.colorId || '',
+      // v0.29 — 품명 · 색상 · 교체주기
+      itemTypeId: d.itemTypeId || '', colorId: d.colorId || '', partId: d.partId || '',
       replValue: d.replValue || null, replUnit: d.replUnit || 'month', lastReplDate: d.lastReplDate || '',
       lastRecReplDate: d.lastRecReplDate || ''
     };
@@ -1574,7 +1689,7 @@
       order: n.order || 0, updatedAt: Date.now(),
       lastRecDate: n.lastRecDate || '', lastRecQty: (n.lastRecQty === undefined ? null : n.lastRecQty), lastRecResult: n.lastRecResult || '',
       materials: sortMats(n.materials || []),
-      itemTypeId: n.itemTypeId || '', colorId: n.colorId || '',
+      itemTypeId: n.itemTypeId || '', colorId: n.colorId || '', partId: n.partId || '',
       replValue: n.replValue || null, replUnit: n.replUnit || 'month', lastReplDate: n.lastReplDate || '',
       lastRecReplDate: n.lastRecReplDate || ''
     };
@@ -1613,6 +1728,14 @@
       COLORS = list;
       rebuildColors();
     }, function(e){ console.warn('색상 목록 불러오기 실패', e); });
+    var partP = db.collection(PARTS_COL).get().then(function(snap){
+      if(snap.empty) return;                      // 아직 저장한 적 없으면 기본 목록 사용
+      var list = [];
+      snap.forEach(function(doc){ var d = doc.data(); list.push({id: doc.id, name: d.name || '', color: d.color || '#64748b', order: d.order || 0}); });
+      list.sort(function(a, b){ return a.order - b.order; });
+      PARTS = list;
+      rebuildParts();
+    }, function(e){ console.warn('파트 목록 불러오기 실패', e); });
     var itP = db.collection(ITEMTYPES_COL).get().then(function(snap){
       var list = [];
       snap.forEach(function(doc){ var d = doc.data(); list.push({id: doc.id, name: d.name || '', note: d.note || '', order: d.order || 0}); });
@@ -1625,7 +1748,7 @@
       snap.forEach(function(doc){ list.push(userFromDoc(doc.id, doc.data())); });
       users = list;
     }, function(e){ console.warn('사용자 목록 불러오기 실패', e); });
-    Promise.all([db.collection(ZONES_COL).get(), db.collection(NODES_COL).get(), db.collection(TYPES_COL).get(), settingsP, usersP, matsP, colsP, itP, alertP]).then(function(res){
+    Promise.all([db.collection(ZONES_COL).get(), db.collection(NODES_COL).get(), db.collection(TYPES_COL).get(), settingsP, usersP, matsP, colsP, itP, alertP, partP]).then(function(res){
       zones = [];
       res[0].forEach(function(doc){
         zones.push(normalizeZone(Object.assign({}, doc.data(), {id: doc.id})));
@@ -1748,6 +1871,15 @@
     return nodes.filter(function(n){
       return n.zoneId === zoneId && n.category === category && (n.parentId || null) === (parentId || null);
     }).sort(function(a, b){ return a.order - b.order; });
+  }
+  // 내 파트만 보기일 때, 이 항목(또는 그 아래 어느 하나)이 보이는가
+  function visibleNode(n){
+    if(!partFilterOn()) return true;
+    if(inScope(n)) return true;
+    return descendantIds(n.id).some(function(id){ var x = findNode(id); return x && inScope(x); });
+  }
+  function childrenOfVisible(zoneId, category, parentId){
+    return childrenOf(zoneId, category, parentId).filter(visibleNode);
   }
   function descendantIds(id){
     var out = [];
@@ -1956,13 +2088,13 @@
     z.x = r3(x0); z.y = r3(y0); z.w = r3(Math.max(0, x1 - x0)); z.h = r3(Math.max(0, y1 - y0));
   }
   function normalizeZone(src){
-    var z = {id: src.id || uid('z'), name: String(src.name || ''), x: +src.x || 0, y: +src.y || 0, w: +src.w || 0, h: +src.h || 0, typeId: src.typeId || ''};
+    var z = {id: src.id || uid('z'), name: String(src.name || ''), x: +src.x || 0, y: +src.y || 0, w: +src.w || 0, h: +src.h || 0, typeId: src.typeId || '', partId: src.partId || ''};
     z.shapes = shapesFromDoc(src) || [rectPts(z.x, z.y, z.w, z.h)];
     updateBBox(z);
     return z;
   }
   function zoneDoc(z){
-    return {name: z.name, x: z.x, y: z.y, w: z.w, h: z.h, typeId: z.typeId || '', shapes: shapesToDoc(z.shapes), updatedAt: Date.now()};
+    return {name: z.name, x: z.x, y: z.y, w: z.w, h: z.h, typeId: z.typeId || '', partId: z.partId || '', shapes: shapesToDoc(z.shapes), updatedAt: Date.now()};
   }
   function pointInPoly(p, pts){
     var inside = false;
@@ -2275,6 +2407,20 @@
   var alerts = {soonCheck: ALERT_DEF.soonCheck, soonRepl: ALERT_DEF.soonRepl};
   var users = [];
   var me = null;
+  var partScope = 'all';          // 'mine' = 내 파트만 보기 · 'all' = 전체 보기
+  function partFilterOn(){ return partScope === 'mine' && !!(me && me.partId); }
+  // 화면에 보일 항목인가
+  function inScope(n){
+    if(!partFilterOn()) return true;
+    var p = effectivePart(n);
+    return !p || p === COMMON_PART || p === me.partId;
+  }
+  function inScopeZone(z){
+    if(!partFilterOn()) return true;
+    if(nodes.some(function(n){ return n.zoneId === z.id && inScope(n); })) return true;
+    var p = z.partId || '';
+    return !p || p === COMMON_PART || p === me.partId;
+  }
   var lgFails = 0, lgLockUntil = 0;
   function level(){ return me ? (ROLE_LEVEL[me.role] || 0) : 0; }
   function canRecord(){ return level() >= 1; }
@@ -2339,13 +2485,13 @@
   }
   function userFromDoc(id, d){
     var fr = normFr(d.fr, d.role);
-    return {id: id, fr: fr, role: fr[factory.id] || '', pinHash: d.pinHash || '', name: d.name || '',
+    return {id: id, fr: fr, role: fr[factory.id] || '', partId: d.partId || '', pinHash: d.pinHash || '', name: d.name || '',
       active: d.active !== false, note: d.note || '', createdAt: d.createdAt || 0, createdBy: d.createdBy || '',
       updatedAt: d.updatedAt || 0, updatedBy: d.updatedBy || '', lastLoginAt: d.lastLoginAt || 0, loginCount: d.loginCount || 0};
   }
   function userToDoc(u){
     var fr = normFr(u.fr, u.role);
-    return {name: u.name, fr: fr, role: topRole({fr: fr}), pinHash: u.pinHash || '', active: u.active !== false, note: u.note || '',
+    return {name: u.name, fr: fr, role: topRole({fr: fr}), partId: u.partId || '', pinHash: u.pinHash || '', active: u.active !== false, note: u.note || '',
       createdAt: u.createdAt || Date.now(), createdBy: u.createdBy || '', updatedAt: Date.now(), updatedBy: (me ? me.name : ''),
       lastLoginAt: u.lastLoginAt || 0, loginCount: u.loginCount || 0};
   }
@@ -2380,8 +2526,23 @@
     document.body.classList.toggle('is-master', isMaster());
     document.body.classList.toggle('signed-in', !!me);
     byId('whoTag').innerHTML = me ? escapeHtml(me.name) + '<span class="r">' + ROLE_LABEL[me.role] + '</span>' : '로그인';
+    renderPartTag();
     if(editMode && !canManage()){ setEditMode(false); }
     syncMenuGroups();
+  }
+  function renderPartTag(){
+    var el = byId('partTag');
+    if(!el) return;
+    var show = !!(me && me.partId && PART_BY_ID[me.partId]);
+    el.classList.toggle('hidden', !show);
+    if(!show) return;
+    var mine = partFilterOn();
+    el.classList.toggle('mine', mine);
+    el.style.setProperty('--pc', PART_BY_ID[me.partId].color);
+    el.innerHTML = mine
+      ? escapeHtml(partName(me.partId)) + '만<span class="sw">전체 보기</span>'
+      : '전체<span class="sw">' + escapeHtml(partName(me.partId)) + '만 보기</span>';
+    el.title = mine ? '지금 ' + partName(me.partId) + ' 것만 보고 있습니다 — 누르면 전체' : '지금 전체를 보고 있습니다 — 누르면 ' + partName(me.partId) + '만';
   }
   // 묶음 메뉴: 권한 때문에 안이 전부 숨겨지면 묶음 버튼 자체를 감춘다
   function syncMenuGroups(){
@@ -2410,7 +2571,7 @@
         if(u && u.role){
           // 명단에 있는 사람: 지금 이 공장에서의 권한·PIN 기준으로 다시 확인 (권한이 바뀌었으면 다시 로그인)
           var nd = needHash(u);
-          if(u.active && !mustSetPin(u) && (!nd || sv.h === nd)){ me = {name: u.name, role: u.role, uid: u.id}; }   // PIN을 아직 안 정한 점검자는 세션으로도 못 들어옴
+          if(u.active && !mustSetPin(u) && (!nd || sv.h === nd)){ me = {name: u.name, role: u.role, uid: u.id, partId: u.partId || ''}; }   // PIN을 아직 안 정한 점검자는 세션으로도 못 들어옴
         } else if(u){ me = null; }                                  // 이 공장 소속이 아님 → 다시 로그인
         else if(sv.role === 'inspector' && svFac === factory.id && !pickMode()){ me = {name: sv.name, role: sv.role, uid: ''}; }   // 명단이 있으면 목록 밖 점검자는 못 들어옴
         else if(svFac === factory.id){
@@ -2419,6 +2580,8 @@
         }
       }
     }
+    // 파트가 있는 사람은 처음에 자기 파트만 보게 한다
+    partScope = (me && me.partId && !isMaster()) ? 'mine' : 'all';
     applyRole();
     renderAll();
     if(!me){ openLogin(sv && sv.name ? sv.name : '', sv && sv.role ? sv.role : 'inspector'); }
@@ -2494,7 +2657,9 @@
   }
   function closeLogin(){ byId('loginModal').classList.add('hidden'); }
   function finishLogin(name, role, h, uid){
-    me = {name: name, role: role, uid: uid || ''};
+    var lu = uid ? findUser(uid) : null;
+    me = {name: name, role: role, uid: uid || '', partId: lu ? (lu.partId || '') : ''};
+    partScope = (me.partId && !isMaster()) ? 'mine' : 'all';
     writeSession({uid: uid || '', name: name, role: role, h: h || '', factory: factory.id});
     lgFails = 0;
     closeLogin();
@@ -2642,6 +2807,7 @@
       var pinRole = u.role || topRole(u);
       h += '<div class="urow' + (u.active ? '' : ' off') + '" data-uid="' + u.id + '">' +
         '<span class="un">' + escapeHtml(u.name) + tags +
+        (u.partId && PART_BY_ID[u.partId] ? partTag(u.partId) : '') +
         (u.active ? '' : '<span class="unote">정지됨</span>') + (u.note ? '<span class="unote">' + escapeHtml(u.note) + '</span>' : '') + '</span>' +
         '<span class="umuted">' + (u.pinHash ? '개인 PIN 있음' : (pinRole === 'inspector' ? '아직 없음 — 첫 로그인 때 본인이 정함' : (settings[pinRole + 'PinHash'] ? '공용 PIN 사용' : '없음 — 로그인 불가'))) + '</span>' +
         '<span class="umuted">' + (u.lastLoginAt ? fmtTime(u.lastLoginAt) + ' · ' + (u.loginCount || 0) + '회' : '접속 기록 없음') + '</span>' +
@@ -2674,6 +2840,7 @@
     byId('uFormTitle').textContent = u ? '사용자 수정' : '사용자 추가';
     byId('uName').value = u ? u.name : '';
     renderUserFacs(u);
+    fillPartSelect(byId('uPart'), u ? u.partId : '', '— 전체 (파트 구분 없음) —');
     byId('uNote').value = u ? u.note : '';
     byId('uActive').checked = u ? u.active : true;
     byId('uPin1').value = ''; byId('uPin2').value = ''; byId('uPinReset').checked = false;
@@ -2756,6 +2923,7 @@
     var fr = formFr();
     var role = fr[factory.id] || '';                 // 지금 보고 있는 공장에서의 권한
     var note = byId('uNote').value.trim();
+    var partId = byId('uPart').value || '';
     var active = byId('uActive').checked;
     var p1 = byId('uPin1').value, p2 = byId('uPin2').value;
     var u = uEditId ? findUser(uEditId) : null;
@@ -2775,19 +2943,20 @@
     if(!db){ msg.textContent = 'Firebase에 연결되지 않아 저장할 수 없습니다.'; return; }
     var id = u ? u.id : uid('u');
     if(!pinReset && (p1 || p2)){ pinHashNew = userPinHash(id, p1); }
-    var next = {id: id, name: name, fr: fr, role: role, pinHash: pinHashNew, active: active, note: note,
+    var next = {id: id, name: name, fr: fr, role: role, partId: partId, pinHash: pinHashNew, active: active, note: note,
       createdAt: u ? u.createdAt : Date.now(), createdBy: u ? u.createdBy : (me ? me.name : ''),
       lastLoginAt: u ? u.lastLoginAt : 0, loginCount: u ? u.loginCount : 0};
     byId('uSave').disabled = true;
     db.collection(USERS_COL).doc(id).set(userToDoc(next)).then(function(){
       byId('uSave').disabled = false;
       if(u){ users[users.indexOf(u)] = next; } else { users.push(next); }
-      var det = frText(fr) + (active ? '' : ' · 정지') + (note ? ' · ' + note : '');
+      var det = frText(fr) + (partId ? ' · ' + partName(partId) : '') + (active ? '' : ' · 정지') + (note ? ' · ' + note : '');
       if(u){
         var ch = [];
         if(u.name !== name) ch.push('이름 ' + u.name + ' → ' + name);
         if(frText(u.fr) !== frText(fr)) ch.push('권한 ' + frText(u.fr) + ' → ' + frText(fr));
         if(u.active !== active) ch.push(active ? '사용' : '정지');
+        if((u.partId || '') !== partId) ch.push('파트 ' + (partName(u.partId) || '전체') + ' → ' + (partName(partId) || '전체'));
         if(pinHashNew !== u.pinHash) ch.push(pinHashNew ? 'PIN 재설정' : 'PIN 지움(본인이 다시 정함)');
         audit('사용자 수정', name, ch.length ? ch.join(' / ') : det);
       } else {
@@ -2795,6 +2964,8 @@
       }
       // 내 계정을 고쳤으면 지금 세션도 맞춰 준다
       if(me && me.uid === id){
+        me.partId = partId;
+        partScope = (partId && role !== 'master') ? 'mine' : 'all';
         if(!role){ me = null; writeSession(null); applyRole(); renderAll(); closeUserForm(); byId('usersModal').classList.add('hidden'); openLogin('', 'inspector'); saveOk(); return; }
         me = {name: name, role: role, uid: id};
         writeSession({uid: id, name: name, role: role, h: needHash(next), factory: factory.id});
@@ -2982,6 +3153,7 @@
   function recRadio(name, value){ var el = document.querySelector('input[name="' + name + '"][value="' + value + '"]'); if(el) el.checked = true; }
   function recRadioVal(name){ var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ''; }
   function openRecModal(nodeId, rec){
+    if(!canTouch(findNode(nodeId))){ alert(partName(effectivePart(findNode(nodeId))) + ' 담당 항목이라 점검 기록을 남길 수 없습니다.'); return; }
     var n = findNode(nodeId);
     if(!n) return;
     if(!me){ openLogin(); return; }
@@ -3502,6 +3674,12 @@
     sel.innerHTML = h;
     sel.value = (cur && IT_BY_ID[cur]) ? cur : '';
   }
+  function fillPartSelect(sel, cur, allLabel){
+    var h = '<option value="">' + (allLabel || '— 작업장 기본 —') + '</option>';
+    PARTS.forEach(function(x){ h += '<option value="' + x.id + '">' + escapeHtml(x.name) + '</option>'; });
+    sel.innerHTML = h;
+    sel.value = (cur && PART_BY_ID[cur]) ? cur : '';
+  }
   function fillColorSelect(sel, cur, allLabel){
     var h = '<option value="">' + (allLabel || '— 색상 없음 —') + '</option>';
     COLORS.forEach(function(c){
@@ -3544,6 +3722,8 @@
   // ---- 설비/공기구 항목(트리) ----
   function openNodeModal(opts){
     if(!canManage()) return;
+    var guardNode = opts.node || (opts.parentId ? findNode(opts.parentId) : null);
+    if(guardNode && !canTouch(guardNode)){ alert(partName(effectivePart(guardNode)) + ' 담당 항목이라 수정할 수 없습니다.'); return; }
     nodeModalCtx = opts;
     var n = opts.node || null;
     var cat = n ? n.category : opts.category;
@@ -3631,6 +3811,7 @@
   }
   function deleteNode(n){
     if(!canManage()) return;
+    if(!canTouch(n)){ alert(partName(effectivePart(n)) + ' 담당 항목이라 삭제할 수 없습니다.'); return; }
     var desc = descendantIds(n.id);
     var ids = [n.id].concat(desc);
     var photoCnt = 0;
@@ -3744,14 +3925,14 @@
     var selNode = selectedItemId ? findNode(selectedItemId) : null;
     var selTop = selNode ? topAncestor(selNode).id : null;
     var h = '<div class="zi-head"><span class="zname">' + escapeHtml(z.name) + '</span>' + typeBadge(zoneType(z)) +
-      '<span class="zsum">설비 ' + childrenOf(z.id, 'equip', null).length + ' · 공기구 ' + childrenOf(z.id, 'tool', null).length +
+      '<span class="zsum">설비 ' + childrenOfVisible(z.id, 'equip', null).length + ' · 공기구 ' + childrenOfVisible(z.id, 'tool', null).length +
       ' · 점검 대상 ' + zs.total + (zs.bad ? ' · <b style="color:#b42318;">지연 ' + zs.bad + '</b>' : '') + (zs.warn ? ' · <span style="color:#a15c00;">임박 ' + zs.warn + '</span>' : '') +
       (zs.alert ? ' · <b style="color:#b42318;">확인 필요 ' + zs.alert + '</b>' : '') + '</span>' +
       '<button class="primary" data-act="zcheck" data-id="' + z.id + '" style="padding:3px 12px;font-size:12px;margin-left:auto;">점검하기</button></div>';
     h += '<div class="zi-cols">';
     ['equip', 'tool'].forEach(function(cat){
       h += '<div><div class="zi-col-title">■ ' + CAT_LABEL[cat] + '</div><div class="icards">';
-      childrenOf(z.id, cat, null).forEach(function(n){
+      childrenOfVisible(z.id, cat, null).forEach(function(n){
         var kids = hasChildren(n.id);
         var s = countStatus(leavesOf(n.id));
         var pc = (n.photoNames || []).length;
@@ -3777,11 +3958,12 @@
 
   // ---- 오른쪽: 선택한 항목 상세 또는 점검 현황 ----
   function renderTree(zoneId, category, parentId, prefix){
-    var list = childrenOf(zoneId, category, parentId);
+    var list = childrenOfVisible(zoneId, category, parentId);
     if(!list.length) return '';
+    var all = childrenOf(zoneId, category, parentId);
     var h = '<ul>';
     list.forEach(function(n, i){
-      var no = (prefix ? prefix + '.' : '') + (i + 1);
+      var no = (prefix ? prefix + '.' : '') + (all.indexOf(n) + 1);
       var kids = hasChildren(n.id);
       var isCol = !!collapsed[n.id];
       var pc = (n.photoNames || []).length;
@@ -3823,6 +4005,7 @@
     return h;
   }
   function renderItemDetail(n){
+    var mine = canTouch(n);
     var z = zones.find(function(zz){ return zz.id === n.zoneId; });
     var kids = hasChildren(n.id);
     var pc = (n.photoNames || []).length;
@@ -3832,13 +4015,19 @@
       (parent ? '<button class="linkish" data-act="open" data-id="' + parent.id + '">↑ 상위 항목: ' + escapeHtml(parent.name) + '</button>' : '') +
       '<div class="d-title"><span class="no">' + itemNo(n) + '</span>' + escapeHtml(n.name) +
       (n.note ? '<span class="memo">(' + escapeHtml(n.note) + ')</span>' : '') + '</div>' +
-      '<div class="mtags">' + (nodeMats(n).length ? matTags(n) : '<span class="mtag">재질 미지정</span>') + '</div></div>' +
+      '<div class="mtags">' + (nodeMats(n).length ? matTags(n) : '<span class="mtag">재질 미지정</span>') +
+      (effectivePart(n) ? partTag(effectivePart(n), partInherited(n)) : '') + '</div></div>' +
       '<div class="d-acts">' +
-      '<button class="primary need-manage" data-act="add" data-id="' + n.id + '">+ 하위 항목</button>' +
-      '<button data-act="photo" data-id="' + n.id + '">사진' + (pc ? ' ' + pc : '') + '</button>' +
-      '<button class="need-manage" data-act="edit" data-id="' + n.id + '">수정</button>' +
-      '<button class="danger need-manage" data-act="del" data-id="' + n.id + '">삭제</button>' +
+      (mine ? '<button class="primary need-manage" data-act="add" data-id="' + n.id + '">+ 하위 항목</button>' +
+        '<button data-act="photo" data-id="' + n.id + '">사진' + (pc ? ' ' + pc : '') + '</button>' +
+        '<button class="need-manage" data-act="edit" data-id="' + n.id + '">수정</button>' +
+        '<button class="danger need-manage" data-act="del" data-id="' + n.id + '">삭제</button>'
+        : '<button data-act="photo" data-id="' + n.id + '">사진' + (pc ? ' ' + pc : '') + '</button>') +
       '<button data-act="close" title="닫기">✕</button></div></div>';
+    if(!mine){
+      h += '<div class="lockmsg">이 항목은 <b>' + escapeHtml(partName(effectivePart(n))) + '</b> 담당입니다. 보기만 되고 점검 기록·수정은 ' +
+        escapeHtml(partName(effectivePart(n))) + ' 쪽에서 합니다. (이물 대조를 위해 열람은 열어 둡니다)</div>';
+    }
     if(pc){
       h += '<div class="d-sec">사진</div><div class="strip" id="itemPhotos" data-node="' + n.id + '"><span class="placeholder" style="font-size:12px;">불러오는 중...</span></div>';
     }
@@ -3864,7 +4053,7 @@
           '<div>최근 확인 수량</div><div>' + (n.lastRecQty === null || n.lastRecQty === undefined ? '기록 없음' : n.lastRecQty + '개') + '</div>' : '') +
         '</div>';
       h += '<div class="rec-bar"><div class="d-sec">점검 기록</div>' +
-        '<button class="primary" data-act="recadd" data-id="' + n.id + '">+ 점검 기록하기</button>' +
+        (mine ? '<button class="primary" data-act="recadd" data-id="' + n.id + '">+ 점검 기록하기</button>' : '') +
         '<label class="need-master"><input type="checkbox" id="recShowDel"' + (showDeleted ? ' checked' : '') + '> 삭제된 기록 포함</label></div>' +
         '<div class="recs" id="recList" data-node="' + n.id + '"><span class="placeholder" style="font-size:12px;">불러오는 중...</span></div>';
       h += '<div class="placeholder need-manage" style="font-size:12px;margin-top:12px;">하위 부품이 있으면 "+ 하위 항목"으로 추가하세요. 하위 항목이 생기면 이 항목 대신 하위 항목마다 주기와 기록을 둡니다.</div>';
@@ -4727,6 +4916,7 @@
     var z = byId('asZone').value, q = folderKey(byId('asSearch').value);
     return nodes.filter(function(n){
       if(hasChildren(n.id)) return false;
+      if(!canTouch(n)) return false;                    // 다른 파트 항목에는 사진을 못 붙인다
       if(z && n.zoneId !== z) return false;
       if(q && folderKey(pathNames(n).join('')).indexOf(q) < 0 && folderKey(zoneName(n.zoneId)).indexOf(q) < 0) return false;
       return true;
@@ -5051,7 +5241,7 @@
       });
   }
   function ckTargets(){
-    var list = ckLeaves(ckZoneId);
+    var list = ckLeaves(ckZoneId).filter(canTouch);     // 다른 파트 항목은 점검 대상에서 뺀다
     if(ckScope === 'all') return list;
     if(ckScope === 'cycle') return list.filter(function(n){ return !!n.cycleValue; });
     return list.filter(function(n){ var st = nodeStatus(n); return !!n.cycleValue && st.level >= 1; });   // 오늘 대상 = 지연·임박·미입력
@@ -5314,7 +5504,9 @@
     byId('repFiltersPho').classList.toggle('hidden', tab !== 'pho');
     byId('repFiltersRec').classList.toggle('hidden', tab !== 'rec');
     byId('repXlsx').disabled = (tab === 'pho');          // 엑셀에는 사진을 넣을 수 없다
-    byId('repMsg').textContent = '';
+    byId('repMsg').textContent = partFilterOn()
+      ? '지금 ' + partName(me.partId) + ' 담당 것만 보고 있습니다 — 상단 배지를 누르면 전체로 바뀝니다.'
+      : '';
     if(tab === 'mat'){ renderMatReport(); }
     else if(tab === 'item'){ renderItemReport(); }
     else if(tab === 'pho'){ renderPhotoReport(); }
@@ -5329,6 +5521,7 @@
     var rows = [];
     nodes.forEach(function(n){
       if(hasChildren(n.id)) return;                       // 맨 아래 항목만 센다
+      if(!inScope(n)) return;
       if(cat && n.category !== cat) return;
       if(tSel && n.itemTypeId !== tSel) return;
       if(!tSel && !noType && !n.itemTypeId) return;        // 기본은 품명을 지정한 것만
@@ -5493,6 +5686,7 @@
     var rows = [];
     zoneList.forEach(function(z){
       nodes.filter(function(n){ return n.zoneId === z.id; }).forEach(function(n){
+        if(!inScope(n)) return;
         if(cSel && n.category !== cSel) return;
         var ms = nodeMats(n);
         if(mSel && ms.indexOf(mSel) < 0) return;
@@ -5614,6 +5808,7 @@
     zoneList.forEach(function(z){
       nodes.filter(function(n){ return n.zoneId === z.id; }).forEach(function(n){
         var ms = nodeMats(n);
+        if(!inScope(n)) return;
         var hit = mSel ? (ms.indexOf(mSel) >= 0) : (ms.length > 0);
         var empty = !ms.length && !hasChildren(n.id);
         if(!hit && !(withEmpty && empty && !mSel)) return;
@@ -5740,6 +5935,7 @@
         if(!r.date || r.date < from || r.date > to) return;     // 목록 방식이 달라도 한 번 더 거른다
         var n = findNode(r.nodeId);
         var zoneId = (n && n.zoneId) || r.zoneId;
+        if(n && !inScope(n)) return;                            // 내 파트만 보기면 다른 파트 기록은 제외
         if(zSel && zoneId !== zSel) return;
         var cat = n ? n.category : '';
         if(cSel && cat !== cSel) return;
@@ -6026,20 +6222,26 @@
     b.commit().then(saveOk).catch(saveFail);
   });
 
-  // ================= 품명 · 색상 지정 (v0.27) =================
+  // ================= 품명 · 색상 지정 (v0.29) =================
   var tgDraft = {};      // nodeId -> {itemTypeId, colorId}  (저장 누를 때까지 화면에만)
   var tgPicked = {};     // nodeId -> true
   function itUseCount(id){ return nodes.filter(function(n){ return n.itemTypeId === id; }).length; }
   function clUseCount(id){ return nodes.filter(function(n){ return n.colorId === id; }).length; }
   function tgOf(n){
     var d = tgDraft[n.id];
-    return {itemTypeId: d ? d.itemTypeId : (n.itemTypeId || ''), colorId: d ? d.colorId : (n.colorId || '')};
+    return {itemTypeId: d ? d.itemTypeId : (n.itemTypeId || ''), colorId: d ? d.colorId : (n.colorId || ''),
+      partId: d ? d.partId : (n.partId || '')};
   }
   function tgSet(n, key, val){
     var cur = tgOf(n);
     cur[key] = val;
-    if(cur.itemTypeId === (n.itemTypeId || '') && cur.colorId === (n.colorId || '')){ delete tgDraft[n.id]; }
+    if(cur.itemTypeId === (n.itemTypeId || '') && cur.colorId === (n.colorId || '') && cur.partId === (n.partId || '')){ delete tgDraft[n.id]; }
     else { tgDraft[n.id] = cur; }
+  }
+  function zonePartOf(n){ var z = findZone(n.zoneId); return (z && z.partId) ? z.partId : ''; }
+  function ptUseCount(id){
+    return nodes.filter(function(n){ return n.partId === id; }).length + zones.filter(function(z){ return z.partId === id; }).length
+      + users.filter(function(u){ return u.partId === id; }).length;
   }
   // 지정 대상 = 말단 항목 (하위가 있는 묶음 항목은 제외)
   function tgNodes(){
@@ -6052,6 +6254,7 @@
       var v = tgOf(n);
       // 아직 저장 전에 내가 방금 바꾼 줄은, 다 채워졌어도 화면에 남겨 둔다(확인하고 저장해야 하므로)
       if(view === 'todo' && v.itemTypeId && v.colorId && !tgDraft[n.id]) return false;
+      if(view === 'todopart' && (v.partId || zonePartOf(n)) && !tgDraft[n.id]) return false;
       if(q && aliasKey(pathNames(n).join('')).indexOf(q) < 0 && aliasKey(zoneName(n.zoneId)).indexOf(q) < 0
          && aliasKey(n.note || '').indexOf(q) < 0) return false;
       return true;
@@ -6066,6 +6269,7 @@
     var list = tgNodes();
     var itOpts = '<option value="">—</option>' + ITEMTYPES.map(function(t){ return '<option value="' + t.id + '">' + escapeHtml(t.name) + '</option>'; }).join('');
     var clOpts = '<option value="">—</option>' + COLORS.map(function(c){ return '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>'; }).join('');
+    var ptOpts = PARTS.map(function(x){ return '<option value="' + x.id + '">' + escapeHtml(x.name) + '</option>'; }).join('');
     byId('tgRows').innerHTML = list.length ? list.map(function(n){
       var v = tgOf(n);
       var dirty = !!tgDraft[n.id];
@@ -6075,7 +6279,8 @@
         '<td class="p">' + escapeHtml(pathNames(n).join(' › ')) + ' <span class="z">' + CAT_LABEL[n.category] + '</span></td>' +
         '<td><span class="nt">' + escapeHtml(n.note || '') + '</span></td>' +
         '<td><select data-tgit>' + itOpts + '</select></td>' +
-        '<td><select data-tgcl>' + clOpts + '</select></td></tr>';
+        '<td><select data-tgcl>' + clOpts + '</select></td>' +
+        '<td><select data-tgpt><option value="">' + (zonePartOf(n) ? '작업장(' + escapeHtml(partName(zonePartOf(n))) + ')' : '— 미지정 —') + '</option>' + ptOpts + '</select></td></tr>';
     }).join('') : '<tr><td colspan="6" class="placeholder" style="padding:14px;">조건에 맞는 항목이 없습니다.</td></tr>';
     // 선택값은 innerHTML 로 넣으면 안 먹으므로 따로 넣는다
     list.forEach(function(n){
@@ -6084,10 +6289,14 @@
       var v = tgOf(n);
       tr.querySelector('[data-tgit]').value = v.itemTypeId;
       tr.querySelector('[data-tgcl]').value = v.colorId;
+      tr.querySelector('[data-tgpt]').value = v.partId;
     });
-    var todo = nodes.filter(function(n){ if(hasChildren(n.id)) return false; var v = tgOf(n); return !v.itemTypeId || !v.colorId; }).length;
+    var leaves = nodes.filter(function(n){ return !hasChildren(n.id); });
+    var todo = leaves.filter(function(n){ var v = tgOf(n); return !v.itemTypeId || !v.colorId; }).length;
+    var noPart = leaves.filter(function(n){ var v = tgOf(n); return !(v.partId || zonePartOf(n)); }).length;
     var chg = Object.keys(tgDraft).length;
-    byId('tgCount').textContent = '보이는 것 ' + list.length + '개 · 아직 안 된 것 ' + todo + '개' + (chg ? ' · 바꾼 것 ' + chg + '개' : '');
+    byId('tgCount').textContent = '보이는 것 ' + list.length + '개 · 품명·색상 안 된 것 ' + todo + '개 · 파트 안 정한 것 ' + noPart + '개'
+      + (chg ? ' · 바꾼 것 ' + chg + '개' : '');
     byId('tgSel').textContent = Object.keys(tgPicked).length;
     byId('tgAll').checked = list.length > 0 && list.every(function(n){ return tgPicked[n.id]; });
   }
@@ -6101,6 +6310,7 @@
     zs.value = cur;
     fillItemTypeSelect(byId('tgBulkIt'), '', '— 바꾸지 않음 —');
     fillColorSelect(byId('tgBulkCl'), '', '— 바꾸지 않음 —');
+    fillPartSelect(byId('tgBulkPt'), '', '— 바꾸지 않음 —');
     byId('tgMsg').textContent = '';
     tgRender();
     byId('tagModal').classList.remove('hidden');
@@ -6131,6 +6341,7 @@
     }
     if(e.target.hasAttribute('data-tgit')) tgSet(n, 'itemTypeId', e.target.value);
     else if(e.target.hasAttribute('data-tgcl')) tgSet(n, 'colorId', e.target.value);
+    else if(e.target.hasAttribute('data-tgpt')) tgSet(n, 'partId', e.target.value);
     else return;
     tr.classList.toggle('changed', !!tgDraft[n.id]);
     var chg = Object.keys(tgDraft).length;
@@ -6139,17 +6350,18 @@
   byId('tgBulkApply').addEventListener('click', function(){
     var ids = Object.keys(tgPicked);
     if(!ids.length){ byId('tgMsg').textContent = '먼저 왼쪽 네모칸으로 항목을 고르세요.'; return; }
-    var it = byId('tgBulkIt').value, cl = byId('tgBulkCl').value;
-    if(!it && !cl){ byId('tgMsg').textContent = '지정할 품명이나 색상을 고르세요.'; return; }
+    var it = byId('tgBulkIt').value, cl = byId('tgBulkCl').value, pt = byId('tgBulkPt').value;
+    if(!it && !cl && !pt){ byId('tgMsg').textContent = '지정할 품명·색상·파트 중 하나를 고르세요.'; return; }
     var cnt = 0;
     ids.forEach(function(id){
       var n = findNode(id);
       if(!n) return;
       if(it) tgSet(n, 'itemTypeId', it);
       if(cl) tgSet(n, 'colorId', cl);
+      if(pt) tgSet(n, 'partId', pt);
       cnt++;
     });
-    byId('tgMsg').textContent = cnt + '개에 ' + [it ? '품명 ' + itemTypeName(it) : '', cl ? '색상 ' + colorName(cl) : ''].filter(Boolean).join(' · ') + ' 지정(아직 저장 전).';
+    byId('tgMsg').textContent = cnt + '개에 ' + [it ? '품명 ' + itemTypeName(it) : '', cl ? '색상 ' + colorName(cl) : '', pt ? '파트 ' + partName(pt) : ''].filter(Boolean).join(' · ') + ' 지정(아직 저장 전).';
     tgRender();
   });
   // 이름·비고를 보고 빈 칸만 채운다. 사람이 보고 고칠 수 있게 저장은 따로.
@@ -6177,13 +6389,14 @@
       if(!n) return;
       n.itemTypeId = tgDraft[id].itemTypeId;
       n.colorId = tgDraft[id].colorId;
+      n.partId = tgDraft[id].partId;
       changed.push(n);
     });
     var b = db.batch();
     changed.forEach(function(n){ b.set(db.collection(NODES_COL).doc(n.id), nodeToDoc(n)); });
     byId('tgMsg').textContent = '저장하는 중...';
     b.commit().then(function(){
-      audit('품명·색상 지정', '', changed.length + '개 항목');
+      audit('품명·색상·파트 지정', '', changed.length + '개 항목');
       tgDraft = {};
       byId('tgMsg').textContent = changed.length + '개 저장했습니다.';
       tgRender();
@@ -6200,6 +6413,13 @@
     byId('alMsg').textContent = '';
     byId('alertModal').classList.remove('hidden');
   }
+  byId('partTag').addEventListener('click', function(){
+    if(!(me && me.partId)) return;
+    partScope = partFilterOn() ? 'all' : 'mine';
+    renderPartTag();
+    renderAll();
+    if(!byId('reportModal').classList.contains('hidden')){ setRepTab(repTab); }
+  });
   byId('btnAlert').addEventListener('click', openAlertModal);
   byId('alCancel').addEventListener('click', function(){ byId('alertModal').classList.add('hidden'); });
   byId('alReset').addEventListener('click', function(){
@@ -6325,6 +6545,123 @@
     ITEMTYPES.forEach(function(t){ b.set(db.collection(ITEMTYPES_COL).doc(t.id), {name: t.name, note: t.note, order: t.order, updatedAt: Date.now(), updatedBy: (me ? me.name : '')}); });
     removed.forEach(function(t){ b.delete(db.collection(ITEMTYPES_COL).doc(t.id)); });
     b.commit().then(saveOk).catch(saveFail);
+  });
+
+  // ---- 파트 관리 ----
+  var ptDraft = null;
+  function ptRender(){
+    byId('ptRows').innerHTML = ptDraft.map(function(x, i){
+      var used = x.id ? ptUseCount(x.id) : 0;
+      var fixed = x.id === COMMON_PART;
+      return '<div class="prow" data-i="' + i + '">' +
+        '<input type="color" data-k="color" value="' + escapeHtml(x.color) + '">' +
+        '<input type="text" data-k="name" value="' + escapeHtml(x.name) + '" placeholder="예: 품질" maxlength="12">' +
+        '<span class="cnt">' + (used ? used + '곳' : '—') + '</span>' +
+        '<button data-k="del"' + ((used || fixed) ? ' disabled title="' + (fixed ? '공통은 지울 수 없음' : '쓰이고 있어 지울 수 없음') + '"' : '') + '>지우기</button></div>';
+    }).join('');
+  }
+  function openPtModal(){
+    if(!canManage()) return;
+    ptDraft = PARTS.map(function(x){ return {id: x.id, name: x.name, color: x.color}; });
+    byId('ptMsg').textContent = '';
+    ptRender();
+    byId('ptModal').classList.remove('hidden');
+  }
+  byId('tgManagePt').addEventListener('click', openPtModal);
+  byId('ptRows').addEventListener('input', function(e){
+    var row = e.target.closest ? e.target.closest('[data-i]') : null;
+    if(!row || !e.target.dataset.k) return;
+    ptDraft[+row.dataset.i][e.target.dataset.k] = e.target.value;
+  });
+  byId('ptRows').addEventListener('click', function(e){
+    if(e.target.dataset.k !== 'del') return;
+    ptDraft.splice(+e.target.closest('[data-i]').dataset.i, 1);
+    ptRender();
+  });
+  byId('ptAdd').addEventListener('click', function(){ ptDraft.push({id: '', name: '', color: '#7c3aed'}); ptRender(); });
+  byId('ptCancel').addEventListener('click', function(){ byId('ptModal').classList.add('hidden'); ptDraft = null; });
+  byId('ptSave').addEventListener('click', function(){
+    if(!canManage()) return;
+    var msg = byId('ptMsg');
+    var seen = {};
+    for(var i = 0; i < ptDraft.length; i++){
+      var x = ptDraft[i];
+      x.name = String(x.name || '').trim();
+      if(!x.name){ msg.textContent = (i + 1) + '번째 파트의 이름을 입력하세요.'; return; }
+      var key = aliasKey(x.name);
+      if(seen[key]){ msg.textContent = "'" + x.name + "' 이름이 중복됩니다."; return; }
+      if(!hexToRgb(x.color)){ msg.textContent = x.name + ' 색이 올바르지 않습니다.'; return; }
+      seen[key] = true;
+    }
+    if(!ptDraft.some(function(x){ return x.id === COMMON_PART; })){ msg.textContent = "'공통'은 지울 수 없습니다."; return; }
+    var keep = {};
+    ptDraft.forEach(function(x, idx){ if(!x.id){ x.id = uid('pt'); } x.order = idx; keep[x.id] = true; });
+    var removed = PARTS.filter(function(x){ return !keep[x.id]; });
+    var blocked = removed.filter(function(x){ return ptUseCount(x.id) > 0; });
+    if(blocked.length){ msg.textContent = blocked.map(function(x){ return '"' + x.name + '"'; }).join(', ') + '은(는) 아직 쓰이고 있어 지울 수 없습니다.'; return; }
+    var before = PARTS.map(function(x){ return x.name; }).join(', ');
+    PARTS = ptDraft.map(function(x){ return {id: x.id, name: x.name, color: String(x.color).toLowerCase(), order: x.order}; });
+    rebuildParts();
+    audit('파트 관리 저장', '', '전: ' + before + ' / 후: ' + PARTS.map(function(x){ return x.name; }).join(', '));
+    byId('ptModal').classList.add('hidden');
+    ptDraft = null;
+    if(!byId('tagModal').classList.contains('hidden')){ fillPartSelect(byId('tgBulkPt'), '', '— 바꾸지 않음 —'); tgRender(); }
+    applyRole();
+    renderAll();
+    var db = initFB();
+    if(!db) return;
+    var b = db.batch();
+    PARTS.forEach(function(x){ b.set(db.collection(PARTS_COL).doc(x.id), {name: x.name, color: x.color, order: x.order, updatedAt: Date.now(), updatedBy: (me ? me.name : '')}); });
+    removed.forEach(function(x){ b.delete(db.collection(PARTS_COL).doc(x.id)); });
+    b.commit().then(saveOk).catch(saveFail);
+  });
+
+  // ---- 작업장 기본 파트 ----
+  var zpDraft = null;
+  function openZpModal(){
+    if(!canManage()) return;
+    zpDraft = {};
+    zones.forEach(function(z){ zpDraft[z.id] = z.partId || ''; });
+    byId('zpMsg').textContent = '';
+    byId('zpRows').innerHTML = zones.length ? zones.map(function(z){
+      var cnt = nodes.filter(function(n){ return n.zoneId === z.id && !hasChildren(n.id); }).length;
+      var own = nodes.filter(function(n){ return n.zoneId === z.id && n.partId; }).length;
+      return '<div class="prow" style="grid-template-columns:1fr 150px 90px;" data-z="' + z.id + '">' +
+        '<span>' + escapeHtml(z.name) + '</span>' +
+        '<select data-zp></select>' +
+        '<span class="cnt">항목 ' + cnt + (own ? ' · 예외 ' + own : '') + '</span></div>';
+    }).join('') : '<div class="placeholder">구역이 없습니다.</div>';
+    zones.forEach(function(z){
+      var sel = byId('zpRows').querySelector('[data-z="' + z.id + '"] [data-zp]');
+      if(sel) fillPartSelect(sel, z.partId || '', '— 정하지 않음 —');
+    });
+    byId('zpModal').classList.remove('hidden');
+  }
+  byId('tgZonePart').addEventListener('click', openZpModal);
+  byId('zpRows').addEventListener('change', function(e){
+    var row = e.target.closest ? e.target.closest('[data-z]') : null;
+    if(!row || !e.target.hasAttribute('data-zp')) return;
+    zpDraft[row.dataset.z] = e.target.value;
+  });
+  byId('zpCancel').addEventListener('click', function(){ byId('zpModal').classList.add('hidden'); zpDraft = null; });
+  byId('zpSave').addEventListener('click', function(){
+    if(!canManage()) return;
+    var changed = zones.filter(function(z){ return (z.partId || '') !== (zpDraft[z.id] || ''); });
+    if(!changed.length){ byId('zpMsg').textContent = '바뀐 것이 없습니다.'; return; }
+    var db = initFB();
+    if(!db){ byId('zpMsg').textContent = 'Firebase 연결 안 됨 — 저장할 수 없습니다.'; return; }
+    changed.forEach(function(z){ z.partId = zpDraft[z.id] || ''; });
+    var b = db.batch();
+    changed.forEach(function(z){ b.set(db.collection(ZONES_COL).doc(z.id), zoneDoc(z)); });
+    byId('zpMsg').textContent = '저장하는 중...';
+    b.commit().then(function(){
+      audit('작업장 기본 파트 저장', '', changed.map(function(z){ return z.name + '=' + (partName(z.partId) || '미지정'); }).join(', '));
+      byId('zpModal').classList.add('hidden');
+      zpDraft = null;
+      if(!byId('tagModal').classList.contains('hidden')) tgRender();
+      renderAll();
+      saveOk();
+    }).catch(function(e){ byId('zpMsg').textContent = '저장 실패: ' + (e.message || e); saveFail(e); });
   });
 
   // ---- 색상 관리 ----
@@ -6589,7 +6926,9 @@
       var od = overdueInZone(z.id);
       var t = zoneType(z);
       var mc = filterActive() ? zoneMatchCount(z.id) : 0;
-      h += '<span class="zchip' + (z.id === selectedZoneId ? ' selected' : '') + (filterActive() && !mc ? ' mat-dim' : '') + '" data-act="zone" data-id="' + z.id + '">' +
+      var dimPart = partFilterOn() && !inScopeZone(z);
+      h += '<span class="zchip' + (z.id === selectedZoneId ? ' selected' : '') + ((filterActive() && !mc) || dimPart ? ' mat-dim' : '') + '" data-act="zone" data-id="' + z.id + '"' +
+        (dimPart ? ' title="' + escapeHtml(partName(me.partId)) + ' 담당 항목이 없습니다"' : '') + '>' +
         (t ? '<i class="dot" style="background:' + escapeHtml(t.color) + ';"></i>' : '<i class="dot untyped"></i>') + escapeHtml(z.name) +
         (mc ? '<span class="mcnt">' + mc + '</span>' : '') +
         (od > 0 ? '<span class="cnt">지연 ' + od + '</span>' : '') +
@@ -6876,10 +7215,13 @@
     var footerH = 30;
     var availH = Math.max(340, vh - top - footerH - 4);
     var pageW = work.clientWidth || (vw - 32);
-    var planW = Math.min(Math.round((availH - 14) * CROP_AR), Math.round(pageW * 0.62));
-    planW = Math.max(Math.min(360, Math.round((availH - 14) * CROP_AR)), planW);  // 세로로 긴 도면이면 높이에 맞춰 폭을 줄임
+    // 도면은 화면 높이를 다 쓰고, 오른쪽 칸에는 최소 폭만 남긴다 (v0.29)
+    var SIDE_MIN = 420;
+    var byH = Math.round((availH - 14) * CROP_AR);          // 높이에 맞춘 폭
+    var byW = Math.round(pageW - SIDE_MIN - 12);            // 오른쪽 칸을 남기고 쓸 수 있는 폭
+    var planW = Math.min(byH, Math.max(360, byW));
     var planH = Math.round((planW - 14) / CROP_AR) + 14;
-    var maxH = vh - top - footerH - 4;            // 위쪽이 두꺼워져도 화면 밖으로 나가지 않게
+    var maxH = availH;                            // 위쪽이 두꺼워져도 화면 밖으로 나가지 않게
     if(planH > maxH && maxH >= 300){
       planH = Math.round(maxH);
       planW = Math.round((planH - 14) * CROP_AR) + 14;
